@@ -29,6 +29,7 @@ dito. Copre gli strati 2-5 dell'architettura del documento operativo v1.0
 | `guida.py` | il manuale dell'operatore, che si apre dal «?» dentro il programma |
 | `logo.py` | il marchio disegnato su tela Tk, e la finestrella di avvio |
 | `scatti_guida.py` | rifà le figure della guida su un archivio inventato |
+| `crea_pacchetto.py` · `crea_icona.py` | preparano la cartella da copiare in sede |
 | `test_anviz.py` · `test_presenze.py` · `test_copie.py` · `test_grafico.py` · `test_sicurezza.py` · `test_posta.py` | i collaudi |
 
 Nessuna dipendenza esterna: solo la libreria standard di Python 3.10+.
@@ -484,6 +485,32 @@ Restano aperti:
    il client oggi **non la gestisce**. Tenerla spenta finché non si prova.
 4. Il significato dei due byte finali del record utente.
 5. La corrispondenza numero → lingua.
+
+## Come si consegna: una cartella, non un .exe
+
+`python crea_pacchetto.py` prepara `pacchetto/TIMBRA/`: dentro c'è un Python
+"incorporato" (la distribuzione ufficiale ridotta, presa da python.org) più i
+sorgenti. Si copia la cartella **intera** sul computer del locale e si fa
+doppio clic sul collegamento con l'icona. Non si installa niente, non si tocca
+il resto della macchina. Circa 35 MB.
+
+**Perché non un eseguibile.** Un exe di PyInstaller non firmato viene
+**bloccato da Smart App Control**, acceso di serie sulle installazioni pulite
+di Windows 11 — non l'avviso che si scavalca con «esegui comunque», proprio
+bloccato (misurato: `VerifiedAndReputablePolicyState = 1` sulla macchina di
+sviluppo). In più gli antivirus lo segnalano come falso positivo, perché la
+tecnica di impacchettamento è la stessa dei malware. Il giorno che serve
+davvero un file singolo la strada è il **certificato di firma** — Azure
+Trusted Signing, ~10 $/mese con identità aziendale verificata — non un altro
+impacchettatore.
+
+**Il Python incorporato non ha Tkinter**: la distribuzione ridotta lascia
+fuori tcl/tk, che vengono copiati dal Python installato sulla macchina che
+prepara il pacchetto. Stessa versione, stessa architettura.
+
+Il collegamento punta a `pythonw.exe`, non a `python.exe`: altrimenti a ogni
+avvio resterebbe aperta anche una finestra nera di console, che prima o poi
+qualcuno chiude credendo di chiudere una cosa inutile.
 
 ## Il PIN, e cosa non è
 

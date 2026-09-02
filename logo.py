@@ -57,20 +57,32 @@ def _carattere(dimensione: int, grassetto: bool = False):
     return ("TkDefaultFont", dimensione, "bold" if grassetto else "normal")
 
 
-def disegna(tela: tk.Canvas, scala: float = 1.0, dx: float = 0.0,
-            dy: float = 0.0) -> None:
-    """Disegna il marchio sulla tela, in scala."""
-    def punti(elenco, tx, ty, s):
+# Il riquadro del solo segno, gia' in coordinate del logo, tratto compreso.
+# Serve per ritagliarlo quando si vuole l'icona senza le scritte.
+RIQUADRO_SEGNO = (44.0, 71.0, 153.0, 166.0)
+
+
+def disegna_segno(tela: tk.Canvas, scala: float = 1.0, dx: float = 0.0,
+                  dy: float = 0.0) -> None:
+    """Le due curve, senza le scritte."""
+    def punti(elenco):
         fuori = []
         for x, y in elenco:
-            fuori += [dx + (tx + x * s) * scala, dy + (ty + y * s) * scala]
+            fuori += [dx + (40 + x * SCALA_SEGNO) * scala,
+                      dy + (62 + y * SCALA_SEGNO) * scala]
         return fuori
 
     for tratto, colore in ((ARCO_CHIARO, AZZURRO), (ARCO_SCURO, BLU)):
         tela.create_line(
-            *punti(tratto, 40, 62, SCALA_SEGNO), fill=colore,
+            *punti(tratto), fill=colore,
             width=max(1, SPESSORE * SCALA_SEGNO * scala), smooth="raw",
             splinesteps=48, capstyle="round")
+
+
+def disegna(tela: tk.Canvas, scala: float = 1.0, dx: float = 0.0,
+            dy: float = 0.0) -> None:
+    """Disegna il marchio intero sulla tela, in scala."""
+    disegna_segno(tela, scala, dx, dy)
 
     tela.create_text(dx + 228 * scala, dy + 116 * scala, anchor="sw",
                      text=TITOLO, fill=NERO,

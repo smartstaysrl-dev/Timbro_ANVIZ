@@ -66,7 +66,9 @@ CONFIG_PREDEFINITA = {
 # dipendenti sul terminale o le regole con cui si contano le ore, si'.
 SEZIONI_PROTETTE = ("Dipendenti", "Impostazioni")
 
-TITOLO_FINESTRA = "Gestione presenze"
+# Il titolo della finestra e' anche la chiave con cui la seconda copia
+# ritrova la prima per portarla avanti: si cambia qui e basta.
+TITOLO_FINESTRA = "TIMBRA — presenze"
 
 # Il terminale regge una conversazione alla volta: se lo scheduler sta
 # scaricando e nel frattempo l'interfaccia gli chiede il seriale, una delle due
