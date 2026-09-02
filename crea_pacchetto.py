@@ -102,10 +102,17 @@ def scrivi_avvio(radice: str) -> None:
             "Se il collegamento si perde, va bene anche TIMBRA.bat.\n\n"
             "Non serve installare niente: il Python sta dentro la cartella\n"
             "python\\ e non tocca il resto del computer.\n\n"
-            "La cartella si puo' spostare o copiare dove si vuole, basta\n"
-            "spostarla INTERA. Dentro app\\ nascono l'archivio delle\n"
-            "timbrature, la configurazione e le copie di sicurezza: quando\n"
-            "si fa un backup, si copia tutta la cartella.\n\n"
+            "Cosa c'e' dentro:\n"
+            "  app\\     il programma. Si sostituisce per aggiornare.\n"
+            "  dati\\    archivio delle timbrature, impostazioni, copie di\n"
+            "           sicurezza. QUESTA NON SI TOCCA MAI.\n"
+            "  python\\  il motore. Non serve guardarci dentro.\n\n"
+            "Per aggiornare: si chiude il programma, si sostituisce la sola\n"
+            "cartella app\\ con quella nuova, si riapre. I dati restano.\n\n"
+            "Per il backup: si copia tutta la cartella TIMBRA, o almeno\n"
+            "dati\\ che e' quella che conta.\n\n"
+            "La cartella si puo' spostare dove si vuole, basta spostarla\n"
+            "INTERA.\n\n"
             "La guida sta dentro il programma, col «?» in alto a destra.\n")
 
 
@@ -164,6 +171,11 @@ def main() -> int:
             shutil.copytree(sorgente, os.path.join(app, cartella),
                             ignore=shutil.ignore_patterns("_finto.db*"))
     print(f"  {len(SORGENTI)} file + {len(CARTELLE)} cartelle")
+
+    # La cartella dei dati nasce vuota, accanto al codice e non dentro:
+    # aggiornare vuol dire sostituire "app", e quello che sta li' dentro deve
+    # poter sparire senza portarsi via un anno di timbrature.
+    os.makedirs(os.path.join(radice, "dati"), exist_ok=True)
 
     scrivi_avvio(radice)
     crea_collegamento(radice)

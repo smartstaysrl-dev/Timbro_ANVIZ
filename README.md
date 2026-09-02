@@ -31,7 +31,7 @@ dito. Copre gli strati 2-5 dell'architettura del documento operativo v1.0
 | `scatti_guida.py` | rifà le figure della guida su un archivio inventato |
 | `crea_pacchetto.py` · `crea_icona.py` | preparano la cartella da copiare in sede |
 | `guida_pdf.py` | stampa la stessa guida in PDF (`TIMBRA - guida.pdf`) |
-| `test_anviz.py` · `test_presenze.py` · `test_copie.py` · `test_grafico.py` · `test_sicurezza.py` · `test_posta.py` | i collaudi |
+| `test_anviz.py` · `test_presenze.py` · `test_copie.py` · `test_grafico.py` · `test_sicurezza.py` · `test_posta.py` · `test_dati.py` | i collaudi |
 
 Nessuna dipendenza esterna: solo la libreria standard di Python 3.10+.
 
@@ -486,6 +486,27 @@ Restano aperti:
    il client oggi **non la gestisce**. Tenerla spenta finché non si prova.
 4. Il significato dei due byte finali del record utente.
 5. La corrispondenza numero → lingua.
+
+## I dati non stanno con il codice
+
+    TIMBRA      app\      il programma — si sostituisce per aggiornare
+      dati\     archivio, impostazioni, copie — non si tocca mai
+      python\   il motore
+
+Aggiornare vuol dire sostituire `app\`. Se lì dentro ci fossero anche le
+timbrature, la mossa istintiva — copio la cartella nuova sopra la vecchia —
+cancellerebbe l'archivio di tutto l'anno. Non è un aggiornamento mancante, è
+una trappola armata: per questo la separazione viene prima dell'aggiornatore.
+
+Un'installazione fatta prima della separazione **si sistema da sola al primo
+avvio**: i file vengono portati in `dati\` e il percorso dell'archivio dentro
+la configurazione viene raddrizzato. Quel secondo pezzo è un difetto che si è
+visto solo provandolo su un'installazione vera: i file erano già di là, ma
+`configurazione.json` conservava il percorso assoluto di prima, il programma
+ci andava, non trovava niente e **si fabbricava un archivio nuovo e vuoto**
+accanto al codice. Le timbrature non si perdevano — erano nell'altra cartella
+— ma il locale si ritrovava la storia sparita e la prima copia di sicurezza
+salvava il vuoto.
 
 ## Come si consegna: una cartella, non un .exe
 

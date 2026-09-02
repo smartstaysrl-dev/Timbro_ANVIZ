@@ -434,6 +434,77 @@ def _():
     assert len(spediti) == 1, f"{len(spediti)} copie dello stesso report"
 
 
+# --- l'avviso che il terminale tace ------------------------------------------
+def scheduler_muto(giorni_fa, ultimo_allarme="", soglia=2):
+    """Uno scheduler il cui ultimo scarico riuscito e' di N giorni fa."""
+    import queue
+    import tempfile
+    import gestione
+
+    cartella = tempfile.mkdtemp()
+    archivio = str(pathlib.Path(cartella) / "timbrature.db")
+    db = gestione.apri_archivio(archivio)
+    quando = dt.datetime.now() - dt.timedelta(days=giorni_fa)
+    db.execute("INSERT INTO importazioni (quando, esito) VALUES (?, 'ok')",
+               (quando.isoformat(timespec="seconds"),))
+    db.commit()
+    db.close()
+
+    imp = config(allarme_giorni=soglia, ultimo_allarme=ultimo_allarme)
+    cfg = dict(gestione.CONFIG_PREDEFINITA)
+    cfg.update({"archivio": archivio, "posta": imp})
+    coda = queue.Queue()
+    return gestione.Servizio(cfg, coda), cfg, coda
+
+
+@prova("terminale muto da giorni: parte l'avviso, una volta sola")
+def _():
+    servizio, cfg, coda = scheduler_muto(giorni_fa=5, soglia=2)
+    con_finto_smtp(servizio._forse_allarme)
+    assert FintoSMTP.ultimo and FintoSMTP.ultimo.messaggi, "nessun avviso"
+    msg = FintoSMTP.ultimo.messaggi[0]
+    assert "non risponde" in msg["Subject"], msg["Subject"]
+    corpo = msg.get_content()
+    assert "NON SI PERDONO" in corpo, "l'avviso non rassicura sui dati"
+    assert cfg["posta"]["ultimo_allarme"], "l'avviso non e' stato segnato"
+
+    # Al giro dopo non si ripete: una mail al giorno la si impara a cestinare.
+    FintoSMTP.ultimo = None
+    con_finto_smtp(servizio._forse_allarme)
+    assert FintoSMTP.ultimo is None, "l'avviso e' partito due volte"
+
+
+@prova("terminale che risponde: nessun avviso, e la memoria si azzera")
+def _():
+    ieri = (dt.datetime.now() - dt.timedelta(days=9)).isoformat(timespec="seconds")
+    servizio, cfg, _ = scheduler_muto(giorni_fa=0, ultimo_allarme=ieri, soglia=2)
+    con_finto_smtp(servizio._forse_allarme)
+    assert FintoSMTP.ultimo is None or not FintoSMTP.ultimo.messaggi,         "avviso mandato con il terminale che risponde"
+    assert not cfg["posta"]["ultimo_allarme"],         "la memoria dell'avviso non si azzera: al prossimo guasto si aspetta"
+
+
+@prova("soglia a zero: l'avviso e' spento e resta spento")
+def _():
+    servizio, _, _ = scheduler_muto(giorni_fa=30, soglia=0)
+    con_finto_smtp(servizio._forse_allarme)
+    assert FintoSMTP.ultimo is None, "avviso mandato con la soglia a zero"
+
+
+@prova("installazione appena nata: non si allarma per niente")
+def _():
+    import queue
+    import tempfile
+    import gestione
+    cartella = tempfile.mkdtemp()
+    archivio = str(pathlib.Path(cartella) / "timbrature.db")
+    gestione.apri_archivio(archivio).close()      # nessuno scarico, mai
+    cfg = dict(gestione.CONFIG_PREDEFINITA)
+    cfg.update({"archivio": archivio, "posta": config(allarme_giorni=2)})
+    servizio = gestione.Servizio(cfg, queue.Queue())
+    con_finto_smtp(servizio._forse_allarme)
+    assert FintoSMTP.ultimo is None,         "allarme al primo avvio, prima ancora di aver provato a collegarsi"
+
+
 falliti = [(n, e) for n, e in esiti if e]
 for nome, errore in esiti:
     print(("  OK   " if not errore else "  FALLITO ") + nome

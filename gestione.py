@@ -23,6 +23,7 @@ import datetime as dt
 import json
 import os
 import queue
+import shutil
 import sqlite3
 import sys
 import threading
@@ -45,8 +46,91 @@ from interfaccia import (
 )
 
 CARTELLA = os.path.dirname(os.path.abspath(__file__))
-FILE_CONFIG = os.path.join(CARTELLA, "configurazione.json")
-FILE_REGOLE = os.path.join(CARTELLA, "regole.json")
+
+
+def _cartella_dati() -> str:
+    """Dove vivono archivio, configurazione e copie: MAI insieme al codice.
+
+    Aggiornare il programma vuol dire sostituire la cartella del codice. Se li'
+    dentro ci fossero anche le timbrature, la mossa istintiva — copio la
+    cartella nuova sopra la vecchia — cancellerebbe l'archivio di tutto
+    l'anno. Tenerli separati e' l'unica cosa che rende l'aggiornamento una
+    faccenda noiosa invece che un rischio.
+
+    Nel pacchetto consegnato il codice sta nella cartella "app" e i dati
+    nella cartella "dati", fratelle. Fuori dal pacchetto — quando si lavora sui sorgenti — i dati
+    stanno in `dati/` dentro la cartella del progetto. La variabile
+    d'ambiente TIMBRA_DATI vince su tutto: serve per farci girare le prove.
+    """
+    scelta = os.environ.get("TIMBRA_DATI")
+    if scelta:
+        return os.path.abspath(scelta)
+    if os.path.basename(CARTELLA).lower() == "app":
+        return os.path.join(os.path.dirname(CARTELLA), "dati")
+    return os.path.join(CARTELLA, "dati")
+
+
+CARTELLA_DATI = _cartella_dati()
+FILE_CONFIG = os.path.join(CARTELLA_DATI, "configurazione.json")
+FILE_REGOLE = os.path.join(CARTELLA_DATI, "regole.json")
+
+# Nomi dei file che, in una installazione fatta prima della separazione,
+# stanno ancora accanto al codice e vanno portati di la'.
+DA_TRASLOCARE = ("timbrature.db", "timbrature.db-wal", "timbrature.db-shm",
+                 "configurazione.json", "regole.json")
+
+
+def prepara_cartella_dati() -> list[str]:
+    """Crea `dati/` e ci porta dentro quello che era rimasto col codice.
+
+    Si chiama PRIMA di aprire qualunque cosa: spostare un database SQLite
+    mentre qualcuno lo tiene aperto lascia indietro i file -wal e -shm, e con
+    loro le ultime timbrature scaricate.
+    """
+    os.makedirs(CARTELLA_DATI, exist_ok=True)
+    if os.path.abspath(CARTELLA_DATI) == os.path.abspath(CARTELLA):
+        return []
+    traslocati = []
+    for nome in DA_TRASLOCARE:
+        vecchio = os.path.join(CARTELLA, nome)
+        nuovo = os.path.join(CARTELLA_DATI, nome)
+        if os.path.exists(vecchio) and not os.path.exists(nuovo):
+            try:
+                shutil.move(vecchio, nuovo)
+                traslocati.append(nome)
+            except OSError:
+                pass
+    vecchie_copie = os.path.join(CARTELLA, "copie")
+    nuove_copie = os.path.join(CARTELLA_DATI, "copie")
+    if os.path.isdir(vecchie_copie) and not os.path.isdir(nuove_copie):
+        try:
+            shutil.move(vecchie_copie, nuove_copie)
+            traslocati.append("copie")
+        except OSError:
+            pass
+    return traslocati
+
+
+def raddrizza_percorsi(cfg: dict) -> bool:
+    """Rimette il percorso dell'archivio dentro `dati`, se era rimasto indietro.
+
+    Il trasloco sposta i FILE, ma la configurazione si porta dentro il percorso
+    assoluto di dove stava l'archivio: riletta com'e', il programma va a
+    cercarlo dove non c'e' piu' e si crea un archivio nuovo, VUOTO, accanto al
+    codice. Le timbrature non si perdono — sono di la' — ma il locale si
+    ritrova la storia sparita, e alla prima copia di sicurezza si porta dietro
+    il vuoto. Difetto trovato provando il trasloco su un'installazione vera.
+
+    Si tocca solo se l'archivio stava insieme al codice: chi l'ha messo di
+    proposito su un disco di rete se lo tiene dov'e'.
+    """
+    if os.path.abspath(CARTELLA_DATI) == os.path.abspath(CARTELLA):
+        return False
+    vecchio = os.path.abspath(cfg.get("archivio") or "")
+    if os.path.dirname(vecchio) != os.path.abspath(CARTELLA):
+        return False
+    cfg["archivio"] = os.path.join(CARTELLA_DATI, os.path.basename(vecchio))
+    return True
 
 CONFIG_PREDEFINITA = {
     "terminale_ip": "192.168.0.218",
@@ -54,7 +138,7 @@ CONFIG_PREDEFINITA = {
     "minuti_fra_scarichi": 5,
     "allinea_orologio": True,
     "tolleranza_orologio_s": 30,
-    "archivio": os.path.join(CARTELLA, "timbrature.db"),
+    "archivio": os.path.join(CARTELLA_DATI, "timbrature.db"),
     "operatore": "segreteria",
     # Il seriale letto dal terminale, tenuto anche qui: e' il codice con cui
     # si recupera il PIN, e deve funzionare pure a terminale staccato.
@@ -234,6 +318,16 @@ def pota_registro(db, giorni: int = GIORNI_REGISTRO) -> int:
     return cur.rowcount
 
 
+def _quando_o_niente(testo):
+    """Una data scritta in archivio o in configurazione, o None se illeggibile."""
+    if not testo:
+        return None
+    try:
+        return dt.datetime.fromisoformat(str(testo))
+    except (TypeError, ValueError):
+        return None
+
+
 def nomi_dipendenti(db) -> dict[int, str]:
     return {r[0]: r[1] for r in db.execute(
         "SELECT employee_code, nome FROM dipendenti")}
@@ -305,6 +399,79 @@ class Servizio(threading.Thread):
         # staccato smetterebbe di far arrivare le mail senza che nessuno colleghi
         # le due cose — e ce ne si accorgerebbe a fine anno.
         self._forse_report()
+        self._forse_allarme()
+
+    # --- l'avviso che il terminale tace --------------------------------
+    def _forse_allarme(self):
+        """Manda una mail se il terminale non risponde da giorni.
+
+        Serve perche' altrimenti non se ne accorge nessuno: le timbrature non
+        si perdono — restano nel dispositivo — ma un cavo staccato il 3 del
+        mese si scopre il 31, e a quel punto mancano anche le ore di chi ha
+        cambiato turno e non se lo ricorda piu'.
+
+        Si avvisa UNA volta ogni tanti giorni quanti sono quelli di soglia:
+        una mail al giorno per due settimane la si impara a cestinare, e poi
+        si cestina anche quella che contava.
+        """
+        try:
+            self._allarme()
+        except Exception as e:                                   # noqa: BLE001
+            self.coda.put(("report_fallito", {
+                "messaggio": f"avviso di guasto non spedito: "
+                             f"{type(e).__name__}: {e}"}))
+
+    def _allarme(self):
+        imp = posta.impostazioni(self.cfg)
+        if not imp.get("attivo") or not posta.configurata(imp):
+            return
+        try:
+            giorni = float(imp.get("allarme_giorni") or 0)
+        except (TypeError, ValueError):
+            giorni = 0
+        if giorni <= 0:
+            return                       # avviso spento di proposito
+
+        db = apri_archivio(self.cfg["archivio"])
+        try:
+            riga = db.execute(
+                "SELECT MAX(quando) FROM importazioni WHERE esito = 'ok'"
+            ).fetchone()
+            mai = db.execute("SELECT COUNT(*) FROM importazioni").fetchone()[0]
+        finally:
+            db.close()
+        ultima = riga[0] if riga else None
+        if not mai:
+            return          # installazione appena nata: non c'e' niente da dire
+
+        adesso = dt.datetime.now()
+        soglia = dt.timedelta(days=giorni)
+        quando_ok = _quando_o_niente(ultima)
+        if quando_ok is not None and adesso - quando_ok < soglia:
+            # Tutto a posto: si dimentica l'allarme, cosi' se ricapita si
+            # riparte puliti invece di aspettare la scadenza vecchia.
+            if imp.get("ultimo_allarme"):
+                self._segna_allarme("")
+            return
+
+        gia = _quando_o_niente(imp.get("ultimo_allarme"))
+        if gia is not None and adesso - gia < soglia:
+            return                       # gia' avvisato di recente
+
+        fermo = (adesso - quando_ok).total_seconds() / 86400 \
+            if quando_ok is not None else giorni
+        oggetto, testo = posta.testo_allarme(
+            fermo, ultima or "",
+            f"{self.cfg['terminale_ip']}:{self.cfg['terminale_porta']}")
+        posta.invia(imp, oggetto, testo)
+        self._segna_allarme(adesso.isoformat(timespec="seconds"))
+        self.coda.put(("allarme", {"giorni": int(fermo)}))
+
+    def _segna_allarme(self, quando: str):
+        fresche = posta.impostazioni(self.cfg)
+        fresche["ultimo_allarme"] = quando
+        self.cfg["posta"] = fresche
+        self.coda.put(("salva_config", None))
 
     def _forse_report(self):
         if not self.report_in_corso.acquire(blocking=False):
@@ -2025,7 +2192,7 @@ class SchermataPresenze(Schermata):
         nome_file = (f"presenze-{dal:%Y-%m}.csv" if self.periodo == "mese"
                      else f"presenze-{dal:%Y-%m-%d}.csv" if dal == al
                      else f"presenze-{dal:%Y-%m-%d}_{al:%Y-%m-%d}.csv")
-        percorso = os.path.join(CARTELLA, nome_file)
+        percorso = os.path.join(CARTELLA_DATI, nome_file)
         try:
             presenze.esporta_csv(percorso, elenco, nomi)
         except OSError as e:
@@ -2434,6 +2601,13 @@ class SchermataImpostazioni(Schermata):
                    "l'ultimo giorno che c'e'.")
         self._voce("Ora", imp["ora"], self._cambia_ora_report)
         self._voce("Ultimo mese spedito", imp["ultimo_inviato"] or "nessuno")
+        self._voce("Avvisa se il terminale tace",
+                   "no" if not imp["allarme_giorni"]
+                   else f"dopo {imp['allarme_giorni']} giorni",
+                   self._cambia_allarme,
+                   "Una mail quando il terminale non risponde da un po'. Le "
+                   "timbrature non si perdono comunque, ma un cavo staccato "
+                   "il 3 del mese si scopre il 31.")
         azioni_posta = tk.Frame(self.lista.interno, bg=BG)
         azioni_posta.pack(fill="x", padx=8, pady=4)
         Bottone(azioni_posta, "Manda una prova adesso", self._prova_posta,
@@ -2576,6 +2750,14 @@ class SchermataImpostazioni(Schermata):
         v = SceltaOra.chiedi(self, "A che ora", iniziale)
         if v is not None:
             self._salva_posta({"ora": f"{v.hour:02d}:{v.minute:02d}"})
+
+    def _cambia_allarme(self):
+        imp = posta.impostazioni(self.app.cfg)
+        v = TastierinoNumerico.chiedi(
+            self, "Dopo quanti giorni avvisare", str(imp["allarme_giorni"]),
+            "Zero per non avvisare mai.")
+        if v is not None and v.isdigit():
+            self._salva_posta({"allarme_giorni": int(v)})
 
     def _cambia_posta_attivo(self, valore):
         imp = posta.impostazioni(self.app.cfg)
@@ -3047,11 +3229,19 @@ class App(tk.Tk):
         # calcolare le presenze e far partire lo scheduler prende qualche
         # istante: uno schermo vuoto in quel momento fa pensare che il doppio
         # clic non abbia funzionato, e qualcuno ne apre un secondo.
+        # Prima di qualunque apertura: se l'installazione e' nata prima della
+        # separazione, archivio e configurazione stanno ancora accanto al
+        # codice e vanno portati in `dati`. Sta qui e non solo in main()
+        # perche' anche i banchi di prova costruiscono App() direttamente, e
+        # senza il trasloco troverebbero un archivio vuoto.
+        prepara_cartella_dati()
         self.withdraw()
         splash = logo.Splash(self)
         splash.apri()                    # dissolvenza in entrata
         splash.scrivi("leggo la configurazione...")
         self.cfg = carica_config()
+        if raddrizza_percorsi(self.cfg):
+            salva_config(self.cfg)
         self.regole = presenze.Regole.carica(FILE_REGOLE)
         self.coda: queue.Queue = queue.Queue()
         self.utenti: list = []
@@ -3309,6 +3499,12 @@ class App(tk.Tk):
             self.stato.config(text=f"Report di {dati['mese']} spedito a "
                                    f"{dati['a']} ({dati['quante']} giornate)")
             return
+        if tipo == "allarme":
+            self.spia.config(fg=ROSSO)
+            self.stato.config(
+                text=f"Il terminale non risponde da {dati['giorni']} giorni: "
+                     f"mandato un avviso per email")
+            return
         if tipo == "report_fallito":
             self.spia.config(fg=GIALLO)
             self.stato.config(text="Report mensile NON spedito: "
@@ -3417,8 +3613,11 @@ class App(tk.Tk):
 
 def main() -> int:
     if not sicurezza.istanza_unica(TITOLO_FINESTRA):
-        print("La gestione presenze era gia' aperta: portata in primo piano.")
+        print("TIMBRA era gia' aperta: portata in primo piano.")
         return 0
+    traslocati = prepara_cartella_dati()
+    if traslocati:
+        print("dati spostati in", CARTELLA_DATI, "->", ", ".join(traslocati))
     abilita_dpi()
     try:
         App().mainloop()

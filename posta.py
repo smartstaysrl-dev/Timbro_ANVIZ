@@ -42,6 +42,8 @@ PREDEFINITE = {
     "giorno": 1,                # giorno del mese in cui arriva il report
     "ora": "08:00",
     "ultimo_inviato": "",       # "2026-08" = il mese di agosto e' gia' partito
+    "allarme_giorni": 2,        # avvisa se il terminale tace da tanti giorni
+    "ultimo_allarme": "",       # quando e' partito l'ultimo avviso
 }
 
 # Server piu' comuni, per non far digitare "smtp.gmail.com" col dito a un
@@ -398,6 +400,36 @@ def corpo_html(elenco, nomi, titolo: str, dal: dt.date, al: dt.date) -> str:
         f'per il foglio di calcolo. Messaggio automatico della gestione '
         f'presenze.</p>'
         f'</div></div>')
+
+
+def testo_allarme(giorni: float, ultima: str, dove: str) -> tuple:
+    """L'avviso che il terminale non risponde. Ritorna (oggetto, testo).
+
+    Detto in parole che servono a fare qualcosa, non a spaventare: la prima
+    cosa da sapere e' che le timbrature NON si perdono, la seconda e' cosa
+    guardare. Un allarme che non dice cosa fare viene ignorato dalla seconda
+    volta in poi.
+    """
+    quante = max(1, int(giorni))
+    gg = "giorno" if quante == 1 else "giorni"
+    oggetto = f"TIMBRA: il terminale non risponde da {quante} {gg}"
+    testo = (
+        f"Il terminale delle presenze non risponde da {quante} {gg}.\n\n"
+        f"Ultimo collegamento riuscito: {ultima or 'mai'}.\n"
+        f"Indirizzo cercato: {dove}.\n\n"
+        "LE TIMBRATURE NON SI PERDONO: restano dentro al terminale, che ne "
+        "tiene decine di migliaia, e arrivano tutte insieme appena il "
+        "collegamento torna. Il personale continua a timbrare normalmente.\n\n"
+        "Cosa controllare, nell'ordine:\n"
+        "  1. il terminale e' acceso e ha lo schermo vivo\n"
+        "  2. il cavo di rete e' attaccato da tutte e due le parti\n"
+        "  3. il computer con TIMBRA e' acceso e il programma e' aperto\n"
+        "  4. in Impostazioni, Manutenzione, «Cerca il terminale in rete»: "
+        "serve se il dispositivo ha cambiato indirizzo\n\n"
+        f"Questo avviso non si ripete tutti i giorni: torna fra {quante} {gg} "
+        "se la situazione non cambia.\n\n"
+        "Messaggio automatico della gestione presenze.")
+    return oggetto, testo
 
 
 # --- Spedizione ---------------------------------------------------------------
