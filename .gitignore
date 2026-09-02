@@ -1,0 +1,8 @@
+__pycache__/
+*.db
+*.db-wal
+*.db-shm
+*.csv
+configurazione.json
+regole.json
+copie/

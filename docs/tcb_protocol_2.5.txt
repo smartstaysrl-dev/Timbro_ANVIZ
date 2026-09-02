@@ -1,0 +1,10127 @@
+=== PAGE 1 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 1 / 96 
+ 
+TC_B Communication Protocol V2.15 
+TC_B Communication Protocol V2.15 ................................................................................ 1 
+Part I Communication Protocol Overall Standard ....................................................... 6 
+Part II Command ......................................................................................................... 7 
+1.CMD: 0x30Get Device Configuration 1  ......................................................... 11 
+2.CMD: 0x31Set Device Configuration 1 ........................................................... 12 
+3.CMD: 0x32Get Device Configuration 2 ........................................................... 12 
+4.CMD: 0x33Set Device Configuration 2 ........................................................... 14 
+5.CMD: 0x38 Get Device Date/Time .................................................................. 15 
+6.CMD: 0x39 Set Device Date/Time .................................................................. 15 
+7.CMD: 0x3A Get Network Configuration .......................................................... 16 
+8.CMD: 0x3B Set Network Configuration ........................................................... 16 
+9.CMD: 0x3C Get Records Info ......................................................................... 17 
+10.CMD: 0x40 Download T&A Records ............................................................. 17 
+11.CMD:0x41 Upload T&A Record .................................................................... 18 
+12.CMD: 0x42 Download User's Info ................................................................. 19 
+13.CMD: 0x43 Upload User’s Info ..................................................................... 20 
+14.CMD: 0x44 Download FP Template ............................................................. 21 
+15.CMD: 0x45 Upload FP Template .................................................................. 22 
+16.CMD: 0x46 Get Device ID ............................................................................. 23 
+17.CMD: 0x47 Set Device ID ............................................................................. 24 
+18. CMD: 0x48 Get Device Model code ............................................................. 24 
+19.CMD: 0x49 Set Device Model Code ............................................................. 25 
+20.CMD: 0x4A Get Manufacture Code .............................................................. 25 
+21.CMD: 0x4B Set Manufacture Code ............................................................... 26 
+22.CMD: 0x4C Delete Designated User Data .................................................... 27 
+23.CMD: 0x4D Initialize User Profile .................................................................. 27 
+24.CMD: 0x4E Erase all Records/ New Records Flag ....................................... 28 
+25.CMD: 0x4F Initialize System ......................................................................... 29 
+26.CMD: 0x50 Get Timezone ............................................................................ 29 
+27.CMD: 0x51 Set Timezone ............................................................................. 30 
+28.CMD: 0x52 Get Group Info ........................................................................... 30 
+29.CMD: 0x53 Set Group Information ................................................................ 31 
+30.CMD: 0x54 Get Alarm Setting ....................................................................... 31 
+31.CMD: 0x55 Set Alarm ................................................................................... 32 
+32.CMD: 0x56 Get Indexed Messages .............................................................. 33 
+33.CMD: 0x57 Add Index Message ................................................................... 34 
+34.CMD: 0x58 Get Headers of All Index MSG ................................................... 35 
+35.CMD: 0x59 Delete Index Message ............................................................... 35 
+36.CMD: 0x5A Get T&A Status Parameters List ............................................... 36 
+37.CMD: 0x5B Set T&A Status Parameters List ................................................ 36 
+
+=== PAGE 2 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 2 / 96 
+ 
+38. CMD: 0x5C Enroll Fingerprint Online ........................................................... 37 
+39. CMD: 0x5D Get Device Capacity Parameter ............................................... 38 
+40. CMD: 0x5E Unlock Door Without Authentication ......................................... 38 
+41.CMD: 0x5F Output T&A Records in Real Time ............................................ 39 
+42.CMD: 0x70 Get Customized T&A Statuses .................................................. 39 
+43.CMD: 0x71 Set Customized T&A Statuses ................................................... 40 
+44. CMD: 0x72 Download User Data (Extended) .............................................. 41 
+45. CMD: 0x73 Upload User Data(Extended) .................................................... 43 
+46.CMD: 0x74 Get Communication Device ID ................................................... 44 
+47.CMD: 0x75 Modify Communication Device ID .............................................. 45 
+48.CMD: 0x3D Clear Admin Flag ....................................................................... 45 
+49.CMD: 0x3E Get Time Stamp ........................................................................ 45 
+50.CMD: 0x3F Set Time Stamp ......................................................................... 46 
+51.CMD: 0x76 Get Random Number ................................................................. 46 
+52.CMD: 0x77 Encrypt Device Model and Language Options with a Random 
+Number   ........................................................................................................... 47 
+53.CMD: 0x26 Get Specified Index Message .................................................... 47 
+54.CMD: 0x27 Add a Indexed Message ............................................................ 48 
+55.CMD: 0x28 Get Headers of a Ranged Message .......................................... 48 
+56.CMD: 0x29 Delete a indexed Message ........................................................ 49 
+57. CMD: 0x20 Get T&A Status Auto Switching Setting .................................... 50 
+58.CMD: 0x21 Set T&A Status Auto Switching Setting ..................................... 50 
+59. CMD: 0x10 Get the Number of Daily Remaining Attempts of a Specified User
+ ........................................................................................................................... 51 
+60.CMD: 0x10 Set Daily Attempts Number of a Specified User ........................ 51 
+61.CMD: 0x22 Download User Data(Extended) ................................................ 52 
+62. CMD: 0x23 Upload User Data( Extended) ................................................... 53 
+63. CMD: 0x24 Get Device Serial Number ........................................................ 54 
+64.CMD: 0x25 Modify Device Serial Number .................................................... 54 
+65.CMD: 0x2F Get Special State ....................................................................... 54 
+66.CMD: 0x2A Get Number of All Images ......................................................... 55 
+67. CMD: 0x2B Get Image Headers .................................................................. 56 
+68.CMD: 0x2C Get a Specified Image File ........................................................ 57 
+69. CMD: 0x2D Delete a Specified Image ......................................................... 59 
+70.CMD: 0x10 Update Firmware/Image/Voice .................................................. 59 
+71.CMD: 0x12 Directory Operation .................................................................... 60 
+72. CMD: 0x13 Download Log Files .................................................................. 62 
+73.CMD: 0x1C Get Admin Card ID/ Password .................................................. 62 
+74.CMD: 0x1D Set Admin Card ID/ Password ................................................... 63 
+75.CMD: 0x1A Get Daylight Saving Parameters ............................................... 64 
+76.CMD: 0x1B Set Daylight Saving Parameters ................................................ 65 
+77.CMD: 0x18 Get Language Options ............................................................... 65 
+78.CMD: 0x19 Set Language Options ............................................................... 66 
+79. CMD:0x78 Send Feature Value/ Card ID to T&A Device  ........................... 67 
+
+=== PAGE 3 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 3 / 96 
+ 
+80.CMD:0x16 Get GPRS Parameters ............................................................... 69 
+81.CMD: 0x17 Set GPRS Parameters ............................................................... 70 
+82.CMD: 0x7A Get Device Extended Info .......................................................... 70 
+83.CMD: 0x7B Modify Device Extended Info ..................................................... 71 
+84.CMD: 0x7E Get Card Number ...................................................................... 71 
+85.CMD: 0x14 Get Reboot Time ........................................................................ 72 
+86.CMD: 0x15 Set Reboot Time ........................................................................ 72 
+87.CMD: 0x2E Extended Commands ................................................................ 73 
+88.CMD: 0x02 UDP Search Device ................................................................... 74 
+89.CMD: 0x03 UDP Set Device Parameter ....................................................... 76 
+90.CMD: 0x7F Heartbeat Package .................................................................... 77 
+91.CMD: 0x7D Data Modification Alert .............................................................. 77 
+92.CMD: 0x64Download Personnel Change Records ....................................... 78 
+93.CMD: 0x65 Download User’s Information (Extended)) ................................. 79 
+94.CMD: 0x1E Clear Change of Personnel Records/ Flags .............................. 80 
+95.CMD: 0x34 Get Device Configuration 3 ........................................................ 81 
+96.CMD: 0x35 set Device Configuration 3 ......................................................... 82 
+97.CMD: 0x04 Connection Authentication ......................................................... 83 
+98.CMD: 0x36 Get Device Configuration4 ......................................................... 83 
+99.CMD: 0x61 Add Department ......................................................................... 84 
+100.CMD: 0x62 Delete Department ................................................................... 85 
+101.CMD: 0x66 Download a Specified User’s Templates/Images .................... 85 
+102.CMD: 0x67 Batch Download Users’ Images ............................................... 86 
+103.CMD: 0x79 Get Result of Last Authentication (Pass/Fail) .......................... 87 
+104.CMD: 0x68 Get Timezone Mode Status ..................................................... 89 
+105.CMD: 0x69 Set Timezone Mode Status ...................................................... 90 
+106.CMD: 0x6D Upload User’s images ............................................................. 90 
+107.CMD: 0x6A  Add BT Device/User ............................................................. 91 
+108.CMD: 0x6BDelete Specific Address of Bluetooth Device ........................... 91 
+109.CMD: 0x6C Get Information of All Bluetooth Devices ................................. 92 
+110.CMD: 0x6E Get IEEE802.11 Network Setting ............................................ 92 
+111.CMD: 0x6F Set IEEE 802.11 Network setting ............................................ 93 
+112.CMD: 0x05 Get Authorization Code ............................................................ 93 
+113.CMD: 0x06 Authorize .................................................................................. 94 
+114.CMD: 0x07 UDP Start Video ....................................................................... 94 
+115.CMD: 0x08 UDP Stop Video ....................................................................... 94 
+116.CMD: 0x09 UDP Command ........................................................................ 95 
+117.CMD: 0x0A Get Server URL ....................................................................... 95 
+118.CMD: 0x0B Set Server URL ....................................................................... 95 
+119.CMD: 0x0C Test User ................................................................................. 96 
+ 
+
+=== PAGE 4 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 4 / 96 
+ 
+ 
+Versio
+n 
+Date 
+Engineer 
+Update Notes 
+V2.1 
+2013-05-16 
+David 
+Modified the definition of the “Record_Type”byte that 
+is the returned value of the command: “Download 
+T&A Records CMD: 0x40”for the Version 02.35 
+firmware for the M3 hardware platform. 
+Added the improved version of “Get GPRS 
+Parameters CMD: 0x16” and “Set GPRS Parameters 
+CMD: 0x17:” for M3 hardware platform V02.36.   
+V2.2 
+2013-11-05 
+David 
+Added following commands: 
+87.Extension Command 
+ 
+ 
+CMD: 0x2E 
+88.UDP Search Device Command CMD:0x02 
+89.UDP Device Configuration  
+CMD:0x03   
+V2.3 
+2013-12-07 
+David 
+Added the following protocols for the “Records 
+Auto-synchronization project” which is customized for 
+a business acquaintance of ours in Singapore:   
+90.Heartbeat Package 
+ 
+ 
+CMD: 0x7F  
+91.Data Modification Alert  
+ 
+CMD: 0x7D 
+92.Download Personnel Changes 
+CMD: 0x64 
+93.Download User’s Information(Extended)  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+CMD: 0x65 
+94.Delete all Personnel Change Records\Reset flag 
+of New Personnel Change  
+ 
+CMD: 0x1E 
+V2.4 
+    
+Luffy 
+Added following commands: 
+95.Get Device Configuration3CMD: 0x34 
+96.Set Device Configuration3CMD: 0x35 
+ 
+V2.5 
+2014-04-09 
+David 
+Added following commands 
+97.Connection Authentication  
+CMD: 0x04    
+It is applicable to Iris Devices Only 
+V2.6 
+2014-05-22 
+David 
+Added following commands 
+98.Get Device Configuration 4CMD: 0x36    It is 
+applicable to M4 Platform Only 
+99.Add Group  
+ 
+ 
+ 
+ 
+CMD: 0x61    
+It is applicable to OA1000 Only 
+100.Delete Group  
+ 
+ 
+ 
+CMD: 0x62    
+It is applicable to OA1000 only 
+V2.7 
+2014-12-20 
+David 
+Added following commands 
+101.Download a specified user’s Templates/ Images 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+CMD: 0x66     
+It is applicable to OA1000 Only  
+102.Batch Download Users’ Templates/Images 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+CMD: 0x67    
+
+=== PAGE 5 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 5 / 96 
+ 
+It is applicable to OA1000 Only 
+V2.8 
+2015-01-14 
+David 
+Modified 0x5E/0x5F/0x2F command for Panasonic 
+project;  
+ 
+Added Command: 
+103.Get Result of Last Authentication (Pass/Fail) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+CMD:0x79  
+ 
+Modified the following Commands: 
+79. Received Feature Values/ card numbers to 
+execute Following Commands   
+CMD: 0x78 
+95.Get Device Configuration 3 CMD: 0x34 
+96.Set Device Configuration 3 CMD: 0x35 
+V2.9 
+2015-03-30 
+David 
+Added following commands: 
+104.Get Timezone Mode Status  
+CMD 0x68     
+// It is applicable to C2 Pro only 
+105.Set Timezone Mode Status  
+CMD 0x69     
+//It is applicable to C2 Pro only 
+V2.10 
+2015-11-20 
+David 
+Added the following commands: 
+106.Upload User's Images  
+  
+CMD: 0x6D  
+107.Add Bluetooth User     
+ 
+CMD: 0x6A   
+It is applicable to M5 Only.  
+108.Delete Specific Address of Bluetooth Device  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+CMD: 0x6B    
+// It is applicable to M5 Only 
+109.Get Information of All Bluetooth Devices         
+CMD: 0x6C    //It is applicable to M5 Only 
+110.Get WIFI Network ConfigurationCMD: 0x6E   
+//It is applicable to VX0 Only 
+111.Set WIFI Network Configuration CMD: 0x6F  
+//It is applicable to VX0 Only 
+V2.11 
+   
+2015-01-14 
+David 
+Added following commands: 
+112.Get Authorization Code  
+  
+CMD: 0x05 
+113.Authorize      
+ 
+  
+ 
+CMD: 0x06 
+114.UDP Start Video   
+  
+ 
+CMD: 0x07 
+115.UDP Stop Video   
+  
+ 
+CMD: 0x08 
+116.UDP Command    
+ 
+  
+CMD: 0x09 
+V2.12 
+2016-05-13 
+David 
+Modified                   
+    CMD: 0x65 
+Download User’s Information  
+V2.13 
+2016-07-25 
+David 
+Added following commands: 
+117. Get Server URL    
+ 
+  
+CMD:0x0A 
+118. Set Server URL    
+ 
+  
+CMD:0x0B 
+V2.14 
+2016-09-06 
+David 
+improved User+DNS process 
+Added following commands: 
+
+=== PAGE 6 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 6 / 96 
+ 
+88.UDP Search Device  
+  
+ 
+CMD: 0x02 
+89.UDP Device Setting  
+  
+ 
+CMD: 0x03 
+V2.15 
+2016-12-15 
+David 
+Added commands: 
+119.check whether a user exists   CMD:0x0C 
+Modified commands: 
+95.Get Device Configuration3 CMD: 0x34 
+96.Set Device Configuration3 CMD: 0x35 
+ 
+ 
+Part I Communication Protocol Overall Standard 
+1)Command format 
+STX 
+CH(Device 
+No.) 
+CMD(Comm
+and) 
+LEN(Data 
+Length) 
+DATA 
+CRC16 
+0xA5 
+4Byte 
+1Byte 
+2Byte 
+0-600Byte 
+2Byte 
+2)Response format: 
+STX 
+CH(Devi
+ce No.) 
+ACK(Acknowle
+dgment ) 
+RET(Re
+turn 
+Value) 
+LEN(Data 
+Length) 
+DATA 
+CRC1
+6 
+0xA5 
+4Byte 
+1Byte( CMD+0
+x80) 
+1Byte  
+2Byte 
+0-600Byte 
+2Byte 
+ 
+Description:   
+CH four bytes sequence: IDHH, IDHL, IDLH, IDLL; 
+CRC16 Checking is applied to all data,  
+CRC16 two bytes sequence: CRCL, CRCH; 
+All devices will response to following Commands, when CH is zero.    
+ 
+The Definition of the RET:  
+#define ACK_SUCCESS  
+ 
+0x00 
+//Operation Succeeded 
+#define ACK_FAIL 
+ 
+ 
+ 
+0x01 
+//Operation Failed 
+#define ACK_FULL 
+ 
+ 
+ 
+0x04 
+//Exceeded maximum allowed users  
+ 
+#define ACK_EMPTY  
+ 
+ 
+0x05 
+//No User 
+#define ACK_NO_USER  
+ 
+0x06 
+//No Such User 
+#define ACK_TIME_OUT  
+ 
+0x08 
+//Capture timeout 
+#define ACK_USER_OCCUPIED 
+0x0A 
+//User already exists 
+#define ACK_FINGER_OCCUPIED 0x0B 
+//Fingerprint already exists 
+#define ACK_LOCKED 
+ 
+ 
+0x0F 
+//USB Locked 
+If the RET = ACK_Failed, the length of the DATA field is always equal to 0 byte, and the 
+LEN field has constant value of 0.  
+ 
+ 
+
+=== PAGE 7 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 7 / 96 
+ 
+Part II Command  
+1 
+Get Device Configuration 1 
+ CMD: 0x30 
+2 
+Set Device Configuration 1 
+ CMD: 0x31 
+3 
+Get Device Configuration 2  
+ CMD: 0x32 
+4 
+Set Device Configuration 2 
+ CMD: 0x33 
+5 
+Get Device Date/Time  
+ CMD: 0x38 
+6 
+Set Device Date/Time 
+ CMD: 0x39 
+7 
+Get Network Configuration 
+ CMD: 0x3A 
+8 
+Set Network Configuration  
+ CMD: 0x3B 
+9 
+Get Records 
+ CMD: 0x3C 
+10 
+Download T&A Records 
+ 
+ CMD: 0x40 
+11 
+Upload T&A Records 
+ CMD: 0x41 
+12 
+Download User's Information 
+ CMD: 0x42 
+13 
+Upload User's Information  
+ CMD: 0x43 
+14 
+Download Fingerprint Template 
+ CMD: 0x44 
+15 
+Upload Fingerprint Template 
+ CMD: 0x45 
+16 
+Get Device ID No. 
+ CMD: 0x46 
+17 
+Set Device ID No. 
+ CMD: 0x47 
+18 
+Get Device Model Code 
+ CMD: 0x48 
+19 
+Set Device Model Code 
+ CMD: 0x49 
+20 
+Get Manufacture Code 
+ 
+ CMD: 0x4A 
+21 
+Set Manufacture Code 
+ CMD: 0x4B 
+22 
+Delete User Data  
+ CMD: 0x4C 
+23 
+Initialize User Profile 
+ CMD: 0x4D 
+24 
+Erase all Records/ New Records Flag 
+ CMD: 0x4E 
+25 
+Initialize System  
+ CMD: 0x4F 
+26 
+Get Timezone  
+ CMD: 0x50 
+27 
+Set Timezone  
+ CMD: 0x51 
+28 
+Get Group Info 
+ CMD: 0x52 
+29 
+Set Group Info 
+ CMD: 0x53 
+30 
+Get Alarm Info 
+ CMD: 0x54 
+31 
+Set Alarm Info 
+ CMD: 0x55 
+32 
+Get Index Message 
+ 
+ CMD: 0x56 
+33 
+Add Index Message  
+ CMD: 0x57 
+34 
+Get Headers of All Short MSG 
+ CMD: 0x58 
+35 
+Delete Index Message 
+ CMD: 0x59 
+36 
+Get T&A Status Parameters List 
+ CMD: 0x5A 
+37 
+Set T&A Status Parameters List 
+ CMD: 0x5B 
+38 
+Register Fingerprint 
+ CMD: 0x5C 
+39 
+Get Device Capacity Parameter 
+ CMD: 0x5D 
+40 
+Unlock Without Verification 
+ CMD: 0x5E 
+
+=== PAGE 8 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 8 / 96 
+ 
+41 
+Output T&A Records in Real Time  
+ CMD: 0x5F 
+42 
+Get a Customized T&A Status Report  
+ CMD: 0x70 
+43 
+Set a Customized T&A Status Report 
+ CMD: 0x71 
+44 
+Download User Info (Extended) 
+ CMD: 0x72 
+45 
+Upload User Info(Extended) 
+ CMD: 0x73 
+46 
+Get Communication Device ID 
+ CMD: 0x74 
+47 
+Modify Communication Device ID 
+ CMD: 0x75 
+48 
+Clear Admin Flag  
+ CMD: 0x3D 
+49 
+Get Time Stamp 
+ CMD: 0x3E 
+50 
+Set Time Stamp 
+ CMD: 0x3F 
+51 
+Get a Random No. 
+ CMD: 0x76 
+52 
+Encrypt Device Model and Language Setting with 
+a Random Number   
+ CMD:0x77 
+53 
+Get a Indexed Message  
+ CMD: 0x26 OA3000 Only 
+54 
+Add a Message 
+ CMD: 0x27 OA3000 Only  
+55 
+Get Headers of a Ranged Message  
+ CMD: 0x28 OA3000 Only 
+56 
+Delete a Specified Message  
+ CMD: 0x29 OA3000 Only 
+57 
+Get T&A Status Auto Switching Setting 
+ CMD: 0x20 
+OA3000/OA1000Only  
+58 
+Set T&A Status Auto Switching Setting 
+ CMD: 0x20 
+OA3000/OA1000Only 
+59 
+Get the amount of the Remaining attempts of a 
+Specified User  
+ CMD: 0x10(FeiYiKe Only) 
+60 
+Set the amount of daily attempts of a Specified 
+User 
+ CMD: 0x11(FeiYiKe Only) 
+61 
+Download User’s Info (Extended) 
+ CMD: 0x22 761 Platform 
+Only 
+62 
+Upload User’s Info (Extended) 
+ CMD: 0x23 761 Platform 
+Only 
+63 
+Get Device Serial Number  
+ CMD: 0x24 
+64 
+Set Device Serial Number  
+ CMD: 0x25 
+65 
+Get Special State  
+ CMD: 0x2F 
+VF30/VP30/T60 Only 
+66 
+Get Number of all Images 
+ CMD: 0x2A 
+OA1000/OA3000/761 
+Platform Only 
+67 
+Get Image Header   
+ CMD: 0x2B 
+OA1000/OA3000/761 
+Platform Only 
+68 
+Get Specified Image File  
+ CMD: 0x2C 
+OA1000/OA3000/761 
+Platform Only 
+69 
+Delete Specified Image File    
+ CMD: 0x2D 
+
+=== PAGE 9 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 9 / 96 
+ 
+OA1000/OA3000/761 
+Platform Only 
+70 
+Update Firmware/Image/Voice Files 
+ CMD: 0x10 761 Platform 
+Only 
+71 
+Directory Operations  
+ CMD: 0x12 761 Platform 
+Only 
+72 
+Download Log Files  
+ CMD: 0x13 761 Platform 
+Only 
+73 
+Get Administrator’s Card No./ Password  
+ CMD: 0x1C T5 Only 
+74 
+Set Administrator’s Card No./ Password 
+ CMD: 0x1D T5 Only 
+75 
+Get Daylight Saving Timezone 
+ CMD: 0x1A 
+76 
+Set Daylight Saving Timezone 
+ CMD: 0x1B 
+77 
+Get Optional Language List    
+ CMD: 0x18 
+78 
+Set Optional Language List  
+ CMD: 0x19 
+79 
+Receive Feature Value/ Card No. to Execute 
+Following Commands 
+ CMD: 0x78 
+80 
+Get GPRS Parameters 
+ CMD: 0x16 
+81 
+Set GPRS Parameters  
+ CMD: 0x17 
+82 
+Get Device Extended Info 
+ CMD: 0x7A 
+83 
+Modify Device Extended Info  
+ CMD: 0x7B 
+84 
+Get Card Info 
+ CMD: 0x7E T5s Only 
+85 
+Get Auto Restart Time  
+ CMD:0x14 761\OA1000  
+Only 
+86 
+Set Auto Restart Time  
+ CMD: 0x15 761\OA1000 
+Only 
+87 
+Extended Commands 
+ CMD: 0x2E  
+88 
+UDP Search Devices  
+ CMD: 0x02 
+89 
+UDP Set Device Parameters  
+ CMD: 0x03 
+90 
+Heartbeat Package  
+ CMD: 0x7F 
+91 
+Data Modification Alert   
+ CMD: 0x7D 
+92 
+Download Personnel Change Records   
+ CMD: 0x64 
+93 
+Download User’s Info (Extended)    
+ CMD: 0x65 
+94 
+Clear Personnel Change Records/ Flag 
+ CMD: 0x1E 
+95 
+Get Device Configuration 3  
+ CMD: 0x34 
+96 
+Set Device Configuration 3 
+ CMD: 0x35 
+97 
+Connection Authentication  
+ CMD: 0x04 Iris Device 
+Only 
+98 
+Get Device Configuration 4 
+ CMD:0x36 M4 Only 
+99 
+Add Department  
+ CMD: 0x61 OA1000 Only 
+100 
+Delete Department 
+ CMD: 0x62 OA1000 Only  
+101 
+Download Specified User’s templates/images   
+ CMD: 0x66 OA1000 Only  
+102 
+Batch Download Users’ templates/Images 
+ CMD: 0x67 OA1000 Only  
+103 
+Get result of Last Authentication (Pass/Fail) 
+ CMD:0x79 Brazilian 
+
+=== PAGE 10 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 10 / 96 
+ 
+Clients Only   
+104 
+Get State Switch Info. 
+ CMD: 0x68 C2 Pro Only 
+105 
+Set State Switch Info  
+ CMD: 0x69 C2 Pro Only 
+106 
+Upload User’s Image to Device  
+ CMD: 0x6D 
+107 
+Add Bluetooth Device  
+ CMD:0x6A M5 Only 
+108 
+Delete Specific Address of Bluetooth Device    
+ CMD:0x6B M5 Only 
+109 
+Get All Bluetooth Users’ Info 
+ CMD:0x6C M5 Only 
+110 
+Get WIFI Configuration  
+ CMD: 0x6E VX0 Only 
+111 
+Set WIFI Configuration  
+ CMD: 0x6F VX0 Only 
+112 
+Get Authorization Seed 
+ CMD: 0x05 
+113 
+Authorize  
+ CMD: 0x06 
+114 
+UDP Start Video 
+ CMD: 0x07 
+115 
+UDP Stop Video  
+ CMD: 0x08 
+116 
+UDP Command 
+ CMD: 0x09 
+117 
+Get a Specified Server’s URL   
+ CMD: 0x0A 
+118 
+Set a Specified Server’s URL 
+ CMD: 0x0B 
+119 
+User Exists  
+ CMD: 0x0C 
+
+=== PAGE 11 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 11 / 96 
+ 
+1.CMD: 0x30 Get Device Configuration 1  
+Function: This command retrieves the firmware version, communication password, sleep 
+time, volume, language, date and time format, attendance state, language flag setting and  
+command version. 
+ 
+Command: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x30 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (29Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xB0 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x12 
+18Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (18Byte) 
+Byte 
+Data 
+Description  
+1-8 
+Version 
+Version Number is in ASC format. 
+9-11 
+Password Length+Password 
+The length of communication 
+password is equal to Byte(9)>>4; 
+12 
+Sleep Mode Time Delay 
+0-250 minutes, set as 0 which 
+means the device never goes to 
+sleep mode.  
+13 
+Volume 
+0-5, mute if is set as 0, the maximum 
+value is 5.  
+14 
+Language  
+Device Display Language: 
+0-Simplified Chinese, 1-Traditional 
+Chinese, 3-English, 4-Spanish, 
+5-Portuguese  
+15 
+Time/Date Format 
+7-4Bit:  
+Date Format: 0-Chinese, 
+1-American, 2-British 
+3-0BitL: 
+Time Format: 0-24Hours, 
+1-12Hours(AM/PM),   
+16 
+Attendance state 
+0-15   
+17 
+Language Setting Flag 
+Language is only changeable when 
+the flag set as ‘0x10’  (761 Only) 
+18 
+Command Version 
+= 0x01,would response to 0x22 0x23 
+(761 only ) 
+=0x02, would response to 0x24 0x25 
+=0x03, would response to 0x04(ST 
+
+=== PAGE 12 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 12 / 96 
+ 
+platform Only)   
+ 
+ 
+ 
+2.CMD: 0x31 Set Device Configuration 1  
+Function: This command sets the communication password, sleep time delay , volume, 
+language, date format, attendance state, and language setting flag.  
+Any field without modification should be set as 0xFF. 
+ 
+Commands: (20Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x31 
+0x00 
+0x0A 
+10Byte 
+CRCL CRCH 
+ 
+Data Format: (10Byte) 
+Byte 
+Data 
+1-3 
+Communication Password+the length of the PS 
+4 
+Sleep Mode Time Delay 
+5 
+Volume 
+6 
+Language  
+7 
+Date/Time Format 
+8 
+Attendance State 
+9 
+Change Language  
+10 
+Reserved (NULL) 
+Length of the password = Byte(1) >> 4; 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xB1 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x00 
+CRCL CRCH 
+ 
+3.CMD: 0x32 Get Device Configuration 2  
+ 
+Function: This command gets the following parameters: the Precision of the fingerprint 
+matching, Fixed Wiegand Head Code, Wiegand Option, Work code permission, real-time 
+mode setting, FP auto update setting, relay mode, Lock delay, Memory overflow warning, 
+Repeat attendance delay, door sensor delay, scheduled bell delay. 
+
+=== PAGE 13 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 13 / 96 
+ 
+Any field without modification should be set as 0xFF. 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x32 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (26Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xB2 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x0F 
+15Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (15Byte) 
+Byte 
+Data 
+Description  
+1 
+Precision 
+Range(0-2):  0-Low; 1-Medium, 2-High 
+2 
+Fixed Wiegand Header 
+1-254 
+3 
+Wiegand Option 
+0-Wiegand26,  
+1-Anviz Wiegand,  
+2-fixed Wiegand 
+3- Wiegand26 Card Mode.  
+4- Wiegand34 Card Mode 
+5- Wiegand26 little Endian 
+6- Wiegand34 Big Endian  
+4 
+Work Code Setting 
+0-disabled; 1-enabled 
+5 
+Real time mode Setting  
+0-disabled; 1-enabled 
+6 
+FP Auto Updating 
+Setting 
+0-disabled; 1-enabled 
+7 
+Relay Mode  
+0-disabled; 1-enabled 
+8 
+Locker Delay 
+Range(0-15 Seconds), never open lock if it is set 
+as 0. 
+9-11 
+Low Records Memory 
+Warning 
+Range(0-5000) If the remaining records capacity 
+is lower than threshold, a warning will be 
+triggered. No warning if it is set as 0. 
+12 
+Repeat Attendance 
+Delay 
+Range(0-250 minutes): If it is set as 0, then 
+repeated attendance will be recorded as well.  
+13 
+Door Sensor Delay 
+Range(0-250 seconds): no alarm if is set as 0    
+14 
+Bell Delay 
+Range(0-15 seconds): no bell if is set as 0.  
+15 
+Time Correction 
+Set a duration for time compensation   
+0-60 increase 0-60seconds each day  
+0x81-0xBC Decrease 0-60 seconds each day  
+ 
+
+=== PAGE 14 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 14 / 96 
+ 
+4.CMD: 0x33 Set Device Configuration 2  
+Function: This command sets the following parameters: Precision , Fixed Wiegand Head 
+Code, Wiegand Option, Work code permission, real-time mode, FP auto update, relay 
+mode, Lock delay, out of records memory alert, Repeat attendance delay, door sensor 
+delay, scheduled bell delay. 
+Any field without modification should be set as 0xFF. 
+ 
+ 
+Commands: (25Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+Data 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x33 
+0x00 0x0F 
+15Byte 
+CRCL CRCH 
+ 
+Data Format: (15Byte) 
+Byte 
+Data 
+Description  
+1 
+Precision 
+Range(0-2):  0-Low; 1-Medium, 2-High 
+2 
+Fixed Wiegand Header 
+1-254 
+3 
+Wiegand Option 
+0-Wiegand26,  
+1-Anviz Wiegand,  
+2-fixed Wiegand 
+3- Wiegand26 Card Mode. 
+4- Wiegand34 Card Mode 
+5- Wiegand26 little Endian 
+6- Wiegand34 Big Endian   
+4 
+Work Code Setting 
+0-disabled; 1-enabled 
+5 
+Real time mode Setting  
+0-disabled; 1-enabled 
+6 
+FP Auto Updating 
+Setting 
+0-disabled; 1-enabled 
+7 
+Relay Mode  
+0-disabled; 1-enabled 
+8 
+Locker Delay 
+Range(0-15 Seconds), never open lock if it is set 
+as 0. 
+9-11 
+Low Records Memory 
+Warning 
+Range(0-5000) If the remaining records capacity 
+is lower than threshold, a warning will be 
+triggered. No warning if it set as 0. 
+12 
+Repeat Attendance 
+Delay 
+Range(0-250 minutes): Within the specified time 
+range, only the first record would be take as valid 
+record 
+13 
+Door Sensor Delay 
+Range(0-250 seconds): no alarm if is set as 0    
+14 
+Bell Delay 
+Range(0-15 seconds): no bell if is set as 0.  
+15 
+Time Correction 
+Set a duration for time compensation   
+0-60 increase 0-60seconds each day  
+0x81-0xBC Decrease 0-60 seconds each day  
+
+=== PAGE 15 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 15 / 96 
+ 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xB3 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+5.CMD: 0x38 Get Device Date/Time  
+Function: This command retrieves the date and time setting . 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x38 
+0x00 0x00 
+CRCL CRCH 
+Response: (17Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xB8 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x06 
+6Byte 
+CRCL 
+CRCH 
+Data Format: (6Byte) 
+DATA 
+Year 
+ 
+Month 
+Day 
+Hour 
+Minute 
+Second 
+Byte 
+1 
+2 
+3 
+4 
+5 
+6 
+ 
+6.CMD: 0x39 Set Device Date/Time 
+Function: This command sets the date and time  
+Commands: (16Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x39 
+0x00 0x06 
+6Byte 
+CRCL 
+CRCH 
+Data Format: (6Byte) 
+DATA 
+Year 
+ 
+Month 
+Day 
+Hour 
+Minute 
+Second 
+Byte 
+1 
+2 
+3 
+4 
+5 
+6 
+Response: (11Byte) 
+DLE 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xB9 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+
+=== PAGE 16 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 16 / 96 
+ 
+7.CMD: 0x3A Get Network Configuration  
+Function: This command retrieves the IP address, sub-net Mask, MAC address, Default 
+gateway, Server IP address, Remote Access Permission, Port Number, TCP/IP mode, 
+DHCP permission. 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x3A 
+0x00 0x00 
+CRCL CRCH 
+Response: (38Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xBA 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x1B 
+27Byte 
+CRCL 
+CRCH 
+Data Format: (27Byte) 
+DATA 
+IP 
+Add 
+Sub 
+net 
+MAC 
+Add 
+Default 
+Gatewa
+y 
+Server 
+IP 
+Remot
+e 
+Acces
+s 
+Port 
+Mode 
+DHCP 
+Permi
+ssion  
+Byte 
+1-4 
+5-8 
+9-14 
+15-18 
+19-22 
+23 
+24-2
+5 
+26 
+27 
+ 
+Mode definition: 0-Server Mode, 1-Client Mode 2-Client Mode with Server URL enabled 
+ 
+8.CMD: 0x3B Set Network Configuration  
+Function: This command sets the IP address, sub-net Mask, MAC address, Default 
+gateway, Server IP address,   Remote Access Permission, Port Number, TCP/IP mode, 
+DHCP permission. 
+ 
+Commands: (37Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x3B 
+0x00 0x1B 
+27Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (27Byte) 
+DATA 
+IP 
+Add 
+Sub 
+net 
+MAC 
+Add 
+Default 
+Gatewa
+y 
+Server 
+IP 
+Remot
+e 
+Acces
+s 
+Port 
+Mode 
+DHCP 
+Permi
+ssion  
+
+=== PAGE 17 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 17 / 96 
+ 
+Byte 
+1-4 
+5-8 
+9-14 
+15-18 
+19-22 
+23 
+24-2
+5 
+26 
+27 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xBB 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL CRCH 
+ 
+9.CMD: 0x3C Get Records Info  
+Function: This command gets record’s information, including the number of registered 
+users, Enrolled Fingerprints, Registered Passwords, Registered Cards, Attendance 
+Records, and New Records. 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x3C 
+0x00 0x00 
+CRCL CRCH 
+Response: (29Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xB
+C 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x22 
+18Byte 
+CRCL 
+CRCH 
+Data Format: (18Byte) 
+DATA 
+Number of 
+Users  
+Number of 
+FPs  
+Number of 
+PWs 
+Number of 
+Cards 
+Number of 
+All 
+Records  
+Number of 
+New 
+Records  
+Byte 
+1-3 
+4-6 
+7-9 
+10-12 
+13-15 
+16-18 
+ 
+10.CMD: 0x40 Download T&A Records 
+Function: This command downloads attendance records, the max number of records is 25 
+each time.(data length: 25*14 = 350Byte) 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x40 
+0x00 0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format:  
+
+=== PAGE 18 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 18 / 96 
+ 
+DATA 
+Parameter 
+Number of 
+Records 
+Byte 
+1 
+2 
+Parameter definition: 
+= 0: downloading  
+= 1: start downloading; retrieves all the records ( While retrieving all records, data 
+parameter should be set to 1 for the inquiry of the first data package.) 
+= 2: start download; retrieves new records (While retrieving new records, Data parameter 
+should be set to 1 for the inquiry of the first data package.) 
+ 
+= 0x10:Send the previous package again 
+Records <=25 
+Response: (12+N *14Byte // N is the valid records) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC0 
+ACK_SUCC
+ESS 
+FAIL 
+(1+N *14) 
+(1+N 
+*14)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *14Byte) 
+DATA 
+Number of Valid 
+Records N 
+Record 1 
+Record 2 
+… 
+Byte 
+1 
+2-15 
+16-29 
+… 
+Data Format: (14Byte) 
+DATA 
+User ID 
+Date/Time  
+Backup 
+Code  
+Record Type 
+Work 
+Type 
+Byte 
+1-5 
+6-9 
+10 
+11 
+12-14 
+ 
+Date/Time is an accumulator which counts the number of seconds that have elapsed 
+since 2000-01-01 00:00.   
+Backup code: bit 3—Card  bit 2—Password  bit 1—FP2  bit 0—FP1 
+If ‘Record Type’ bit 7(the seventh bit) is equal to 1, which means the door can be opened; 
+or it is equal to 0, which means the door can’t be opened; the low 4 bits is attendance 
+status. 
+ 
+11.CMD:0x41 Upload T&A Record 
+Function: This command uploads a T&A record at a time.   
+Commands: (24Byte) 
+ 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+041 
+0x00 0x0D 
+14Byte 
+CRCL 
+CRCH 
+Data Format: (14Byte) 
+
+=== PAGE 19 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 19 / 96 
+ 
+DATA 
+User ID 
+Date/Tim
+e 
+Backu
+p Code 
+Record Type 
+Work Code 
+Byte 
+1-5 
+6-9 
+10 
+11 
+12-14 
+Date/Time is an accumulator which counts the number of seconds that have elapsed 
+since 2000-01-01 00:00.   
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC1 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+12.CMD: 0x42 Download User's Info  
+Function: This command downloads user’s info, maximum package size is 12 records per 
+download. (Data Length: 12*27= 324Byte) 
+P.S. Platform M3 and WinCE (OA1000, OA3000,Iris) use command 0x72; Platform 761 
+use command 0x22 
+ 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x42 
+0x00 0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+Parameter 
+Number of 
+Records 
+Byte 
+1 
+2 
+ 
+Parameter defined as follow:  
+ 
+= 0: Downloading  
+ 
+= 1: Start Downloading (It is required parameter with first data package) 
+= 0x10: Resend Last Package 
+Maximum Number of Records <=12 
+Response: (12+N *27Byte // N is the number of the valid records) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC2 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+(1+N *27) 
+(1+N 
+*27)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *27Byte) 
+DATA 
+Number of Valid 
+Records N 
+ User Data 1 
+User Data 2 
+… 
+Byte 
+1 
+2-28 
+29-55 
+… 
+
+=== PAGE 20 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 20 / 96 
+ 
+User Data Format: (27Byte) 
+Byte 
+Data  
+Description 
+1-5 
+User ID 
+ 
+6-8 
+Length of the 
+password +password 
+Byte(6)>>4 
+9-1 
+Card No. 
+ 
+12-21 
+Name 
+ 
+22 
+Department 
+ 
+23 
+Group Code 
+ 
+24 
+Attendance Mode 
+ 
+25-26 
+FP Register Status 
+Bit 0 = 1 FP1 enrolled successfully; Bit 1 = 1 FP2 
+enrolled successfully  
+27 
+Special info 
+Byte(7-6) :1 - Normal User 3-Admin 
+If the byte (6-8) return 0xFF which means the password does not exist. 
+If the byte (9-11) return 0xFF which means the card ID doesn’t exist. 
+ 
+13.CMD: 0x43 Upload User’s Info  
+Function: This command uploads user’s info, the maximum upload number is 12 records 
+(the length of the info data: 12*27=324Byte ) 
+P.S. Platform of M3 and WinCE ( OA1000,OA3000,Iris) use command 0x73;Platform use 
+command 0x23. 
+Commands: (11+N*27Byte // N is the number of records) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x43 
+1+N *27 
+(1+N 
+*27)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *25Byte) 
+DATA 
+Records 
+number N 
+User Info 1 
+User Info 2 
+… 
+Byte 
+1 
+2-28 
+29-55 
+… 
+Records number<=12 
+Data is set as 0xFF without input. 
+FP Registration State is Constant Zero 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DAT
+A 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC3 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x02 
+2Byt
+e 
+CRCL 
+CRCH 
+Data Format: (2Byte) 
+DATA 
+Flag 
+
+=== PAGE 21 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 21 / 96 
+ 
+Byte 
+2 
+ 
+Flag: bit 0-11: Each bit represents the state of each upload(1: Succeed;0: Failed) 
+ 
+14.CMD: 0x44 Download FP Template  
+Function: This command downloads users’ FP templates from a T&A device  
+ 
+Commands: (16Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x44 
+0x00 0x06 
+6Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (6Byte) 
+DATA 
+User ID 
+Backup ID 
+Byte 
+1-5 
+6 
+Back Up ID : 1-FP 1  2-FP 2 
+ 
+Response: (349Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC4 
+ACK_SUC
+CESS 
+ACK_FAIL 
+ACK_NO_
+USER 
+0x01 0x52 
+338Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (338Byte) 
+DATA 
+Feature 
+value  
+Byte 
+338 
+ 
+It is applicable to Iris Device, Response: (1291Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC4 
+ACK_SUC
+CESS 
+ACK_FAIL 
+ACK_NO_
+USER 
+0x05 0x00 
+1280Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (1280Byte) 
+DATA 
+Iris Feature 
+Byte 
+1280 
+
+=== PAGE 22 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 22 / 96 
+ 
+ 
+It is applicable to OA1000 PM, Response: (6155Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC4 
+ACK_SUC
+CESS 
+ACK_FAIL 
+ACK_NO_
+USER 
+0x18 0x00 
+2048*3Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (6144Byte) 
+DATA 
+Feature 
+Byte 
+2048*3 
+ 
+It is applicable to OA1000PU, Response: (2059Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC4 
+ACK_SUC
+CESS 
+ACK_FAIL 
+ACK_NO_
+USER 
+0x08 0x00 
+2048Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (2048Byte) 
+DATA 
+Feature 
+Byte 
+2048 
+ 
+15.CMD: 0x45 Upload FP Template  
+Function: This command sends a fingerprint template to a T&A device. 
+ 
+Commands: (354Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x45 
+0x01 0x58 
+344Byte 
+CRCL 
+CRCH 
+Data Format: (344Byte) 
+DATA 
+User ID 
+Bac
+kup 
+ID 
+Feature 
+Byte 
+1-5 
+6 
+7-344 
+It is applicable to Iris Devices, Commands: (1296Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x45 
+0x05 0x06 
+1286Byte 
+CRCL 
+CRCH 
+
+=== PAGE 23 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 23 / 96 
+ 
+Data Format: (1286Byte) 
+DATA 
+User ID 
+Bac
+kup 
+ID 
+Feature 
+Value 
+Byte 
+1-5 
+6 
+7-1286 
+It is applicable to OA1000PM, Commands: (6160Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x45 
+0x18 0x06 
+6150Byte 
+CRCL 
+CRCH 
+Data Format: (6150Byte) 
+DATA 
+User ID 
+Bac
+kup 
+ID 
+Feature 
+Value 
+Byte 
+1-5 
+6 
+7-6150 
+ 
+It is applicable to OA1000PU serials, Commands: (2064Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x45 
+0x08 0x06 
+2054Byte 
+CRCL 
+CRCH 
+Data Format: (2054Byte) 
+DATA 
+User ID 
+Backup 
+ID 
+Feature 
+Value 
+Byte 
+1-5 
+6 
+7-2054 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC5 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+ACK_NO_U
+SER 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+16.CMD: 0x46 Get Device ID  
+Function: This command gets device ID. 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x46 
+0x00 0x00 
+CRCL CRCH 
+Response: (15Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+
+=== PAGE 24 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 24 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC6 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Device ID  
+Byte 
+1-4 
+ 
+17.CMD: 0x47 Set Device ID  
+Function: This command modifies device ID  
+Commands: (14Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x47 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Device ID  
+Byte 
+1-4 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC7 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+18.CMD: 0x48 Get Device Model code  
+ 
+Function: This command retrieves the model information of a T&A device. 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x48 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (19Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC8 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x08 
+8Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (8Byte) 
+DATA 
+Type Code  
+
+=== PAGE 25 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 25 / 96 
+ 
+Byte 
+1-8 
+ 
+e.g. (HEX): A5 00 00 00 01 C8 00 00 05 “TC400”000 CRCL CRCH 
+ 
+19.CMD: 0x49 Set Device Model Code  
+Function: This command sets the model information of a T&A device 
+ 
+Commands: (18Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x49 
+0x00 0x05 
+8Byte 
+CRCL 
+CRCH 
+Data Format: (8Byte) 
+DATA 
+Type Code 
+Byte 
+1-8 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC9 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+20.CMD: 0x4A Get Manufacture Code   
+Function: This command gets manufacture information of a T&A device  
+ 
+A) ANSI version  
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x4A 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (21Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC
+A 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x0A 
+10Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (10Byte) 
+DATA 
+Info Code 
+
+=== PAGE 26 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 26 / 96 
+ 
+Byte 
+1-10 
+ 
+B) UNICODE Version 
+Commands: (10Byte) 
+The same as ANSI version 
+  
+Response: (31Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC
+A 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x14 
+20Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (20Byte) 
+DATA 
+Info Code 
+Byte 
+1-20 
+ 
+21.CMD: 0x4B Set Manufacture Code  
+Function: This command modifies manufacture information of a T&A device. 
+ 
+A) ANSI Version 
+Commands: (20Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x4B 
+0x00 0x0A 
+10Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (10Byte) 
+DATA 
+Info Code 
+Byte 
+1-10 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xCB 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+B) UNICODE Version 
+ 
+Commands: (30Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x4B 
+0x00 0x14 
+20Byte 
+CRCL 
+CRCH 
+
+=== PAGE 27 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 27 / 96 
+ 
+ 
+Data Format: (20Byte) 
+DATA 
+Info Code 
+Byte 
+1-20 
+Response: (11Byte) 
+ 
+Same as ANSI version  
+ 
+22.CMD: 0x4C Delete Designated User Data  
+Function: This command deletes all data of a specified user.   
+ 
+Commands: (16Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 0x4C 
+0x00 0x06 
+6Byte 
+CRCL CRCH 
+ 
+Data Format: (6Byte) 
+DATA 
+User ID 
+Backup ID 
+Byte 
+1-5 
+6 
+ 
+Backup ID Definition :  
+bit 3-Card;  
+bit 2-Password  
+bit 1-FP 2   
+bit 0-FP 1(optional, it does not delete the user’s information) 
+If Backup ID = 0xFF, all data of the user will be erased( including user’s information)  
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xCC 
+ACK_SUCC
+ESS 
+ACK_NO_U
+SER 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+23.CMD: 0x4D Initialize User Profile   
+Function: This command Initializes all data of a user, including: User Info, FP, PW, Card. 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x4D 
+0x00 0x00 
+CRCL CRCH 
+
+=== PAGE 28 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 28 / 96 
+ 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xCD 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+24.CMD: 0x4E Erase all Records/ New Records Flag   
+ 
+Function: This command deletes all records/ new records flag or partial new records flag.  
+ 
+Commands: (14Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x4E 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (4Byte) 
+DATA 
+Deletion 
+Type  
+Number 
+of New 
+Records 
+Byte 
+1 
+2-4 
+ 
+Deletion Type Definition:  
+0-Delete All Records; 
+1-Delete All New Records; 
+2-Delete a certain number of new records flag, byte2-4 = quantity  
+ 
+Response: (14Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xC
+E 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x03 
+3Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (3Byte) 
+DATA 
+Number of Deleted 
+Records/New 
+Records 
+Byte 
+1-3 
+If it set as type 0, the return value is the number of deleted records. 
+If it set as type 1, the return value is the number of deleted entire new records. 
+If it set as type 2, the return value is the number of deleted new records. 
+
+=== PAGE 29 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 29 / 96 
+ 
+ 
+25.CMD: 0x4F Initialize System 
+ 
+  
+Function: This command resets a T&A device to factory setting, except: language, 
+time/date format, communication parameters, device ID, Manufacture ID/info code and 
+Device Model code. 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x4F 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xCF 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+  
+26.CMD: 0x50 Get Timezone    
+Function: This command retrieves timezone value, the maximum number of timezone is 
+32. 
+ 
+Commands: (11Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x50 
+0x00 0x01 
+1Byte 
+CRCL 
+CRCH 
+Data Format: (1Byte) 
+DATA 
+No. 
+Byte 
+1 
+Response: (39Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD0 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 0x1C 
+28Byte 
+CRCL 
+CRCH 
+Data Format: (28Byte) 
+DAT
+A 
+Mon 
+sub-timez
+one 
+Tues 
+sub-timez
+one 
+Wed 
+sub-timez
+one 
+Thur 
+sub-timez
+one 
+Fri 
+sub-timez
+one 
+Sat 
+sub-timez
+one 
+Sun 
+sub-timez
+one 
+Byte 
+1-4 
+5-8 
+9-12 
+13-16 
+17-20 
+21-24 
+25-28 
+
+=== PAGE 30 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 30 / 96 
+ 
+Sub-timezone Format: (4Byte) 
+DATA 
+Start 
+Hour 
+Start 
+Minute 
+End 
+Hour 
+End 
+Minute 
+Byte 
+1 
+2 
+3 
+4 
+ 
+27.CMD: 0x51 Set Timezone  
+Function: This command sets timezone, maximum number of timezone is 32 
+ 
+Commands: (39Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x51 
+0x00 0x1D 
+29Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (29Byte) 
+DAT
+A 
+No. 
+Monday 
+Sub-tim
+ezone 
+Tuesday 
+sub-time
+zone 
+Wednes
+day 
+sub-time
+zone 
+Thursda
+y 
+sub-time
+zone 
+Friday 
+sub-time
+zone 
+Saturda
+y 
+sub-time
+zone 
+Sunday 
+sub-time
+zone 
+Byte 
+1 
+2-5 
+6-9 
+10-13 
+14-17 
+18-21 
+22-25 
+26-29 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD1 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+28.CMD: 0x52 Get Group Info   
+Function: This command retrieves information of a group which is ranged from group 2 to 
+group 16. The group 0/1 is a normal close/ normal open group. 
+ 
+Commands: (11Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x52 
+0x00 0x01 
+1Byte 
+CRCL 
+CRCH 
+Data Format: (1Byte) 
+DATA 
+Group No. 
+Byte 
+1 
+Response: (15Byte) 
+
+=== PAGE 31 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 31 / 96 
+ 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD2 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Timezone 
+1 No. 
+Timezone 
+2 No. 
+Timezone 
+3 No. 
+Timezone 
+4 No. 
+Byte 
+1 
+2 
+3 
+4 
+ 
+29.CMD: 0x53 Set Group Information   
+Function: This command sets information of a group, ranged from group 2 to group 16. 
+The group 0/1 is a normal close/ normal open group. 
+ 
+Commands: (15Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x53 
+0x00 0x05 
+5Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (5Byte) 
+DATA 
+Group 
+No. 
+Timezo
+ne1 No. 
+Timezo
+ne2 No. 
+Timezo
+ne3 No. 
+Timezo
+ne4 No. 
+Byte 
+1 
+2 
+3 
+4 
+5 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD3 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+30.CMD: 0x54 Get Alarm Setting  
+  
+Function: This command retrieves time setting of all scheduled alarms, the maximum 
+number of alarms is 30.  
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x54 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (101Byte) 
+
+=== PAGE 32 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 32 / 96 
+ 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD4 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 0x3C 
+90Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (90Byte) 
+DATA 
+Time 1 
+Time 2  
+… 
+Time 30 
+Byte 
+1-3 
+4-6 
+… 
+88-90 
+Time Format: (2Byte) 
+DATA 
+Hour 
+Minute 
+Week 
+day  
+Byte 
+1 
+2 
+3 
+ 
+Week Day Field 
+Bit  
+6 
+5 
+4 
+3 
+2 
+1 
+0 
+ 
+Day 
+Saturda
+y 
+Friday 
+Thursd
+ay 
+Wedne
+sday 
+Tuesda
+y 
+Monda
+y 
+Sunday 
+For instance, if the alarm are daily repeated from Monday to Friday, the binary value of the 
+field is 0111110, and decimal value is 62.    
+ 
+31.CMD: 0x55 Set Alarm   
+Function: This command sets time of an alarm. 
+ 
+Commands: (14Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x55 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+No. 
+Hour 
+Minute 
+Week Day 
+Byte 
+1 
+2 
+3 
+4 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD5 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+
+=== PAGE 33 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 33 / 96 
+ 
+32.CMD: 0x56 Get Indexed Messages 
+ 
+Function: This command retrieves 50 messages for each inquiry, indexed from 0 to 49. 
+The maximum size for each message is 48 byte.    
+ 
+A) ANSI Version 
+Commands: (11Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x56 
+0x00 0x01 
+1Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (1Byte) 
+DATA 
+Index 
+Byte 
+1 
+ 
+Response: (70Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD6 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+ACK_NO_U
+SER 
+0x00 
+0x3B 
+59 
+Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (59Byte) 
+DATA 
+User ID 
+Start 
+Date 
+End Date  
+Content  
+Y M D Y M 
+D 
+Byte 
+1-5 
+6 
+7 
+8 
+9 
+10 
+11 
+12-59byte 
+ 
+B) UNICODE Version  
+ 
+Commands: (11Byte) 
+Same as the ANSI Version 
+ 
+Response: (118Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD6 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+ACK_NO_U
+SER 
+0x00 
+0x6B 
+107 
+Byte 
+CRCL 
+CRCH 
+ 
+
+=== PAGE 34 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 34 / 96 
+ 
+Data Format: (107Byte) 
+DATA 
+User ID 
+Start 
+Date 
+End Date  
+Content  
+Y M D Y M 
+D 
+Byte 
+1-5 
+6 
+7 
+8 
+9 
+10 
+11 
+12-107 Byte 
+ 
+33.CMD: 0x57 Add Index Message   
+Function: This command add a message 
+ 
+A) ANSI Version 
+ 
+Commands: (69Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x57 
+0x00 0x3B 
+59Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (59Byte) 
+DATA 
+User ID 
+Start 
+Date 
+End Date  
+Content 
+Y M D Y M 
+D 
+Byte 
+1-5 
+6 
+7 
+8 
+9 
+10 
+11 
+12-59byte 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD7 
+ACK_SUCC
+ESS 
+ACK_FULL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+B) UNICODE Version 
+Commands: (117Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x57 
+0x00 0x6B 
+107Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (107Byte) 
+DATA 
+User ID 
+Start 
+Date 
+End Date 
+Content 
+Y M D Y M 
+D 
+Byte 
+1-5 
+6 
+7 
+8 
+9 
+10 
+11 
+12-107byte 
+Response: (11Byte) 
+ 
+The same as ANSI Version 
+
+=== PAGE 35 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 35 / 96 
+ 
+ 
+34.CMD: 0x58 Get Headers of All Index MSG   
+ 
+Function: This command retrieves headers of all short Messages. 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x58 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (561Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD8 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x02 
+0x26 
+550Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (550Byte) 
+DATA 
+MSG0 
+Header 
+MSG1 
+Header 
+.... 
+MSG49 Header 
+Byte 
+1-11 
+12-22 
+.... 
+540-550 
+ 
+Header  Data Structure : (11Byte) 
+DATA 
+User ID 
+Start 
+Date  
+End Date 
+Y 
+M D Y M 
+D 
+Byte 
+1-5 
+6 
+7 
+8 
+9 
+10 
+11 
+ 
+If the message doesn’t exist, all 11 bytes should be set as 0xFF   
+ 
+35.CMD: 0x59 Delete Index Message    
+ 
+Function: This command deletes an index message. 
+Commands: (11Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x59 
+0x00 0x01 
+1Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (1Byte) 
+DATA 
+Index 
+
+=== PAGE 36 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 36 / 96 
+ 
+Byte 
+1 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD9 
+ACK_SUCCESS 
+ACK_FAIL 
+ACK_EMPTY 
+0x00 
+0x00 
+CRCL 
+CRCH 
+If the index value is equal to ‘0xFF’, all messages will be deleted. 
+ 
+36.CMD: 0x5A Get T&A Status Parameters List   
+ 
+Function: This command retrieves information of attendance status 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x5A 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (27Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD
+A 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x10 
+16Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (16Byte) 
+DATA 
+T&A Status 0  
+T&A Status 1 
+... 
+T&A Status 15 
+Byte 
+1 
+2 
+... 
+16 
+If the number of T&A status is less than 16, then the unused state byte should be set as 
+0xFF.  
+The Default T&A status ( index ranged from 0-254) 
+Index 0: IN 
+Index 1: OUT 
+Index 2: BREAK  
+ 
+ 
+37.CMD: 0x5B Set T&A Status Parameters List  
+  
+Function: This command sets T&A Status parameters list 
+Commands: (26Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x5B 
+0x00 0x10 
+16Byte 
+CRCL CRCH 
+
+=== PAGE 37 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 37 / 96 
+ 
+ 
+Data Format: (16Byte) 
+DATA 
+T&A Status 0 
+T&A Status 1 
+... 
+T&A Status 15 
+Byte 
+1 
+2 
+... 
+16 
+ 
+If the number of T&A status is less than 16, then the unused status byte should be set as 
+0xFF.  
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xDB 
+ACK_SUCCESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+38. CMD: 0x5C Enroll Fingerprint Online   
+  
+ 
+Function: This command Enroll Fingerprint twice 
+ 
+Commands: (17Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x5C 
+0x00 0x07 
+7Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (7Byte) 
+DATA 
+User 
+ID 
+Backup 
+ID 
+Number of 
+Registration  
+Byte 
+1-5 
+6 
+7 
+Number of Registration: 0- the 1st time, 1- the 2nd time 
+ 
+Response: (12Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD
+C 
+ACK_SUCCESS 
+ACK_FAIL 
+ACK_TIME_OUT 
+ACK_FULL(only applicable to 
+the first registration) 
+ST_USER_OCCUPIED(only 
+applicable to the first 
+registration) 
+ST_FINGER_OCCUPIED(only 
+applicable to the first 
+registration) 
+0x00 
+0x00 
+CRCL 
+CRCH 
+ 
+
+=== PAGE 38 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 38 / 96 
+ 
+39. CMD: 0x5D Get Device Capacity Parameter   
+ 
+Function: This command retrieves device capacity parameter, including maximum number 
+of Users, fingerprints, and records. 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x5D 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (20Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xD
+D 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x09 
+9Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (9Byte) 
+DATA 
+Max Number 
+of Users  
+Max Number 
+of FPs 
+Max Number 
+of Records  
+Byte 
+1-3 
+4-6 
+7-9 
+ 
+40. CMD: 0x5E Unlock Door Without Authentication 
+Function: This command opens the door without authentication. 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x5E 
+0x00 0x00 
+CRCL CRCH 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xDE 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+Commands: (16Byte) It is applicable to Panasonic Project only 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x5E 
+0x00 0x06 
+6Byte 
+CRCL 
+CRCH 
+Data Format: (6Byte) 
+
+=== PAGE 39 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 39 / 96 
+ 
+DATA 
+Unlock CMD 
+User ID 
+Byte 
+1 
+2-6 
+Unlock field definition:  
+ 
+0: Normal Unlock  
+ 
+1: Forced Unlock     
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xDE 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+41.CMD: 0x5F Output T&A Records in Real Time    
+Function: This command, which only provides Response data packages,  outputs T&A 
+records automatically after verification. 
+ 
+Response: (25Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xDF ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x0E 
+14Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (14Byte) 
+DATA 
+User ID 
+Date/Time  
+Backup ID 
+Record 
+Type 
+Work Code  
+Byte 
+1-5 
+6-9 
+10 
+11 
+12-14 
+ 
+Date/Time is an accumulator which counts the number of seconds that have elapsed 
+since 2000-01-01 00:00.   
+If work code is set to 0xFF000,then any user is added offline will trigger a real time event 
+which will be saved into a database. (It will be available for generic firmware.) 
+42.CMD: 0x70 Get Customized T&A Statuses    
+Function: This command retrieves a list of user defined T&A statuses 
+ 
+A) ANSI Version 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x70 
+0x00 0x00 
+CRCL CRCH 
+Response: (172Byte) 
+
+=== PAGE 40 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 40 / 96 
+ 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF0 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0xA1 
+161Byte 
+CRCL 
+CRCH 
+Data Format: (161Byte) 
+DATA 
+Status 
+No. 
+Status 0 
+Status 1 
+... 
+Status 15 
+Byte 
+1 
+2-11 
+12-21 
+... 
+152-161 
+The Maximum number of status is16; 
+ 
+B) UNICODE Version 
+Commands: (10Byte) 
+ 
+The same as ANSI Version. 
+ 
+Response: (332Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF0 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x01 
+0x41 
+321Byt
+e 
+CRCL 
+CRCH 
+Data Format: (321Byte) 
+DATA 
+Status 
+No. 
+Status 0  
+Status 1 
+... 
+Status 15  
+Byte 
+1 
+2-21 
+22-41 
+... 
+302-321 
+The Maximum number of status is16. 
+ 
+43.CMD: 0x71 Set Customized T&A Statuses 
+  
+Function: This command sets customized T&A statuses. 
+A) ANSI Version 
+Commands: (171Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x71 
+0x00 0xA1 
+161Byte 
+CRCL CRCH 
+Data Format: (161Byte) 
+DATA 
+Status 
+No. 
+Status 0 
+Status 1 
+... 
+Status15 
+Byte 
+1 
+2-11 
+12-21 
+... 
+152-161 
+The Maximum number of statuses is16 byte; 
+The maximum length of each status string is10 byte.The contents of manufacture 
+information code and T&A status are confined to one row, therefore total length of strings 
+should be less than or equal to 15 byte.(Refer to 0x4A )    
+For instance, if the length of Manufacture Code is equal to 10 byte, the length of each T&A 
+
+=== PAGE 41 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 41 / 96 
+ 
+status should be less than or equal to 5 byte. 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0xF1 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+Customized attendance status 0x71 is one of attendance status modes, another is 
+supplied by 0x5B command . The default mode is 0x5B，status mode will be switched and 
+kept accordingly upon receipt of a 0x5B or 0x71 command. 
+ 
+B) UNICODE Version 
+ 
+Commands: (331Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x71 
+0x01 0x41 
+321Byte 
+CRCL CRCH 
+ 
+Data Format: (321Byte) 
+DATA 
+T&A 
+Status 
+No. 
+T&A Status 
+0 
+T&A Status 1 
+... 
+T&A Status 15 
+Byte 
+1 
+2-21 
+22-41 
+... 
+302-321 
+Response: (11Byte) 
+ 
+The same as ANSI Version 
+ 
+44. CMD: 0x72 Download User Data (Extended) 
+Function: This command downloads user data. The maximum data package contains 12 
+records for each download. 
+data length:12*30= 360Byte 
+ 
+A) ANSI Version 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x72 
+0x00 0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+Parameter 
+Number of 
+Data  
+Byte 
+1 
+2 
+ 
+
+=== PAGE 42 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 42 / 96 
+ 
+Parameter definition:  
+ 
+= 0: downloading 
+ 
+= 1: Start downloading( Data parameter should be set to 1 for the inquiry of the first 
+data package.) 
+= 0x10: resend the previous data package 
+ 
+Number of data<=12 
+ 
+Response: (12+N*30Byte // N is the number of valid messages) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF2 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+(1+N *30) 
+(1+N 
+*30)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *30Byte) 
+DATA 
+No.of valid 
+MSG N 
+ User Data 1 
+User Data2 
+… 
+Byte 
+1 
+2-31 
+32-61 
+… 
+Data Structure : (30Byte) 
+DAT
+A 
+User 
+ID 
+PW 
+Length
++ PW 
+Card 
+ID 
+Nam
+e 
+Dep
+art. 
+Gr
+ou
+p 
+ID 
+Atten
+d. 
+Mod
+e 
+FP 
+Registr
+ation 
+Status 
+MS 
+Byt
+e of 
+the 
+PW 
+Re
+ser
+ve
+d  
+Special 
+Info 
+Byte 
+1-5 
+6-8 
+9-12 
+13-22 
+23 
+24 
+25 
+26-27 
+28 
+29 
+30 
+PW length = Byte(6) >> 4 
+The low 20bits of password is saved in Byte 6-8,  
+MS Byte of the password is saved in Byte 28. 
+FP enroll state define:digit 0 = 1 FP1 enrolled; digit 1 = 1 FP 2 enrolled 
+Special message: Digit 7-6:Permission:  1-user 3-admin 
+Digit 4:Length of card id 1-32 digit 0-24digit 
+If byte 6-8 returns 0xFF which means password does not exist 
+If byte 9-12 returns 0xFF which means card ID does not exist 
+ 
+B) UNICODE Version 
+Function: The maximum data package contains 8 records for each download.(12 records 
+for ANSI Version) 
+The length of the data: 8*40= 320Byte 
+Command:(12Byte) 
+ 
+ 
+Same ANSI Version 
+ 
+ 
+Response: (12+N *40Byte // N is the number of valid records) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+
+=== PAGE 43 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 43 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF2 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+(1+N *40) 
+(1+N 
+*40)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *40Byte) 
+DATA 
+Number of the 
+Valid Records N 
+ User data 1 
+User data 2 
+… 
+Byte 
+1 
+2-41 
+42-81 
+… 
+ 
+User Data Format: (40Byte) 
+DAT
+A 
+User 
+ID 
+PW 
+Length+ 
+PW 
+Card  
+ID 
+Name 
+Department  Group ID 
+Attendance 
+Mode 
+Byte 
+1-5 
+6-8 
+9-12 
+13-32 
+33 
+34 
+35 
+ 
+DAT
+A 
+FP 
+Enroll
+ment 
+Status 
+PW 
+MS  
+Byte 
+Reserved  Special 
+Info 
+Byte 
+36-37 
+38 
+39 
+40 
+ 
+45. CMD: 0x73 Upload User Data(Extended)   
+Function: This command uploads users’ data.The maximum data package contains 12 
+records for each upload( the length of each package is 12*30=360 Byte) 
+ 
+A) ANSI Version. 
+Commands: (11+N *30Byte // N is the number of records) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x73 
+1+N *30 
+(1+N 
+*30)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *30Byte) 
+DATA 
+Records 
+Number N 
+ User Data1 
+User Data 2 
+… 
+Byte 
+1 
+2-31 
+32-61 
+… 
+ 
+Records Number <=12 
+Any empty field should be set as 0xFF.  
+Notice: the status of fingerprint enrollment has a constant value of 0.   
+ 
+Response: (13Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DAT
+A 
+CRC16 
+
+=== PAGE 44 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 44 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF3 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x02 
+2Byt
+e 
+CRCL 
+CRCH 
+Data Format: (2Byte) 
+DATA 
+Flag 
+Byte 
+2 
+Flag:  bit0-11: checks the upload status of the No.1 - No.12 Users’ data 
+(1:Succeed,0:Failed) 
+ 
+B) UNICODE Version 
+Function: The maximum data package contains 8 records for each upload. The length of 
+each package is 8*30=320Byte. (12 records for ANSI) 
+ 
+Commands: (11+N *40Byte // N is number of records) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x73 
+1+N *40 
+(1+N 
+*40)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *40Byte) 
+DATA 
+Records 
+Number N 
+ User data1 
+User Data2 
+… 
+Byte 
+1 
+2-41 
+42-81 
+… 
+Response: (13Byte) 
+ 
+Same as ANSI Version 
+ 
+46.CMD: 0x74 Get Communication Device ID 
+  
+Function: This command retrieves communication device ID.  
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x74 
+0x00 0x00 
+CRCL CRCH 
+Response: (15Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF4 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Device ID 
+Byte 
+1-4 
+ 
+
+=== PAGE 45 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 45 / 96 
+ 
+47.CMD: 0x75 Modify Communication Device ID   
+Function: This command modifies communication device ID 
+Commands: (14Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x75 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Device ID 
+Byte 
+1-4 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF5 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+48.CMD: 0x3D Clear Admin Flag   
+Function: This command deletes all administrators’ flag. 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x3D 
+0x00 0x00 
+CRCL CRCH 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xBD 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+49.CMD: 0x3E Get Time Stamp 
+  
+Function: This command retrieves the time stamp of a User’s registration, time stamp 
+format is the number of seconds that have elapsed since 2000-01-01 00:00 
+Commands: (15Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x3E 
+0x00 0x04 
+5Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+User ID 
+
+=== PAGE 46 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 46 / 96 
+ 
+Byte 
+1-5 
+ 
+Response: (15Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xBE ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Time Stamp 
+(Seconds) 
+Byte 
+1-4 
+ 
+50.CMD: 0x3F Set Time Stamp   
+Function: This command sets a time stamp of a user’s registration , value is equal to the 
+number of seconds have elapsed since 2000-01-01 00:00 
+Commands: (14Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x3F 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Time Stamp 
+(Secs) 
+Byte 
+1-4 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xBF 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+51.CMD: 0x76 Get Random Number   
+Function: This command retrieves an random number. 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x76 
+0x00 0x00 
+CRCL 
+CRCH 
+Response: (15Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+
+=== PAGE 47 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 47 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF6 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 
+0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Random 
+Number 
+Byte 
+1-4 
+ 
+52.CMD: 0x77 Encrypt Device Model and Language 
+Options with a Random Number   
+ 
+Function: This command executes command 0x76 to retrieve a random number for data 
+encryption.  
+Commands: (19Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x77 
+0x00 0x09 
+9Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Encrypted 
+Model 
+Encrypted 
+Language 
+Byte 
+1-8 
+9 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF7 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+53.CMD: 0x26 Get Specified Index Message  
+Function: This command retrieves the ‘Start Date’, ‘End Date’ and ‘Content’ of indexed 
+messages, which contains 200 records, ranged from 0 to 199, 450 byte in total. 
+It is applicable to OA3000 only 
+ 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x26 
+0x00 0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format: (2Byte) 
+DATA 
+Index 
+
+=== PAGE 48 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 48 / 96 
+ 
+Byte 
+2 
+Response: (472Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA6 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+ACK_NO_U
+SER 
+0x01 
+0xCD 
+461 
+Byte 
+CRCL 
+CRCH 
+Data Format: (461Byte) 
+DATA 
+User ID 
+Start 
+Date 
+End Date 
+Title 
+Content 
+Y M D Y M 
+D 
+Byte 
+1-5 
+6 
+7 
+8 
+9 
+10 
+11 
+12-61byte 
+62-461byte 
+ 
+54.CMD: 0x27 Add a Indexed Message      
+Function: This command adds a message. It is applicable to OA3000 only 
+Commands: (471Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x27 
+0x01 0xCD 
+461Byte 
+CRCL 
+CRCH 
+Data Format: (461Byte) 
+DATA 
+User ID 
+Start 
+Date 
+End Date 
+Title 
+Content 
+Y M D Y M 
+D 
+Byte 
+1-5 
+6 
+7 
+8 
+9 
+10 
+11 
+12-61byte 
+62-461byte 
+ 
+User ID = 0 indicates it’s a public message 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA7 
+ACK_SUCC
+ESS 
+ACK_FULL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+55.CMD: 0x28 Get Headers of a Ranged Message  
+   
+Function: This command retrieve headers of all message. It is applicable to OA3000 Only 
+Commands: (11Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+
+=== PAGE 49 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 49 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x28 
+0x00 
+0x01 
+1Byte 
+CRCL CRCH 
+Data Format: (1Byte) 
+DATA 
+Section 
+Number(0-3) 
+Byte 
+1 
+Response: (561Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA8 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x02 
+0x26 
+550Byte 
+CRCL 
+CRCH 
+Data Format: (550Byte) 
+DATA 
+MSG 
+50*Section 
+Number 
+MSG 
+Header 
+MSG 
+50*Section 
+Number+1 
+MSG Header 
+.... 
+MSG 50*Section Number +49 
+MSG Header 
+Byte 
+1-11 
+12-22 
+..... 
+540-550 
+Header Data Structure : (11Byte) 
+DATA 
+User ID 
+Start Date 
+End Date 
+Y 
+M D 
+Y M 
+D 
+Byte 
+1-5 
+6 
+7 
+8 
+9 10 
+11 
+If an indexed massage doesn’t exist, then all 11 bytes should be set as 0xFF. 
+ 
+56.CMD: 0x29 Delete a indexed Message  
+     
+Function: This command delete a specific indexed message. It is applicable to OA3000 
+only 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x29 
+0x00 0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format: (2Byte) 
+DATA 
+Index 
+Byte 
+2 
+If Index value is 0xFFFF, all messages will be erased.  
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA9 
+ACK_SUCCESS 
+ACK_FAIL 
+ACK_EMPTY 
+0x00 
+0x00 
+CRCL 
+CRCH 
+
+=== PAGE 50 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 50 / 96 
+ 
+ 
+57.CMD: 0x20 Get T&A Status Auto Switching Setting 
+Function: This command gets the setting of statuses switching. The maximum number of 
+statuses is 16. It is applicable to OA3000/OA1000 only 
+Commands: (11Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x20 
+0x00 0x01 
+1Byte 
+CRCL 
+CRCH 
+Data Format: (1Byte) 
+DATA 
+No. 
+Byte 
+1 
+Response: (40Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA0 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 0x1D 
+29Byte 
+CRCL 
+CRCH 
+Data Format: (29Byte) 
+DAT
+A 
+Mon 
+Sub-ti
+mezon
+e 
+Tues 
+Sub-ti
+mezon
+e  
+Wed 
+Sub-time
+zone  
+Thurs 
+Sub-time
+zone  
+Fri 
+Sub-timez
+one 
+Sat 
+Sub-ti
+mezon
+e  
+Sun 
+Sub-ti
+mezon
+e  
+Status 
+No. 
+Byte 
+1-4 
+5-8 
+9-12 
+13-16 
+17-20 
+21-24 
+25-28 
+29 
+Sub-Timezone Data Format: (4Byte) 
+DATA 
+Start 
+Hour  
+Start Min. End Hour 
+End Min. 
+Byte 
+1 
+2 
+3 
+4 
+ 
+58.CMD: 0x21 Set T&A Status Auto Switching Setting 
+Function: This command sets statuses switching setting. The maximum number of 
+statuses is 16. It is applicable to OA3000/OA1000 only 
+ 
+Commands: (40Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x21 
+0x00 0x1E 
+30Byte 
+CRCL 
+CRCH 
+Data Format: (30Byte) 
+ 
+
+=== PAGE 51 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 51 / 96 
+ 
+DAT
+A 
+NO. 
+Mon 
+Sub-ti
+mezon
+e 
+Tues. 
+Sub-ti
+mezon
+e  
+Wed. 
+Sub-ti
+mezon
+e 
+Thur. 
+Sub-ti
+mezon
+e 
+Fir. 
+Sub-ti
+mezon
+e 
+Sat. 
+Sub-ti
+mezon
+e 
+Sun. 
+Sub-ti
+mezon
+e 
+Status 
+No. 
+Byte 
+1 
+2-5 
+6-9 
+10-13 
+14-17 
+18-21 
+22-25 
+26-29 
+30 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA1 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+59.CMD: 0x10 Get the Number of Daily Remaining 
+Attempts of a Specified User  
+It is applicable to FeiYiKe customization only. 
+Commands: (15Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x10 
+0x00 0x05 
+5Byte 
+CRCL 
+CRCH 
+Data Format: (5Byte) 
+DATA 
+User ID 
+Byte 
+1-5 
+Response: (12Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x90 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x01 
+1Byte 
+CRCL 
+CRCH 
+Data Format: (1Byte) 
+DATA 
+Daily 
+Remaining 
+Attempts 
+Byte 
+1 
+60.CMD: 0x10 Set Daily Attempts Number of a 
+Specified User   
+It is applicable to FeiYiKe customization only 
+Commands: (16Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+
+=== PAGE 52 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 52 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x11 
+0x00 
+0x06 
+6Byte 
+CRCL CRCH 
+Data Format: (6Byte) 
+DATA 
+User ID 
+Daily 
+Attempts 
+Byte 
+1-5 
+6 
+ 
+Daily attempts is ranged from 0-2 . 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x91 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x00 
+CRCL CRCH 
+ 
+ 
+61.CMD: 0x22 Download User Data(Extended)  
+      
+Function : The maximum data package contains 6 records for each download( the length 
+of each package is 6*84=504 Byte)  It is applicable to the 761 Platform only. 
+ 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x22 
+0x00 0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+Param
+eter 
+Records 
+Number 
+Byte 
+1 
+2 
+ 
+Parameters Definition: 
+ 
+= 0: Downloading  
+ 
+= 1: Start downloading (must send this message to receive first package) 
+= 0x10: resend the previous package 
+Records Number <=12 
+Response: (12+N *84Byte // N is the number of the valid records) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA2 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+(1+N *84) 
+(1+N 
+*84)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *84Byte) 
+DATA 
+Valid Records 
+Number N 
+User Data 1 
+User Data2 
+… 
+
+=== PAGE 53 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 53 / 96 
+ 
+Byte 
+1 
+2-85 
+86-169 
+… 
+Data format: (84Byte) 
+DAT
+A 
+User 
+ID 
+PW 
+Lengt
+h+ 
+PW 
+Card  
+ID 
+Dep
+artm
+ent  
+Gr
+ou
+p 
+ID 
+Atten
+d. 
+Mod
+e 
+FP 
+Enroll 
+State 
+Reserv
+ed 
+Rese
+rved  
+Special 
+Info 
+Byte 
+1-5 
+6-8 
+9-12 
+77 
+78 
+79 
+80-81 
+82 
+83 
+84 
+ 
+Password length = Byte(6) >> 4 
+FP enrollment state: bit0 = 1: FP1enrolled; bit 1 = 1 :FP2 enrolled 
+Special Info : bit 7-6: Permission : 1-user ; 3 -Admin 
+  
+ 
+ 
+Bit4: the length of card ID 1-32bit; 0-24bit 
+If byte6-8 = 0xFF, the password doesn’t exist. 
+If byte9-12 = 0xFF, the card ID doesn’t exist. 
+ 
+62. CMD: 0x23 Upload User Data( Extended)   
+Function : Data package contains maximum 6 records for each download( the length of 
+each package is 6*84=504 Byte) it is applicable to the 761 Platform only 
+ 
+Commands: (11+N *84Byte // N is the number of valid records) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x23 
+1+N *84 
+(1+N 
+*84)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *84Byte) 
+DATA 
+Records 
+Number N 
+ User Data1 
+User Data 2 
+… 
+Byte 
+1 
+2-85 
+86-169 
+… 
+Records Number <=6 
+Any empty field should be set as 0xFF 
+FP Enroll State has a constant value 0;   
+ 
+Response: (13Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA3 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format: (2Byte) 
+DATA 
+Flag 
+Byte 
+2 
+Flag bit0-5: represents upload status (1:Succeed; 0:Failed ) 
+ 
+
+=== PAGE 54 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 54 / 96 
+ 
+63. CMD: 0x24 Get Device Serial Number    
+Function: This command retrieves the device serial number  
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x24 
+0x00 0x00 
+CRCL CRCH 
+Response: (27Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA4 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x10 
+16Byte 
+CRCL 
+CRCH 
+Data Format: (16Byte) 
+DATA 
+SN 
+Byte 
+1-16 
+  
+64.CMD: 0x25 Modify Device Serial Number  
+  
+Function: This command modifies device serial number 
+Commands: (26Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x25 
+0x00 0x10 
+16Byte 
+CRCL 
+CRCH 
+Data Format: (16Byte) 
+DATA 
+SN 
+Byte 
+1-16 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA5 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+65.CMD: 0x2F Get Special State        
+Function: This command retrieve current special state. It is applicable to  
+VF30/VP30/T60+only 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x2F 
+0x00 0x00 
+CRCL 
+CRCH 
+
+=== PAGE 55 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 55 / 96 
+ 
+Response: (19Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xAF 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x08 
+8Byte 
+CRCL 
+CRCH 
+Data Format: (8Byte) 
+DATA 
+State 
+Reserved  
+Byte 
+1 
+2-8 
+ 
+State definition::  
+    Bit 1: Door alarm state:    
+ 
+ 
+0-Normal 1-Fired 
+Bit 5: Door State:  
+ 
+ 
+ 
+ 
+0-Closed 1- Opened 
+Bit 6: State of magnetic door sensor  
+0-Closed 1-Opened 
+    Bit 7: Lock state  
+ 
+ 
+ 
+ 
+0-Closed 1-Opened 
+ 
+66.CMD: 0x2A Get Number of All Images     
+Function: This command retrieves the number of all images. It is applicable to 
+OA1000/OA3000/761 only  
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x2A 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+Iris device protocol  
+Commands: (11Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x2A 
+0x00 
+0x01 
+1Byte 
+CRCL CRCH 
+Data Format:  
+DATA 
+Image 
+Type 
+Byte 
+1 
+Definition of the Image type: 1- Register Succeed, 2-Register Failed 3-Matching Failed, 
+4-Snapshot mode 
+ 
+Response: (14Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xAA ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x03 
+3 Byte 
+CRCL 
+CRCH 
+ 
+
+=== PAGE 56 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 56 / 96 
+ 
+ 
+Data Format: (3Byte) 
+DATA 
+Total 
+Images 
+Number  
+Byte 
+1-3 
+ 
+67. CMD: 0x2B Get Image Headers       
+Function: This command retrieves maximum 50 headers of image files each time. It is 
+applicable to OA1000/OA3000/761 series only.  
+ 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x2B 
+0x00 0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+Parameter 
+Records 
+Number 
+Byte 
+1 
+2 
+Parameter Definition:  
+ 
+= 0: Downloading 
+ 
+= 1: Download Commencing ( Data parameter should be set to 1 for the inquiry of the 
+first data package.) 
+= 0x10: resend the previous data package 
+Number of records <=50 
+ 
+Response: (12+N *9Byte // N is the number of valid messages) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xAB ACK_SUCC
+ESS 
+ACK_FAIL 
+(1+N *9) 
+(1+N *9)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *9Byte) 
+DATA 
+No. of valid data N 
+ Header 1 
+Header2 
+… 
+Byte 
+1 
+2-10 
+11-19 
+… 
+Header Data Format: (9Byte) 
+DAT
+A 
+User 
+ID 
+Date/Time  
+Byte 
+1-5 
+6-9 
+Date/Time  the number of seconds that have elapsed since 2000-01-01 00:00 
+ 
+Iris Device Protocol Adjustment 
+
+=== PAGE 57 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 57 / 96 
+ 
+Commands: (13Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x2B 
+0x00 0x03 
+3Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+Parameter 
+Records 
+Number 
+Image Type 
+Byte 
+1 
+2 
+1 
+Image type definition: 1- Succeed, 2-Failed, 3-Matching Failed, 4- Snapshot Mode  
+ 
+Response: (12+N *10Byte // N is the valid records number ) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xAB ACK_SUCC
+ESS 
+ACK_FAIL 
+(1+N *10) 
+(1+N 
+*10)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *10Byte) 
+DATA 
+Valid Data N 
+ Header 1 
+Header 2 
+… 
+Byte 
+1 
+2-11 
+12-21 
+… 
+Image Header Data format : (10Byte) 
+DATA 
+User ID 
+Date/Time  No. 
+Byte 
+1-5 
+6-9 
+10 
+Date/Time : the number of seconds that have elapsed since 2000-01-01 00:00 
+ 
+68.CMD: 0x2C Get a Specified Image File     
+Function: This command retrieves a specified image file. It is applicable to 
+OA1000/OA3000/761 series only 
+Commands: (20Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x2C 
+0x00 
+0x0A 
+10Byte 
+CRCL CRCH 
+Data Format: (10Byte) 
+DATA 
+Parameter 
+Image Header 
+Byte 
+1 
+9 
+Parameter Definition :  
+ 
+= 0: Downloading  
+ 
+= 1: Download Commencing ( Data parameter should be set to 1 for the inquiry of the 
+first data package.) 
+= 0x10: Resend the previous package  
+ 
+Image Header Data Format: (9Byte) 
+
+=== PAGE 58 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 58 / 96 
+ 
+DAT
+A 
+User 
+ID 
+Date/Time  
+Byte 
+1-5 
+6-9 
+ 
+Date/Time : the number of seconds that have elapsed since 2000-01-01 00:00 
+ 
+Response: (12+N Byte  N is the size of transmitted package N<=512) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA
+C 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+(1+N) 
+(1+N)Byt
+e 
+CRCL 
+CRCH 
+Data Format: (1+N Byte N<=512) 
+DATA 
+Parameter 
+Content 
+Byte 
+1 
+N 
+Parameter Definition:  
+ 
+= 0: Downloading 
+ 
+= 1: Download Completed 
+ 
+Adjustment for Iris Device Protocol  
+Commands: (22Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x2C 
+0x00 
+0x0C 
+12Byte 
+CRCL CRCH 
+Data Format: (10Byte) 
+DATA 
+Parameter 
+Image 
+Header 
+Image 
+Type 
+Byte 
+1 
+10 
+1 
+Image Type Definition : 1- Register Succeed,  
+2-Register Failed, 
+3-Matching Failed,  
+4-Snapshot Mode,  
+5-Real-time Monitoring   
+Response: (12+N Byte  N is the size of the transmitted package) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xA
+C 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+(1+N) 
+(1+N)Byt
+e 
+CRCL 
+CRCH 
+Data Format: (1+N Byte N<=51200) 
+DATA 
+Parameter 
+Content 
+Byte 
+1 
+N 
+Parameter Definition:  
+ 
+= 0: Downloading 
+ 
+= 1: Download Completed 
+ 
+
+=== PAGE 59 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 59 / 96 
+ 
+69. CMD: 0x2D Delete a Specified Image      
+Function: This command deletes a specified image. It is applicable to 
+OA1000/OA3000/761 series only 
+Commands: (19Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x2D 
+0x00 0x09 
+9Byte 
+CRCL 
+CRCH 
+Data Format: (9Byte) 
+DATA 
+Image Header  
+Byte 
+9 
+Image Header Data Structure : (9Byte) 
+DAT
+A 
+User 
+ID 
+Date/Time  
+Byte 
+1-5 
+6-9 
+Date/Time : The number of seconds have elapsed since 2000-01-01 00:00 
+Delete all image files if image header is set to 0xFF. 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xAD 
+ACK_SUCCESS 
+ACK_FAIL 
+0x00 
+0x00 
+CRCL 
+CRCH 
+ 
+Iris Device Protocol Adjustment  
+Commands: (21Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x2D 
+0x00 0x0B 
+11Byte 
+CRCL 
+CRCH 
+Data Format: (11Byte) 
+DATA 
+Image 
+Header  
+Image 
+Type 
+Byte 
+1-10 
+11 
+Image Type Definition:: 1-Register Succeed, 2-Register Failed, 3-Matching Failed, 
+4-Snapshot mode 
+ 
+70.CMD: 0x10 Update Firmware/Image/Voice 
+       
+Function: This command updates firmware, image and voice files with 521byte packages 
+except the last package . It is applicable to the 761Platform only 
+Commands: (Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+
+=== PAGE 60 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 60 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x10 
+16+len 
+16+len Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+Param
+eter 
+Type 
+Index 
+Firmware Version, Image 
+File Name, Voice File 
+Name 
+ Data 
+Byte 
+1 
+1 
+2 
+12 
+len 
+Parameter Definition:  
+ 
+= 0: Uploading  
+ 
+= 1: Upload Commencing ( Data parameter should be set to 1 for the inquiry of the 
+first data package.) 
+ 
+= 2: Upload Completed 
+Type Definition :  
+ 
+= 0 Firmware, = 1Image, = 2Voice, = 3Voice Configuration file  
+Index Definition::  
+ 
+ Increment from 0  
+Firmware Type Definition:  
+ 
+= 0: Firmware , = 1 boot, = 2 Fonts 
+Response: (11Byte) 
+DLE 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x90 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+71.CMD: 0x12 Directory Operation           
+Function: This command deals with directory operation, such as retrieving folders and 
+files name, deleting files and getting content of a file. It is applicable to the 761 platform 
+only. 
+ 
+Commands: (10+4+len Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x12 
+4+len 
+4+len Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+Param
+eter 
+Type 
+Index 
+File Name/ Folder 
+Name/Content 
+Real Data/   
+Byte 
+1 
+1 
+2 
+len 
+Parameter Definition:  
+= 0: transmitting  
+
+=== PAGE 61 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 61 / 96 
+ 
+ 
+= 1: Transmission Commencing    
+ 
+= 2: Transmission Completed  
+Type Definition:  
+ 
+=0: Retrieve files names and sub-directory names from a directory(Specified directory 
+name) 
+ 
+=1: Retrieve content of a specified file(specified file name) 
+ 
+=2: Delete a specified file(specified file name ) 
+ 
+=3: Upload Firmware(no specified file name ) 
+ 
+=4: Upload boot(no specified file name ) 
+ 
+=5: Upload fonts (no specified file name ) 
+ 
+=6: Upload image, Voice, configuration file (specify file name )  
+Index Definition:  
+ 
+ Increment from 0  
+ 
+Response: (11+4+len Byte) 
+DLE 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x92 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+4+len 
+4+len Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+Param
+eter 
+Type 
+Index 
+File_Name/Directory_Name/Fi
+le_Content/ 
+Real data 
+Byte 
+1 
+1 
+2 
+len 
+Parameter Definition:  
+= 0: transmitting  
+ 
+= 1: Transmission Commencing    
+ 
+= 2: Transmission Completed  
+Type Definition:  
+ 
+=0: Retrieve files names and sub-directory names from a directory(Specify directory 
+name) 
+ 
+=1: Retrieve content of a specified file(specify file name) 
+ 
+=2: Delete a specified file(specify file name ) 
+ 
+=3: Upload Firmware(no specified file name ) 
+ 
+=4: Upload boot(no specified file name ) 
+ 
+=5: Upload fonts (no specified file name ) 
+ 
+=6: Upload image, Voice, configuration file (specify file name )  
+ 
+Index Definition:  
+ 
+ Increment from 0  
+Notice: 1, “Transmission Commencing ” package doesn’t contain any real data, which 
+only indicates that the requested data is ready for transmission. 
+      2.The separator for file, directory and files(directories) is 0xFE,0xFF and 0x00 
+
+=== PAGE 62 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 62 / 96 
+ 
+respectively. 
+ 
+72. CMD: 0x13 Download Log Files         
+Function: Data package contains maximum 8 log records for each download( the length of 
+each package is 8*73=584 Byte) It is applicable to the 761Platform only 
+ 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x13 
+0x00 0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+Parameter 
+Record 
+Number 
+Byte 
+1 
+2 
+Parameter Definition :  
+ 
+= 0: Downloading  
+ 
+= 1: Downloading Commencing , (while retrieving all records , Data parameter should 
+be set to 1 for the inquiry of the first data package.)   
+ 
+= 0x10: resend the previous package 
+Records Number <=8 
+Response: (12+N *73Byte // N is the number of valid records) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x93 
+ACK_SUCC
+ESS 
+FAIL 
+(1+N *73) 
+(1+N 
+*73)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *73Byte) 
+DATA 
+Number of Valid 
+Records N 
+Attendance 
+Record 1 
+Attendance 
+Record 2 
+… 
+Byte 
+1 
+2-74 
+75-147 
+… 
+Log Data Structure : (73Byte) 
+DATA 
+User ID 
+Date/Time  Content  
+Byte 
+1-5 
+6-9 
+10-73 
+Date/Time: the number of seconds that have elapsed since 2000-01-01 00:00 
+ 
+73.CMD: 0x1C Get Admin Card ID/ Password 
+    
+Function: This command retrieves administrator ’s card ID for T5A and administrator’s 
+password for T50. It is applicable to T5 only. 
+ 
+
+=== PAGE 63 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 63 / 96 
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x1C 
+0x00 0x00 
+CRCL 
+CRCH 
+Response: (24Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x9C 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x0D 
+13Byte 
+CRCL 
+CRCH 
+Data Format: (13Byte) 
+1) T5A  
+DATA 
+Add Card 
+ID 
+Delete 
+Card ID 
+Duress 
+Card ID 
+Special 
+Info 
+Byte 
+1-4 
+5-8 
+9-12 
+13 
+Special Info definition:: 
+ 
+Bit0: add the length of card ID   
+1- 32bit 0 - 24bit 
+ 
+Bit1: delete the length of Card ID   1 - 32bit 0 - 24bit 
+Bit2: Duress Card ID length 
+ 
+1 - 32bit 0 - 24bit 
+ 
+The return value of RET is ACK_FAIL for T5B. 
+ 
+2) T50 
+DATA 
+Admin PW Length 
++Admin PW 
+Reserved  
+Byte 
+1-3 
+4-13 
+The length of administrator’s password  = Byte(1) >> 4 
+ 
+74.CMD: 0x1D Set Admin Card ID/ Password 
+    
+Function: This command sets administrator’s card ID for T5A and administrator password 
+for T50. It is applicable to T5 only 
+ 
+Commands: (23Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x1D 
+0x00 0x0D 
+13Byte 
+CRCL 
+CRCH 
+Data Format: (13Byte) 
+1) T5A 
+DATA 
+Add Card 
+ID 
+Del Card 
+ID 
+Duress 
+Card 
+Special 
+Info 
+Byte 
+1-4 
+5-8 
+9-12 
+13 
+Special Info definition : 
+
+=== PAGE 64 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 64 / 96 
+ 
+ 
+Bit 0: add the length of the card ID  
+1 - 32bit 0 - 24bit 
+ 
+Bit 1: delete the length of the card ID 
+1 - 32bit 0 - 24bit 
+ 
+Bit 2: the length of a duress card  
+ 
+1 - 32bit 0 - 24bit 
+2) T50 
+DATA 
+Admin PW Length+ 
+Admin PW 
+Reserved  
+Byte 
+1-3 
+4-13 
+Admin PW Length = Byte(1) >> 4 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x9D 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+The return value of RET is ACK_FAIL for T5B 
+ 
+75.CMD: 0x1A Get Daylight Saving Parameters 
+Function: This command retrieves daylight saving flag and time zone. 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x1A 
+0x00 0x00 
+CRCL 
+CRCH 
+Response: (27Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x9A 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x10 
+16Byte 
+CRCL 
+CRCH 
+Data Format: (16Byte) 
+DATA 
+Enable
+/Disabl
+e 
+Date/
+Week 
+Option 
+Start Time 
+Special Info 
+M D W 
+of 
+M  
+D 
+of 
+W 
+H M S 
+M D W of 
+M 
+D 
+of 
+W 
+H M S 
+Byte 
+1 
+2 
+3 
+4 
+5 
+6 
+7 
+8 
+9 
+1
+0 
+1
+1 
+12 
+13 
+1
+4 
+1
+5 
+1
+6 
+Enable/disable:   0-disable  
+  1-enable ; 
+Day/Week option: 1-date format  2-week format; 
+Weeks of month definition :  
+ 
+0x01-0x04: previous 1-4 weeks 
+ 
+0x81-0x82: upcoming 1-2 weeks 
+Days of Week:  
+0-6: Sun/Mon/Tues/Wed/Thur/Fir/Sat  
+ 
+
+=== PAGE 65 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 65 / 96 
+ 
+76.CMD: 0x1B Set Daylight Saving Parameters   
+Function: This command sets daylight saving flag and timezone. 
+ 
+Commands: (26Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x1B 
+0x00 0x10 
+16Byte 
+CRCL 
+CRCH 
+ 
+Data Format: (16Byte) 
+DATA 
+Enable
+/Disabl
+e 
+Date/
+Week 
+Start Time 
+End Time 
+M D W 
+of 
+M 
+D 
+of 
+W 
+H M S 
+M D W 
+of  
+M 
+D 
+of 
+W 
+H M S 
+Byte 
+1 
+2 
+3 
+4 
+5 
+6 
+7 
+8 
+9 
+1
+0 
+1
+1 
+12 
+13 
+1
+4 
+1
+5 
+1
+6 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x9B 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+77.CMD: 0x18 Get Language Options   
+Function: This command retrieves a list of language options.  
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x18 
+0x00 0x00 
+CRCL 
+CRCH 
+Response: (15Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x98 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Language List Data Format: (4Byte) 
+DATA 
+Option 1 
+Option 2 
+Option 3 
+Option 4 
+Byte 
+1 
+2 
+3 
+4 
+ 
+Four languages can be selected from the list below. Once the setup is completed, the 
+display language can only be selected from the 4 languages. 
+  
+
+=== PAGE 66 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 66 / 96 
+ 
+The list all language packs available within the SDK. 
+0xFF - not selected 
+0- simplified Chinese 
+1- Chinese Traditional 
+2- English 
+3- French 
+4- German 
+5- Spanish 
+6-Portuguese 
+7-Italian 
+8- Bulgarian 
+9- Slovak 
+10-hungarian 
+11-slovene 
+12-Turkish 
+13-Polish 
+14-Indonesian 
+15- Romanian 
+16-Russian   
+ 
+  
+ 
+ 
+ 
+78.CMD: 0x19 Set Language Options   
+Function: This command sets 4 display languages.  
+Commands: (14Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x19 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Language Options Data Format: (14Byte) 
+DATA 
+Option 1 
+Option 2 
+Option 3 
+Option 4 
+Byte 
+1 
+2 
+3 
+4 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x99 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+Four language options can be set initially. Once set, the display language can only be 
+switch between these 4 options.  
+The list all language packs available within the SDK. 
+0xFF - not selected 
+0- simplified Chinese 
+
+=== PAGE 67 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 67 / 96 
+ 
+1- Chinese Traditional 
+2- English 
+3- French 
+4- German 
+5- Spanish 
+6-Portuguese 
+7-Italian 
+8- Bulgarian 
+9- Slovak 
+10-hungarian 
+11-slovene 
+12-Turkish 
+13-Polish 
+14-Indonesian 
+15- Romanian 
+16-Russian   
+ 
+  
+ 
+ 
+79. CMD:0x78 Send Feature Value/ Card ID to T&A 
+Device  
+Function: Feature value or card ID is sent to T&A device through communication port for 
+tasks, such as:registration and verification etc.      
+ 
+1) Feature Value 
+Commands: (189Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x78 
+0x00 0xB3 
+CRCL 
+CRCH 
+Data Format: (179Byte) 
+DATA 
+Type 
+Reserved  
+Feature 
+Value Data 
+Byte 
+1 
+2-10 
+11-179 
+Type 为1 
+2)Card ID 
+Commands: (24Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x78 
+0x00 0x0E 
+CRCL 
+CRCH 
+Data Format: (14Byte) 
+DATA 
+Type 
+Reserved 
+Card ID 
+Byte 
+1 
+2-10 
+11-114 
+Type is 2 
+3) Password 
+
+=== PAGE 68 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 68 / 96 
+ 
+Commands: (24Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x78 
+0x00 0x0E 
+CRCL 
+CRCH 
+Data Format: (14Byte) 
+DATA 
+Type 
+User ID 
+Date/Tim
+e   
+PW 
+Length+PW 
+MS 
+Byte 
+Byte 
+1 
+2-6 
+7-10 
+11-13 
+14 
+Password Length = Byte(11) >> 4 
+Type 3 
+Response: (26Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF8 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x0F 
+15Byte 
+CRCL 
+CRCH 
+Data Format: (15Byte) 
+DATA 
+Status 
+User ID 
+Date/ 
+Time 
+Backup 
+ID 
+Record 
+Type 
+Work 
+Code  
+Byte 
+1 
+2-6 
+7-10 
+11 
+12 
+13-15 
+ 
+Linear Customized Response:  
+Response: (35Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF8 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x18 
+24Byte 
+CRCL 
+CRCH 
+Data Format: (24Byte) 
+DATA 
+State 
+User ID 
+Date/Time   
+Backup ID 
+Record 
+Type 
+Work Code  
+Byte 
+1 
+2-6 
+7-10 
+11 
+12 
+13-15 
+ 
+DATA 
+Card ID 
+PW Length+PW 
+Most Significant Byte 
+FP Enrollment 
+State 
+Byte 
+16-19 
+20-22 
+23 
+24 
+ 
+State Definition:  
+ 
+0: Unprocessed events  
+ 
+1: Verify successful  
+2: Failed to verify  
+3: Repeated Verification  
+4: invalid operation  
+5: invalid timezone  
+6: Repeated registration  
+ 
+
+=== PAGE 69 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 69 / 96 
+ 
+80.CMD:0x16 Get GPRS Parameters 
+Function: This command gets GPRS parameters : APN name, GPRS server IP ,local IP , 
+port number , user name and password. 
+A)Basic Version 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x16 
+0x00 0x00 
+CRCL CRCH 
+Response: (119Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x96 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x6C 
+108Byt
+e 
+CRCL 
+CRCH 
+Data Format: (108Byte) 
+DATA 
+APN 
+Name  
+Serve IP 
+Port  
+No.  
+Local IP 
+User 
+Name 
+PW 
+Enable/
+Disable 
+Reserved 
+Byte 
+1-16 
+17-20 
+21-22 
+23-26 
+27-66 
+67-1
+06 
+107 
+108 
+If the length of APN name is less than 16 byte, fill up the remaining byte with 0.    
+If local IP address is assigned by DHCP server dynamically, then set 23-26 byte to 0. 
+If the length of User name is less than 40 byte, fill up the remaining byte with 0.  
+If User Name contains a ‘null’ value, the user name is not set. 
+If the length of the Password is less than 40btye, fill up the remaining byte with 0.    
+Enable/Disable : 0-Disable 1-Enable 
+ 
+Improved Version 
+Commands: (10Byte) 
+ 
+The same as the basic version 
+Response: (91Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x96 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x50 
+80Byte 
+CRCL 
+CRCH 
+Data Format: (80Byte) 
+DATA 
+APN 
+Name 
+Server 
+IP 
+Port 
+Local IP 
+User 
+Name 
+PW 
+Enable/
+Disable 
+Reserved 
+Byte 
+1-32 
+33-36 
+37-38 
+39-42 
+43-60 
+61-7
+8 
+79 
+80 
+If the length of APN name is less than 32 byte, fill up the remaining byte with 0.    
+If local IP address is assigned by DHCP server dynamically, then set 33-36 byte to 0. 
+If the length of User name is less than 18 byte, fill up the remaining byte with 0.  
+If User Name contains a ‘null’ value, the user name is not set. 
+
+=== PAGE 70 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 70 / 96 
+ 
+If the length of the Password is less than 18btye, fill up the remaining byte with 0.    
+Enable/Disable : 0-Disable 1-Enable 
+ 
+81.CMD: 0x17 Set GPRS Parameters 
+ 
+  
+Function: This command sets GPRS parameters : APN name, GPRS server IP/local IP , 
+port number , user name and password 
+A)Basic Version 
+Commands: (118Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x17 
+0x00 0x6C 
+108Byte 
+CRCL 
+CRCH 
+Data Format: (108Byte) 
+DATA 
+APN 
+Name 
+Server 
+IP 
+Port  
+Local IP 
+User 
+Name 
+PW 
+Enable/
+Disable 
+Reserved 
+Byte 
+1-16 
+17-20 
+21-22 
+23-26 
+27-66 
+67-1
+06 
+107 
+108 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x97 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL CRCH 
+B)Improved Version  
+Commands: (90Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x17 
+0x00 0x50 
+80Byte 
+CRCL 
+CRCH 
+Data Format: (80Byte) 
+DATA 
+APN 
+Name 
+Serve IP 
+Port  
+Local 
+IP 
+User 
+Name  
+PW 
+Enable/
+Disable  
+Reserved 
+Byte 
+1-32 
+33-36 
+37-38 
+39-42 
+43-60 
+61-7
+8 
+79 
+80 
+Response: (11Byte) 
+ 
+The same as basic version  
+82.CMD: 0x7A Get Device Extended Info   
+Function: This command retrieves vendor’s name，tax registration number and address.   
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+
+=== PAGE 71 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 71 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x7A 
+0x00 0x00 
+CRCL CRCH 
+Response: (331Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xFA 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x01 0x40 
+320Byte 
+CRCL 
+CRCH 
+Data Format: (320Byte) 
+DATA 
+Vendor 
+Name 
+(UNIODE) 
+Vendor 
+Address  
+(UNICODE) 
+Tax No. 
+(Figure, ASCII 
+code) 
+Reserved 
+Byte 
+1-50 
+51-150 
+151-165 
+166-320 
+ 
+83.CMD: 0x7B Modify Device Extended Info   
+Function: This command retrieve vendor’s name，tax registration number and address   
+Commands: (330Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x7B 
+0x01 0x40 
+320Byte 
+CRCL 
+CRCH 
+Data Format: (320Byte) 
+DATA 
+Vendor 
+Name  
+(UNIODE) 
+Vendor Add 
+(UNICODE) 
+Vendor Tax No. 
+(Figure ASCII 
+Code) 
+Reserved 
+Byte 
+1-50 
+51-150 
+151-165 
+166-320 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xFB 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+84.CMD: 0x7E Get Card Number    
+Function: This command retrieves the card number when user punched a card on T5S. It 
+is applicable to T5S only 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x7E 
+0x00 0x00 
+CRCL CRCH 
+Response: (15Byte) 
+
+=== PAGE 72 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 72 / 96 
+ 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xFE 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Card No. 
+Byte 
+1-4 
+If T5s doesn’t acquire any card number, which means card number is 0. 
+ 
+85.CMD: 0x14 Get Reboot Time    
+Function: This command gets setting of the reboot time. It is applicable to the 761platform 
+and OA1000 only 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x14 
+0x00 0x00 
+CRCL CRCH 
+Response: (20Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x94 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x09 
+9Byte 
+CRCL 
+CRCH 
+Data Format: (9Byte) 
+DATA 
+Reboot 
+Time 1 
+Reboot 
+Time 2 
+Reboot 
+Time 3 
+Byte 
+1-3 
+4-6 
+7-9 
+Reboot times code is a BCD code.  
+For instance, Reboot Time = 22:00:00, equivalent to byte 0x22 0x00 0x00   
+If reboot time is set to 0xFF, then the reboot time hasn’t been set. 
+ 
+86.CMD: 0x15 Set Reboot Time 
+   
+Function: This command sets reboot times. It is applicable to the 761platform and 
+OA1000 only 
+ 
+Commands: (19Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x15 
+0x00 
+0x09 
+9Byte 
+CRCL 
+CRCH 
+Response: (11Byte) 
+
+=== PAGE 73 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 73 / 96 
+ 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x95 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+Data Format: (9Byte) 
+DATA 
+Reboot 
+Time 1 
+Reboot 
+Time 2 
+Reboot 
+Time 3 
+Byte 
+1-3 
+4-6 
+7-9 
+Reboot Time is a BCD code,  
+BCD 
+Byte  
+22:00:00 
+0x22 0x00 0x00 
+If a “Reboot Time”has value of “0xFF”, then the reboot time has been set yet.   
+ 
+87.CMD: 0x2E Extended Commands 
+     
+Function: IRIS extended commands 
+Commands: (11+N Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x2E 
+1+N 
+(1+N)Byt
+e 
+CRCL CRCH 
+Data Format: (1+N Byte) 
+DATA 
+Parameters 
+Data 
+Byte 
+1 
+N 
+Data Description: 
+Parameter 
+Description  
+Length 
+Data Content and Format  
+ 
+Suitable Devices 
+Type  
+0x00 
+Set Admin 
+Configuration 
+96 
+Super Admin PW 12 
+Byte+(Normal Admin Name 
+12 Byte+Normal Admin PW 
+12 Byte)*3+(Admin Card ID 
+4 byte) * 3 
+Iris  
+0x01 
+Set Parameters 
+of Time 
+Synchronization  
+5 
+Enable/Disable Flag 
+1Byte+Time Server IP 
+4Byte 
+761Platform 
+ 
+ 
+ 
+ 
+ 
+0x10 
+Get Admin Info 
+0 
+The response data format 
+e.g. 0x00 
+Iris  
+0x11 
+Get Parameters 
+of Time 
+synchronization 
+0 
+The response data format 
+e.g. 0x01 
+761Platform 
+ 
+ 
+ 
+ 
+ 
+
+=== PAGE 74 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 74 / 96 
+ 
+0x60 
+Reboot 
+0 
+ 
+OA1000 
+ 
+Response: (11+N Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xAE ACK_SUCC
+ESS 
+ACK_FAIL 
+N 
+(N)Byte 
+CRCL 
+CRCH 
+P.S. If Parameter< 0x10, length of response data =11 byte; 
+    If Parameter>=0x10, Response Data Length = 11+N,  
+Response Data Format  
+:Please refer to corresponding configuration. 
+ 
+88.CMD: 0x02 UDP Search Device    
+Function: This command uses UDP broadcast to search devices. The UDP port for device 
+is 5050, the UDP port for PC is 5060.  
+ 
+Commands: (10 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+0x00 0x00 0x00 0x00 0x02 
+0x00 
+0x00 
+CRCL CRCH 
+Response: (74Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x82 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x3F 
+63Byte 
+CRCL 
+CRCH 
+Data Format: (63Byte) 
+DATA 
+Device 
+Model  
+Device 
+SN 
+IP 
+Address 
+Sub-net Mask 
+Default Gateway 
+Byte 
+1-10 
+11-26 
+27-30 
+31-34 
+35-38 
+ 
+DATA 
+MAC 
+Address 
+Server IP 
+Address 
+Port No. 
+Network 
+Mode 
+Firmware 
+Version 
+Reserved 
+Byte 
+39-44 
+45-48 
+49-50 
+51 
+52-59 
+60-63 
+ 
+“Device Model” is set via 0x49, e.g.“T60+、C2、OA1000 ” etc. 
+Network mode: 0-Server Mode; 1-Client Mode  
+Firmware which supports “client+DNS”, it’s Response data format as follows:  
+ 
+Response: (178Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+
+=== PAGE 75 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 75 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x82 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0xA7 
+167Byt
+e 
+CRCL 
+CRCH 
+Data Format: (167Byte) 
+ 
+DATA 
+Device 
+Model 
+Device 
+Serial No. 
+IP 
+Address 
+Sub-net 
+Mask 
+MAC 
+Address 
+Server 
+IP 
+Port No. 
+Byte 
+1-10 
+11-26 
+27-30 
+31-34 
+39-44 
+45-48 
+49-50 
+ 
+ 
+ 
+ 
+ 
+Device Model is set via Command 0x49, e.g:“T60+、C2、OA1000” etc. 
+Network mode : 0-Server Mode 1-Client Mode 2-Client Mode +Server URL 
+ 
+ 
+C2 Pro has a specialized ‘Search Device’ command due to its dual NIC capability.   
+Commands: (11 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+0x00 0x00 0x00 0x00 0x02 
+0x00 
+0x01 
+1Byte 
+CRCL 
+CRCH 
+Data Format: (1Byte) 
+DAT
+A 
+Search 
+Parameter 
+Byte 
+1 
+ 
+Search Parameter Definition:  
+=0 : Search setting of all network adapters 
+Response: (11+46+N*28Byte, N is the Number of NIC) Network Interface Card 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x82 
+ACK_SUC
+CESS 
+ACK_FAIL 
+46+N*18 
+(46+N*28)Byt
+e 
+CRCL 
+CRCH 
+Data Format: (46+N*28Byte, N is the number of NIC) 
+DA
+TA 
+Device 
+Model 
+Device 
+SN 
+Server 
+IP 
+Port 
+Number 
+Network 
+Mode 
+Firmwar
+e 
+Version 
+Reserve
+d 
+NIC 
+Number 
+Byt
+e 
+1-10 
+11-26 
+27-30 
+31-32 
+33 
+34-41 
+42-45 
+46 
+ 
+DATA 
+NIC1 
+NIC2 
+…… 
+Byte 
+47-74 
+75-102 
+…… 
+ 
+DATA  
+Network 
+Mode  
+Firmware 
+Version 
+Reserved  DNS 
+URL 
+Byte 
+51 
+52-59 
+60-63 
+64-67 
+68-167 
+
+=== PAGE 76 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 76 / 96 
+ 
+Device Model is set via command 0x49, e.g. T60+、C2、OA1000 etc. 
+Network mode : 0-Server Mode 1-Client Mode 2-Client Mode +Server URL 
+ 
+NIC Data Format: (28Byte) 
+DAT
+A 
+NIC 
+Name 
+IP 
+Address 
+Sub-net 
+Mask 
+Default 
+MAC 
+Address 
+Byte 
+1-10 
+11-14 
+15-18 
+19-22 
+23-28 
+ 
+89.CMD: 0x03 UDP Set Device Parameter   
+Function: This command sets device parameters by using UDP broadcast. The device 
+UDP port is 5050, The PC UDP port is 5060. 
+Commands: (67 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+0x00 0x00 0x00 0x00 0x03 
+0x00 
+0x39 
+57Byte 
+CRCL 
+CRCH 
+Data Format: (57Byte) 
+DA
+TA 
+IP Address 
+Sub-net Mask 
+Default 
+MAC 
+Address 
+Server 
+IP 
+Port 
+Number 
+Byt
+e 
+1-4 
+5-8 
+9-12 
+13-18 
+19-22 
+23-24 
+ 
+DA
+TA 
+Network Mode 
+New Device No. Reserved 
+User Name 
+Password 
+Byt
+e 
+25 
+26-29 
+30-33 
+34-45 
+46-57 
+ 
+The firmware determines whether the mac address from the UDP package is identical to 
+its own mac address. If the addresses are matched, then the firmware verify user name 
+and password, else the UDP package will be ignored. 
+If password or user name is valid, then device will return the result of setting.   
+User name of an iris device is “admin” , password is the corresponding phrase. 
+User name for 761 and 2440 platform is “0”, password is the corresponding phrase.        
+The rest of platforms only require password verification. 
+ 
+If the firmware supports “Client+DNS”, then the command data has following definition 
+Commands: (171 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+0x00 0x00 0x00 0x00 0x03 
+0x00 
+0xA1 
+161Byte 
+CRCL 
+CRCH 
+Data Format: (161Byte) 
+
+=== PAGE 77 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 77 / 96 
+ 
+DA
+TA 
+IP 
+Ad
+dre
+ss 
+Su
+b-n
+et 
+Ma
+sk 
+Def
+ault 
+MAC 
+Addr
+ess 
+Ser
+ver 
+IP 
+Port 
+Num
+ber 
+Net
+wor
+k 
+Mo
+de 
+Ne
+w 
+De
+vic
+e 
+ID  
+Re
+ser
+ved 
+Us
+er 
+Na
+me 
+Pa
+ss
+wor
+d 
+DN
+S 
+URL 
+Byt
+e 
+1-4 
+5-8 
+9-1
+2 
+13-1
+8 
+19-
+22 
+23-2
+4 
+25 
+26-
+29 
+30-
+33 
+34-
+45 
+46-
+57 
+58-
+61 
+62-1
+61 
+The firmware determines whether the mac address from the UDP package is identical to 
+its own mac address. If the addresses are matched, then the firmware verify user name 
+and password, else the UDP package will be ignored. 
+If password or user name is valid, then device will return the result of setting.   
+User name of an iris device is “admin” , password is the corresponding phrase. 
+User name for 761 and 2440 platform is “0”, password is the corresponding phrase.        
+The rest of platforms only require password verification. 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x83 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x00 
+CRCL 
+CRCH 
+ 
+90.CMD: 0x7F Heartbeat Package 
+  
+Function: Heartbeat packages are sent every 5 minutes(by default) for testing network 
+connectivity.    
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x7F 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xFF 
+ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x00 
+0Byte 
+CRCL 
+CRCH 
+ 
+91.CMD: 0x7D Data Modification Alert  
+ 
+
+=== PAGE 78 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 78 / 96 
+ 
+Function: It is only applicable to 761 platform.If the devices are set to network client mode,  
+any change relates to personnel information, fingerprints or T&A records will be pushed to 
+its server automatically or uploaded after receiving this command. Furthermore, this 
+command will also be executed, if auto data push is failed to update these data alteration 
+within 3 minutes.    
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x7D 
+0x00 0x00 
+CRCL CRCH 
+ 
+Response: (27Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xFD ACK_SUCCE
+SS 
+ACK_FAIL 
+0x00 0x10 
+16Byte 
+CRCL 
+CRCH 
+Data Format: (16Byte) 
+DATA 
+Number of 
+Personnel 
+Changes  
+Number of 
+New 
+Attendance 
+Records 
+Reserved 
+Byte 
+1-3 
+4-6 
+7-16 
+ 
+92.CMD: 0x64Download Personnel Change Records   
+Function: This command downloads the maximum 40 altered personnel records each 
+time. (Record Date Length: 40*10 = 400Byte) 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x64 
+0x00 0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+Parameter 
+Records 
+Number 
+Byte 
+1 
+2 
+Parameter Definition:  
+ 
+= 0: Downloading  
+ 
+= 1: Download Commencing , when downloading all records, this data parameter 
+should be sent with the first request package. 
+ 
+= 2: Download started, when downloading only new records, this data parameter 
+should be sent with the first request package. 
+ 
+= 0x10: resend the previous data package 
+
+=== PAGE 79 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 79 / 96 
+ 
+Records Number<=40 
+Response: (12+N *10Byte // N is the number of valid Records) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xE4 
+ACK_SUCC
+ESS 
+FAIL 
+(1+N *10) 
+(1+N 
+*10)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N *10Byte) 
+DATA 
+Valid Records 
+Number N 
+Record 1 
+Record 2 
+… 
+Byte 
+1 
+2-11 
+12-21 
+… 
+Records Data Format: (10Byte) 
+DATA 
+User ID 
+Date/Tim
+e   
+Type 
+Byte 
+1-5 
+6-9 
+10 
+Date/Time: the number of seconds that have elapsed since 2000-01-01 00:00 
+Type Definition : bit 0- Change User info bit1- Change FP record bit 2-Delete a User 
+ 
+93.CMD: 0x65 Download User’s Information 
+(Extended))  
+ 
+Function: This command retrieves a user information. 
+Commands: (15Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x65 
+0x00 0x05 
+5Byte 
+CRCL 
+CRCH 
+Data Format:  
+DATA 
+User ID 
+Byte 
+1-5 
+ 
+Response: (11+84Byte) It is applicable to 761 platform.  
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xE5 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x54 
+84Byte 
+CRCL 
+CRCH 
+User Info data format : (84Byte) 
+DATA 
+User 
+ID 
+PW 
+Length(bit)
++PW 
+Card ID 
+No. 
+Name  Department 
+Group 
+Number 
+Attendance 
+Mode  
+Byte 
+1-5 
+6-8 
+9-12 
+13-76 
+77 
+78 
+79 
+ 
+
+=== PAGE 80 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 80 / 96 
+ 
+DAT
+A 
+FP 
+Enrollment 
+status 
+Reserve
+d  
+Reserved  Special 
+Info 
+Byte 
+80-81 
+82 
+83 
+84 
+ 
+Password Length = Byte(6) >> 4 
+FP Enrollment status:  bit0 = 1 enrolled FP 1, bit1 = 1enrolled FP 2 
+Special Info bit 7-6: Permission: 1-User  3-Admin 
+ 
+ 
+ Bit 4: Length of Card ID No. 
+1 - 32bit  0 - 24bit 
+If the return value of byte6-8 is 0xFF, then Password doesn’t exist. 
+If the return value of byte9-12is 0xFF, then Card ID No. doesn’t exist. 
+ 
+Response: (11+40Byte)Unicode Code  
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xE5 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x28 
+40Byte 
+CRCL 
+CRCH 
+User Info Format : (40Byte) 
+DATA 
+User 
+ID 
+PW 
+Length(bit)
++PW 
+Card 
+ID No. 
+Name  Department 
+Group 
+Number 
+Attendance 
+Mode  
+Byte 
+1-5 
+6-8 
+9-12 
+13-32 
+33 
+34 
+35 
+ 
+DATA 
+User 
+ID 
+PW 
+Length(bit)
++PW 
+FP Enrollment 
+status 
+PW MS Byte 
+Reserved  Special Info 
+Byte 
+1-5 
+6-8 
+36-37 
+38 
+39 
+40 
+ 
+94.CMD: 0x1E Clear Change of Personnel Records/ 
+Flags 
+Function: This command deletes all or partial records/flags of personnel alteration.  
+Commands: (14Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x1E 
+0x00 0x04 
+4Byte 
+CRCL 
+CRCH 
+Data Format: (4Byte) 
+DATA 
+Deletion 
+Type 
+New 
+Records 
+Number 
+Byte 
+1 
+2-4 
+
+=== PAGE 81 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 81 / 96 
+ 
+Deletion Type Definition: 
+0- Delete all records of personnel alteration; 
+1-Delete all flags of personnel alteration; 
+2-Delete a specified number of flags of new personnel alteration, records number can be 
+set in byte2-4. 
+Response: (14Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x9E 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x03 
+3Byte 
+CRCL 
+CRCH 
+Data Format: (3Byte) 
+DATA 
+Deletion 
+Records/Number of 
+Deleted New 
+Records 
+Byte 
+1-3 
+If Deletion Type=0,it returns the number of deleted records; 
+If Deletion Type=1, it returns the number of all of deleted new records; 
+If Deletion Type=2, it returns the number of deleted new records. 
+ 
+95.CMD: 0x34 Get Device Configuration 3    
+Function: This command retrieves Wiegand Mode. 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x34 
+0x00 0x00 
+CRCL CRCH 
+Response: (26Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xB4 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x0F 
+15Byte 
+CRCL 
+CRCH 
+Data Format: (15Byte) 
+DA
+TA 
+Wiegand 
+Mode 
+Conne
+ction 
+Mode 
+Collec
+ting 
+Thres
+hold  
+Conne
+ction 
+PW 
+Magn
+etic 
+Door 
+Senso
+rs 
+State 
+Re
+ser
+ved  
+Customized 
+Timezone 
+M5 T5 Anti 
+back  
+Byt
+e 
+1 
+2 
+3 
+4 
+5 
+6-1
+3 
+14 
+15 
+Wiegand Mode:  
+
+=== PAGE 82 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 82 / 96 
+ 
+ 
+= 0 Closed 
+ 
+= 1 big endian Wiegand 26 
+ 
+=2 little endian Wiegand26 
+= 3 big endian Wiegand 34 
+ 
+=4 little endian Wiegand 34 
+Connection Mode:  
+ 
+=0 offline mode 
+ 
+=1 online Mode 
+Collecting Threshold Range: 0-8 
+Customized Timezone:  
+ 
+= 0 Disable 
+ 
+= 1 Enable , occupy 2byte of Name field  
+Connection Password:  
+ 
+=0 When network connection established, the communication password is not 
+required.  
+ 
+=1 When network connection established, the CMD 0x04 is sent to verify the 
+communication password. 
+ 
+Magnetic Door Sensors State:  
+ 
+=0 Device send Magnetic Door Sensors State passively 
+ 
+=1 Device send CMD 0x2F actively which contains Magnetic Door Sensors State 
+actively 
+ 
+M5/T5Anti Back :  
+ 
+= 0 Disable 
+ 
+= 1 Enable, Current state is out  
+ 
+=2 Enable , Current state is in 
+=4 Disable, Current state is out  
+=5 Disable , Current state is in  
+ 
+96.CMD: 0x35 set Device Configuration 3   
+Function: This command sets Wiegand Mode. 
+P.s: Unused items should be set as 0xFF 
+Commands: (25Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+Data 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x35 
+0x00 0x0F 
+15Byte 
+CRCL CRCH 
+Data Format: (15Byte) 
+
+=== PAGE 83 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 83 / 96 
+ 
+DA
+TA 
+Wiegand 
+Mode 
+Conne
+ction 
+Mode 
+Collec
+ting 
+Thres
+hold  
+Conne
+ction 
+PW 
+Magn
+etic 
+Door 
+Senso
+rs 
+State 
+Re
+ser
+ved  
+Customized 
+Timezone  
+M5 T5 Anti 
+Back Setting 
+Byt
+e 
+1 
+2 
+3 
+4 
+5 
+6-1
+3 
+14 
+15 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xB5 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+97.CMD: 0x04 Connection Authentication    
+Function: Device can responses to other commands if it passes the Connection 
+Authentication. Connection will expire in 5 minutes without any data transmission    
+Commands: (34 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x04 
+0x00 
+0x18 
+24Byte 
+CRCL 
+CRCH 
+Data Format: (24Byte) 
+DA
+TA 
+User 
+Name 
+Password 
+Byt
+e 
+1-12 
+13-24 
+ 
+The default User Name and Password for iris devices is “admin” and corresponding 
+phrase. For other devices, only communication password is required for verification. 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x84 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+98.CMD: 0x36 Get Device Configuration4   
+Function: This command retrieves T&A parameters, including Firmware Version, Protocol 
+version etc. It is applicable to the M4 platform. 
+
+=== PAGE 84 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 84 / 96 
+ 
+Commands: (10 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x34 
+0x00 
+0x00 
+0Byte 
+CRCL 
+CRCH 
+ 
+Response: (75Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xB4 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x40 
+64Byt
+e 
+CRCL 
+CRCH 
+Data Format: (64Byte) 
+DA
+TA 
+Firmware 
+Version 
+Protocol 
+Version 
+Reserved 
+Byt
+e 
+1-4 
+5-8 
+9-64 
+ 
+99.CMD: 0x61 Add Department 
+Function: This command adds a maximum 20 departments to device each time. It is 
+applicable to OA1000only. 
+Commands: (10+14*N+1 Byte)N<=20 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x61 
+14*N+1 
+(14*N+1)Byte 
+CRCL 
+CRCH 
+Data Format: (14*N+1Byte) 
+DA
+TA 
+Number of 
+Department  
+Department 1 
+Department N 
+Byt
+e 
+1 
+2-15 
+14*N-12 - 
+14*N+1 
+Department format : (14Byte) 
+DA
+TA 
+Depart
+ment ID 
+Departm
+ent Name 
+Super Department 
+No. 
+Byt
+e 
+1-2 
+3-12 
+13-14 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xE1 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+
+=== PAGE 85 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 85 / 96 
+ 
+100.CMD: 0x62 Delete Department   
+Function: This command erases a department from device and is applicable to OA1000 
+only. 
+Commands: (10 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x62 
+0x00 
+0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format: (2Byte) 
+DA
+TA 
+Department 
+ID No. 
+Byt
+e 
+1-2 
+If the Department ID number set as 0xFFFF, all Department will be erased. 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xE2 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+101.CMD: 0x66 Download a Specified User’s 
+Templates/Sanpshots   
+Function: This command downloads use’s templates or sanpshots. It is applicable to 
+OA1000 with TCP/IP network connection. 
+Commands: (17Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x66 
+0x00 0x07 
+7Byte 
+CRCL 
+CRCH 
+Data Format: (6Byte) 
+DATA 
+User ID 
+Back
+up ID 
+Parameter 
+Byte 
+1-5 
+6 
+7 
+Backup ID:  =1-10 from FP image 1 to FP image 10 
+         
+=11 User photo  
+Parameter:  
+ 
+= 0: downloading  
+ 
+= 1: Download Commencing (Data parameter should be set to 1 for the inquiry of the 
+first data package.) 
+    = 0x10: Resend the previous Data package 
+
+=== PAGE 86 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 86 / 96 
+ 
+ 
+Response: (11+1+N Byte, N <= 20480Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xE6 
+ACK_SUC
+CESS 
+ACK_FAIL 
+ACK_NO_
+USER 
+1+N 
+(1+N)Byte 
+CRCL 
+CRCH 
+Data Format: (1+N Byte) 
+DATA 
+Parameter 
+Image Data 
+Byte 
+1 
+N 
+Parameter Definition:  
+ 
+= 0: Downloading  
+ 
+= 1: Download Completed 
+ 
+102.CMD: 0x67 Batch Download Users’ Images   
+Function: This command batch downloads fingerprint images from a T&A device. It is 
+applicable to OA1000 with a network connection only. 
+Commands: (12Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x67 
+0x00 0x02 
+2Byte 
+CRCL 
+CRCH 
+Data Format: (2Byte) 
+DATA 
+Type 
+Para
+meter 
+Byte 
+1 
+2 
+Type: =1 FP Image 
+      =2 User Photo 
+Parameter Definition:  
+ 
+= 0: Downloading 
+ 
+= 1: Download Commencing 
+= 2: Batch Download Commencing 
+= 0x10: Resend the previous Data Package 
+ 
+Response: (11+1+6+N Byte, N <= 20480Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xE7 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+ACK_NO_U
+SER 
+1+6+
+N 
+(1+6+N
+)Byte 
+CRCL 
+CRCH 
+
+=== PAGE 87 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 87 / 96 
+ 
+Data Format: (1+6+N Byte) 
+DATA 
+User 
+ID 
+Backup 
+ID 
+Parame
+ter 
+Image 
+Data 
+Byte 
+1-5 
+6 
+7 
+N 
+Parameter Definition :  
+ 
+= 0: Downloading  
+ 
+= 1: Download Completed 
+Backup ID:  
+=1-10 FP image1 to FP image 10 
+=11 User Photo 
+ 
+103.CMD: 0x79 Get Result of Last Authentication 
+(Pass/Fail)  
+Function: This command retrieves the result of the last bio-metric authentication. It is 
+customized for Brazilian clients.  
+ 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x79 
+0x00 0x00 
+CRCL 
+CRCH 
+Return Value:  
+If state == null 
+Response: (12Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF9 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x01 
+1Byte 
+CRCL 
+CRCH 
+Data Format: (1Byte) 
+DATA 
+Type 
+Byte 
+1 
+ 
+Type 0xFF 
+ 
+If state == succeed  
+Response: (35Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DAT
+A 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF9 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x18 
+24By
+te 
+CRCL 
+CRCH 
+
+=== PAGE 88 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 88 / 96 
+ 
+Data Format: (24Byte) 
+DAT
+A 
+Type 
+User 
+ID 
+Date/T
+ime   
+Back
+up 
+ID 
+Recor
+ds 
+Type 
+Wo
+rk 
+Co
+de 
+Card 
+ID 
+No. 
+PW 
+Length 
++ PW 
+PW MS 
+Byte 
+ 
+FP 
+Enroll
+ment 
+Status 
+Byte 
+1 
+2-6 
+7-10 
+11 
+12 
+13-
+15 
+16-1
+9 
+20-22 
+23 
+24 
+ 
+Type 0 
+ 
+If the user did not register any card, then Card ID No. (byte 16-19) should be set as 0xFF. 
+If the user did not register any password, then byte 20-23 should be set as 0xFF.  
+FP Enrollment Status: 0- Unregistered FP 
+1-FP1 
+2-FP 2 
+ 
+ 
+ 
+    
+3-FP1+FP2 
+If the FP is invalid 
+Response: (181Byte) 
+STX 
+CH 
+ CMD 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF9 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0xAA 
+170By
+te 
+CRCL 
+CRCH 
+Data Format: (170Byte) 
+DAT
+A 
+Type 
+Feature 
+Value Data 
+Byte 
+1 
+2-170 
+ 
+Type=1 
+ 
+4)if the Card ID No. is invalid  
+Response: (16Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF9 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x05 
+5Byte 
+CRCL 
+CRCH 
+Data Format: (5Byte) 
+DAT
+A 
+Type 
+Card 
+ID No. 
+Byte 
+1 
+2-5 
+ 
+If the password is invalid, then Type=2 
+Response: (21Byte) 
+STX 
+CH 
+ CMD 
+RET 
+LEN 
+DATA 
+CRC16 
+
+=== PAGE 89 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 89 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xF9 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x0A 
+10Byte 
+CRCL 
+CRCH 
+Data Format: (10Byte) 
+DAT
+A 
+Type 
+User ID 
+PW 
+Length(
+bit)+PW 
+PW MS 
+Byte 
+Byte 
+1 
+2-6 
+7-9 
+10 
+Type=3 
+ 
+104.CMD: 0x68 Get Timezone Mode Status      
+Function: This command retrieves current setting for timezone shift. It is applicable to C2 
+Pro only. 
+Commands: (11Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x68 
+0x00 0x01 
+1Byte 
+CRCL 
+CRCH 
+Data Format: (1Byte) 
+DATA 
+W 
+Byte 
+1 
+W = 0-6, it represents each week days from Sunday to Saturday 
+ 
+Response: (52Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xE8 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 0x29 
+41Byte 
+CRCL 
+CRCH 
+Data Format: (41Byte) 
+DAT
+A 
+W 
+Sub 
+Timez
+one 1 
+Sub 
+Timez
+one 2 
+Sub 
+Timez
+one 3 
+Sub 
+Timez
+one 4 
+Sub 
+Timez
+one 5 
+Sub 
+Timez
+one 6 
+Sub 
+Timez
+one 7 
+Sub 
+Timezone 
+8 
+Byte 
+1 
+2-6 
+7-11 
+12-16 
+17-21 
+22-26 
+27-31 
+32-36 
+37-41 
+Sub Timezone Format: (5Byte) 
+DATA 
+Start H  
+Start M 
+End H 
+End M 
+Attendan
+ce Status 
+Number 
+Byte 
+1 
+2 
+3 
+4 
+5 
+ 
+
+=== PAGE 90 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 90 / 96 
+ 
+105.CMD: 0x69 Set Timezone Mode Status      
+Function: This command applies rules for timezone shift. It is applicable to C2 Pro only. 
+Commands: (51Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x69 
+0x00 0x29 
+41Byte 
+CRCL 
+CRCH 
+Data Format: (41Byte) 
+DAT
+A 
+W 
+Sub 
+Timez
+one 1 
+Sub 
+Timez
+one 2 
+Sub 
+Timez
+one 3 
+Sub 
+Timez
+one 4 
+Sub 
+Timez
+one 5 
+Sub 
+Timez
+one 6 
+Sub 
+Timez
+one 7 
+Sub 
+Timezone 
+8 
+Byte 
+1 
+2-6 
+7-11 
+12-16 
+17-21 
+22-26 
+27-31 
+32-36 
+37-41 
+W = 0-6, it represents each week days from Sunday to Saturday 
+Sub Timezone Format: (5Byte) 
+DATA 
+Start H  
+Start M 
+End H 
+End M 
+Attendance 
+Status No. 
+Byte 
+1 
+2 
+3 
+4 
+5 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xE9 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+106.CMD: 0x6D Upload User’s images       
+Function: This command uploads a user’s photo to device. It is applicable to OA1000 
+Pro/C2 Pro only. 
+Commands: (10+N Byte N<=15365) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x6D 
+N byte 
+N Byte 
+CRCL 
+CRCH 
+Data Format: (N Byte) 
+DAT
+A 
+User 
+ID 
+Photo 
+Data 
+Byte 
+1-5 
+6-N 
+The photo should be in jpg format, the size of the file should be less than or equal to 
+15KB. 
+ 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+
+=== PAGE 91 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 91 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xED 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL 
+CRCH 
+ 
+107.CMD: 0x6A  Add BT Device/User  
+ 
+Function: This command adds a BT user into device. It is applicable to M5 only. 
+Commands: (38Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x6A 
+0x00 0x1C 
+28Byte 
+CRCL CRCH 
+Data Format: (28Byte) 
+DATA 
+Bluetooth 
+ID 
+Reserved  
+Byte 
+1-16 
+17-28 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xEA 
+ACK_SUCCESS 
+ACK_FULL 
+ACK_USER_OCCU
+PIED 
+ACK_FAIL 
+0x00 
+0x00 
+CRCL 
+CRCH 
+ 
+108.CMD: 0x6B Delete Specific Address of Bluetooth 
+Device 
+Function: This command deletes a Bluetooth device by a specified Bluetooth ID. It is 
+applicable to M5 only. 
+Commands: (26Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DAT
+A 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x6B 
+0x00 0x10 
+16B
+yte 
+CRCL CRCH 
+Data Format: (16Byte) 
+DATA 
+Bluetooth 
+Address 
+Byte 
+1-16 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+
+=== PAGE 92 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 92 / 96 
+ 
+0xA5 
+IDHH IDHL 
+IDLH IDLL 
+0xEB 
+ACK_SUCCESS 
+ACK_NO_USER 
+0x00 0x00 
+CRCL CRCH 
+IF the “Bluetooth ID” argument set as 0, then all BT devices will be erased. 
+ 
+109.CMD: 0x6C Get Information of All Bluetooth 
+Devices 
+Function: This command retrieves data of all Bluetooth devices. It is applicable to M5 only. 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x6C 
+0x00 0x00 
+CRCL CRCH 
+Response: (291Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xE
+C 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x01 
+0x18 
+280Byte 
+CRCL 
+CRCH 
+Data Format: (280Byte) 
+DATA 
+BT Device1  
+BT Device2 
+... 
+BT Device10 
+Byte 
+1-28 
+29-56 
+... 
+259-280 
+BT Device/User Data Format: (28Byte) 
+DATA 
+Bluetooth ID 
+Reserved  
+Byte 
+1-16 
+17-28 
+If any ‘BT device’ data field is not used, all the 28 byte data should be set as 0xFF. 
+ 
+110.CMD: 0x6E Get IEEE802.11 Network Setting   
+Function: This command retrieves SSID and password for a specified WiFi network. It is 
+only applicable to VX0.  
+Commands: (11Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DAT
+A 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x6E 
+0x00 0x01 
+1Byt
+e 
+CRCL CRCH 
+Data Format: (1Byte) 
+DATA 
+Subscript 
+Byte 
+1 
+Subscript range: 1-5 
+Response: (139Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+
+=== PAGE 93 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 93 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xEE ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x80 
+128Byte 
+CRCL 
+CRCH 
+Data Format: (128Byte) 
+DATA 
+SSID 
+Password 
+Byte 
+1-64 
+65-128 
+Both SSID and Password are ASC strings. 
+ 
+111.CMD: 0x6F Set IEEE 802.11 Network setting 
+Function: This command sets the SSID and password for a specified WIFI network. It is 
+applicable to VX0 only. 
+Commands: (139Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DAT
+A 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x6F 
+0x00 0x81 
+129B
+yte 
+CRCL CRCH 
+Data Format: (129Byte) 
+DATA 
+Subscript 
+Name 
+Password 
+Byte 
+1 
+2-65 
+66-129 
+Subscript 范围: 1-5 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0xEF 
+ACK_SUCCES
+S 
+ACK_FAIL 
+0x00 0x00 
+CRCL CRCH 
+ 
+112.CMD: 0x05 Get Authorization Code 
+Function: This command retrieves an authorization code. It is only applicable to C2 
+Pro/OA1000 Pro etc. Which belong to the A20 platform. 
+Commands: (10Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DAT
+A 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x05 
+0x00 0x00 
+0Byt
+e 
+CRCL CRCH 
+Response: (31Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+
+=== PAGE 94 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 94 / 96 
+ 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x85 
+ACK_SUCC
+ESS 
+ACK_FAIL 
+0x00 
+0x14 
+20Byte 
+CRCL 
+CRCH 
+ 
+113.CMD: 0x06 Authorize 
+Function: Device port is 5050, PC port is 5060. It is only applicable to C2 Pro/OA1000 Pro 
+etc.which belong to the A20 platform. 
+Commands: (30Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x06 
+0x00 0x14 
+20Byte 
+CRCL CRCH 
+Response: (11Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x86 
+ACK_SUCCESS 
+ACK_FAIL 
+0x00 0x00 
+CRCL CRCH 
+ 
+114.CMD: 0x07 UDP Start Video  
+Function: Device(UDP port:5050) informs PC (UDP port:5060) about starting video 
+communication. It is applicable to OA1000 Pro only. 
+Commands: (10 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x07 
+0x00 
+0x00 
+CRCL CRCH 
+Response: Null 
+ 
+115.CMD: 0x08 UDP Stop Video 
+Function: This command Device informs PC about closure of video communication. It is 
+applicable to OA1000 Pro only 
+Commands: (10 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x08 
+0x00 
+0x00 
+CRCL CRCH 
+Response: Null 
+ 
+
+=== PAGE 95 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 95 / 96 
+ 
+116.CMD: 0x09 UDP Command 
+    
+Function: This command sends an instruction from PC (UDP port:5060) to device(UDP 
+port 5050). It is applicable to OA1000 Pro only 
+ 
+Commands: (111 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x09 
+0x00 
+0x65 
+101Byte 
+CRCL CRCH 
+Response: (11 Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x89 
+ACK_SUCCESS 
+ACK_FAIL 
+0x00 
+0x00 
+0Byte 
+CRCL 
+CRCH 
+Data Format: (101Byte) 
+DAT
+A 
+ CMD 
+Type 
+Prompt 
+Content(Unicode) 
+Byte 
+1 
+2-101 
+ CMD Type: =1 Open Door 
+ 
+117.CMD: 0x0A Get Server URL 
+Function: This command retrieves the server’s URL from a device. 
+Commands: (10 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x0A 
+0x00 
+0x00 
+0Byte 
+CRCL CRCH 
+Response: (115 Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x8A 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x68 
+104Byte 
+CRCL 
+CRCH 
+Data Format: (104Byte) 
+DAT
+A 
+DNS 
+URL 
+Byte 
+1-4 
+5-104 
+ 
+118.CMD: 0x0B Set Server URL    
+Function: This command sets a specified server’s URL to a device. 
+Commands: (114 Byte) 
+
+=== PAGE 96 ===
+ANVIZ   TC_B Communication Protocol User Manual  
+ 96 / 96 
+ 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x0B 
+0x00 
+0x68 
+104Byte 
+CRCL CRCH 
+Response: (11 Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x8B 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x00 
+0Byte 
+CRCL 
+CRCH 
+Data Format: (104Byte) 
+DAT
+A 
+DNS 
+URL 
+Byte 
+1-4 
+5-104 
+ 
+119.CMD: 0x0C Test User  
+Function: This command determines whether a specified user exists. 
+Commands: (114 Byte) 
+STX 
+CH 
+ CMD 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH IDLL 
+0x0C 
+0x00 
+0x05 
+5Byte 
+CRCL CRCH 
+Response: (11 Byte) 
+STX 
+CH 
+ACK 
+RET 
+LEN 
+DATA 
+CRC16 
+0xA5 
+IDHH IDHL IDLH 
+IDLL 
+0x8C 
+ACK_SUC
+CESS 
+ACK_FAIL 
+0x00 
+0x01 
+1Byte 
+CRCL 
+CRCH 
+Data Format: (104Byte) 
+DATA 
+Exists 
+Byte 
+1 
+ 
+Exists 
+=0 not exists 
+=1 exists 
