@@ -901,6 +901,10 @@ class ModuloUtente(Dialogo):
         Bottone(azioni, "Salva", self._salva, colore=VERDE, colore_testo=BG,
                 altezza=64, larghezza=170).pack(side="right")
         self._disegna()
+        # Rete di sicurezza: se anche cosi' la finestra sfora lo schermo — DPI
+        # diverso, caratteri di sistema piu' grandi — si accorcia e si lascia
+        # scorrere, invece di nascondere il bottone Salva sotto il bordo.
+        self.limita_allo_schermo()
 
     def _riga(self, etichetta, chiave, comando):
         f = tk.Frame(self.campi, bg=CARD, height=ALTEZZA_TOCCO)
