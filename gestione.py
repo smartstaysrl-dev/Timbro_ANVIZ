@@ -833,7 +833,9 @@ class LetturaTessera(Dialogo):
             self.nota.config(
                 text="Il terminale non ha letto niente. Riprova appoggiando "
                      "bene il badge, oppure scrivi il numero a mano.")
-            self.after(1600, self.destroy)
+            # Registrato sul padre: distruggersi dentro un proprio `after`
+            # lascia Tkinter a ripulire un oggetto gia' sparito.
+            self.master.after(1600, self.destroy)
             return
         self.avanzamento.config(text=f"{self._scade} s", fg=BLU)
         if self.nota.cget("text"):

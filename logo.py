@@ -163,7 +163,15 @@ class Splash(tk.Toplevel):
         """Aspetta che i tre secondi siano compiuti, poi sfuma e si toglie."""
         trascorsi = (time.monotonic() - self._nata) * 1000
         attesa = max(0, self.DURATA_MS - self.DISSOLVENZA_MS - trascorsi)
-        self.after(int(attesa), lambda: self._chiudi(1.0, al_termine))
+        # I risvegli si registrano sulla finestra PADRE, non su questa: una
+        # finestra che si distrugge dentro un proprio `after` lascia Tkinter a
+        # ripulire un oggetto che non c'e' piu', e sulla console compare un
+        # "'NoneType' object has no attribute 'remove'" che non spiega niente.
+        self._sveglia(int(attesa), lambda: self._chiudi(1.0, al_termine))
+
+    def _sveglia(self, ritardo, cosa):
+        padre = self.master if self.master is not None else self
+        padre.after(ritardo, cosa)
 
     def _chiudi(self, quanto: float, al_termine) -> None:
         if not self.winfo_exists():
@@ -174,8 +182,8 @@ class Splash(tk.Toplevel):
                 al_termine()
             return
         passo = self.PASSO_MS / max(1, self.DISSOLVENZA_MS)
-        self.after(self.PASSO_MS,
-                   lambda: self._chiudi(quanto - passo, al_termine))
+        self._sveglia(self.PASSO_MS,
+                      lambda: self._chiudi(quanto - passo, al_termine))
 
     def scrivi(self, testo: str) -> None:
         try:
