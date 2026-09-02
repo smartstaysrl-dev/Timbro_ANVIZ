@@ -226,6 +226,12 @@ def main() -> int:
     schermata.giorno = ieri
     for periodo, nome in (("giorno", "presenze-giorno.png"),
                           ("mese", "presenze-mese.png")):
+        if periodo == "mese":
+            # Il mese in corso ha solo i primi giorni: una figura quasi vuota
+            # non mostra niente di quello che la didascalia promette. Si prende
+            # il mese appena chiuso, che e' pieno.
+            primo = dt.date.today().replace(day=1)
+            schermata.giorno = primo - dt.timedelta(days=15)
         schermata._periodo(periodo)
         calma()
         scatta(app, nome)

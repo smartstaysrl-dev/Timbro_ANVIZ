@@ -30,6 +30,7 @@ dito. Copre gli strati 2-5 dell'architettura del documento operativo v1.0
 | `logo.py` | il marchio disegnato su tela Tk, e la finestrella di avvio |
 | `scatti_guida.py` | rifà le figure della guida su un archivio inventato |
 | `crea_pacchetto.py` · `crea_icona.py` | preparano la cartella da copiare in sede |
+| `guida_pdf.py` | stampa la stessa guida in PDF (`TIMBRA - guida.pdf`) |
 | `test_anviz.py` · `test_presenze.py` · `test_copie.py` · `test_grafico.py` · `test_sicurezza.py` · `test_posta.py` | i collaudi |
 
 Nessuna dipendenza esterna: solo la libreria standard di Python 3.10+.
