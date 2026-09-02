@@ -3044,8 +3044,8 @@ class App(tk.Tk):
         # istante: uno schermo vuoto in quel momento fa pensare che il doppio
         # clic non abbia funzionato, e qualcuno ne apre un secondo.
         self.withdraw()
-        partenza = time.monotonic()
         splash = logo.Splash(self)
+        splash.apri()                    # dissolvenza in entrata
         splash.scrivi("leggo la configurazione...")
         self.cfg = carica_config()
         self.regole = presenze.Regole.carica(FILE_REGOLE)
@@ -3084,14 +3084,32 @@ class App(tk.Tk):
         self.after(300, self._svuota_coda)
         self.mostra("Oggi")
 
-        # Il marchio resta a video almeno un attimo: se sparisse dopo 40
-        # millisecondi sembrerebbe un difetto grafico, non una partenza.
+        # Il marchio compie i suoi tre secondi e si sfuma via da solo. La
+        # finestra vera si mostra subito sotto: quando la dissolvenza finisce
+        # il programma e' gia' li', senza uno stacco.
         self.deiconify()
         self.lift()
-        rimasti = max(0, int(900 - (time.monotonic() - partenza) * 1000))
-        self.after(rimasti, splash.destroy)
+        splash.congeda(self._dopo_avvio)
+
+    def _dopo_avvio(self):
+        """Finita la dissolvenza, la finestra vera va davvero davanti.
+
+        Windows non porta in primo piano una finestra che si e' mostrata da
+        sola mentre il fuoco era altrove: senza questa spinta il programma
+        parte, funziona, e resta dietro al browser — sembra non essersi
+        aperto. Il "sempre in primo piano" si accende e si spegne subito
+        dopo, altrimenti resterebbe sopra a tutto per sempre.
+        """
+        try:
+            self.deiconify()
+            self.lift()
+            self.attributes("-topmost", True)
+            self.after(400, lambda: self.attributes("-topmost", False))
+            self.focus_force()
+        except tk.TclError:
+            pass
         if guasto_configurazione:
-            self.after(rimasti + 200, self._avvisa_configurazione)
+            self._avvisa_configurazione()
 
     def _avvisa_configurazione(self):
         Avviso.mostra(

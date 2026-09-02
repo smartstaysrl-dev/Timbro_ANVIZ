@@ -16,6 +16,7 @@ lettere, non il marchio.
 
 from __future__ import annotations
 
+import time
 import tkinter as tk
 import tkinter.font as tkfont
 
@@ -93,13 +94,23 @@ class Marchio(tk.Canvas):
 
 
 class Splash(tk.Toplevel):
-    """La finestrella che si vede mentre il programma si prepara.
+    """La finestrella di avvio: tre secondi al centro dello schermo, in
+    dissolvenza in entrata e in uscita.
 
     Non e' decorazione fine a se stessa: aprire l'archivio, calcolare le
     presenze e far partire lo scheduler prende qualche istante, e uno schermo
-    nero in quel momento fa pensare che il doppio clic non abbia funzionato —
+    vuoto in quel momento fa pensare che il doppio clic non abbia funzionato —
     col risultato che qualcuno ne apre un secondo.
+
+    I tre secondi sono garantiti da entrambe le parti. Se il programma si
+    prepara in fretta si aspetta; se ci mette piu' del previsto NON si allunga
+    l'attesa, si sfuma via subito: il marchio non deve mai diventare il motivo
+    per cui si sta fermi a guardare.
     """
+
+    DURATA_MS = 3000            # quanto resta a video, in tutto
+    DISSOLVENZA_MS = 420        # entrata e uscita, ciascuna
+    PASSO_MS = 20
 
     def __init__(self, padre, scala: float = 0.62):
         super().__init__(padre)
@@ -113,12 +124,58 @@ class Splash(tk.Toplevel):
                               fg=GRIGIO, font=_carattere(12))
         self.stato.pack(pady=(0, 18))
         self.update_idletasks()
+
         larghezza, altezza = self.winfo_reqwidth(), self.winfo_reqheight()
         x = (self.winfo_screenwidth() - larghezza) // 2
-        y = (self.winfo_screenheight() - altezza) // 3
+        y = (self.winfo_screenheight() - altezza) // 2      # centrata davvero
         self.geometry(f"{larghezza}x{altezza}+{max(0, x)}+{max(0, y)}")
         self.attributes("-topmost", True)
+        self._trasparenza(0.0)
+        self._nata = time.monotonic()
         self.update()
+        # Su una finestra senza bordi Tk applica la DIMENSIONE ma non la
+        # posizione, finche' non e' stata mostrata: prima dell'update finiva
+        # in alto a sinistra invece che al centro. Si rimette adesso.
+        self.geometry(f"+{max(0, x)}+{max(0, y)}")
+        self.update_idletasks()
+
+    # --- dissolvenza ----------------------------------------------------
+    def _trasparenza(self, quanto: float) -> bool:
+        """Ritorna falso se il sistema non sa fare la trasparenza."""
+        try:
+            self.attributes("-alpha", max(0.0, min(1.0, quanto)))
+            return True
+        except tk.TclError:
+            return False
+
+    def apri(self) -> None:
+        """Dissolvenza in entrata, subito, prima che il programma si metta a
+        lavorare: e' l'unico momento in cui si puo' fare a passi regolari,
+        perche' dopo il thread principale e' occupato ad aprire l'archivio."""
+        passi = max(1, self.DISSOLVENZA_MS // self.PASSO_MS)
+        for i in range(1, passi + 1):
+            if not self._trasparenza(i / passi):
+                return                       # niente trasparenza: si vede e basta
+            self.update()
+            time.sleep(self.PASSO_MS / 1000)
+
+    def congeda(self, al_termine=None) -> None:
+        """Aspetta che i tre secondi siano compiuti, poi sfuma e si toglie."""
+        trascorsi = (time.monotonic() - self._nata) * 1000
+        attesa = max(0, self.DURATA_MS - self.DISSOLVENZA_MS - trascorsi)
+        self.after(int(attesa), lambda: self._chiudi(1.0, al_termine))
+
+    def _chiudi(self, quanto: float, al_termine) -> None:
+        if not self.winfo_exists():
+            return
+        if quanto <= 0 or not self._trasparenza(quanto):
+            self.destroy()
+            if al_termine:
+                al_termine()
+            return
+        passo = self.PASSO_MS / max(1, self.DISSOLVENZA_MS)
+        self.after(self.PASSO_MS,
+                   lambda: self._chiudi(quanto - passo, al_termine))
 
     def scrivi(self, testo: str) -> None:
         try:
