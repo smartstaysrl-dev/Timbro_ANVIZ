@@ -1,4 +1,8 @@
-# Gestione presenze — terminale Anviz W1C Pro
+<p align="center">
+  <img src="logo/timbra-logo.svg" alt="TIMBRA — Presenze" width="440">
+</p>
+
+# TIMBRA — presenze da terminale Anviz W1C Pro
 
 Applicazione touch che parla direttamente col terminale in LAN (TCP porta 5010),
 senza cloud, senza CrossChex, senza browser.
@@ -22,6 +26,9 @@ dito. Copre gli strati 2-5 dell'architettura del documento operativo v1.0
 | `copie.py` | le copie di sicurezza giornaliere, verificate |
 | `posta.py` | il report mensile via email: quando spedirlo e cosa scriverci |
 | `sicurezza.py` | il PIN delle sezioni pericolose, l'offuscamento, l'istanza unica |
+| `guida.py` | il manuale dell'operatore, che si apre dal «?» dentro il programma |
+| `logo.py` | il marchio disegnato su tela Tk, e la finestrella di avvio |
+| `scatti_guida.py` | rifà le figure della guida su un archivio inventato |
 | `test_anviz.py` · `test_presenze.py` · `test_copie.py` · `test_grafico.py` · `test_sicurezza.py` · `test_posta.py` | i collaudi |
 
 Nessuna dipendenza esterna: solo la libreria standard di Python 3.10+.
@@ -68,13 +75,13 @@ Si sceglie il giorno del mese e l'ora; racconta sempre il mese appena chiuso.
 
 **Una copia sola dell'applicazione**, e le sezioni pericolose sotto PIN.
 
+**La guida è dentro il programma**, col «?» in alto a destra: dieci capitoli
+con le figure di ogni passaggio. Le figure si rifanno con `scatti_guida.py`, e
+sono fatte su un archivio inventato con nomi di fantasia — un manuale con
+dentro nomi e orari veri è un documento che gira per il locale e si stampa.
+
 **Esportazione mensile** in CSV per il consulente paghe, che avvisa se ci sono
 anomalie ancora aperte.
-
-## Le quattro strade, e perché sono meno diverse di quanto sembri
-
-Il documento operativo ne elenca quattro. La ricognizione tecnica ha mostrato che
-tre finiscono sullo stesso filo:
 
 ## Le quattro strade, e perché sono meno diverse di quanto sembri
 

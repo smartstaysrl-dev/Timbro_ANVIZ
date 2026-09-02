@@ -13,9 +13,15 @@ Regole di scrittura rispettate qui dentro:
   - quando una cosa NON si può fare, lo si scrive, con il perché e con la
     strada alternativa. È la parte che fa perdere più tempo se manca.
 
-Ogni capitolo è (titolo, [blocchi]). Un blocco è una stringa: se comincia con
-"# " è un sottotitolo, se comincia con "- " è un punto elenco, altrimenti è un
-paragrafo normale.
+Ogni capitolo è (titolo, [blocchi]). Un blocco è una stringa:
+  "# ..."            sottotitolo
+  "- ..."            punto elenco
+  "! foto.png"       una figura, presa da guida/ (con "| didascalia" in coda)
+  qualunque altro    paragrafo
+
+Le figure si rifanno con `python scatti_guida.py`. Sono fatte su un archivio
+inventato con nomi di fantasia, apposta: un manuale con dentro i nomi e gli
+orari veri dei dipendenti è un documento che gira per il locale e si stampa.
 """
 
 CAPITOLI = [
@@ -46,8 +52,9 @@ CAPITOLI = [
  "- Timbrature: l'elenco grezzo, così come arriva dal terminale",
  "- Dipendenti: chi è iscritto sul terminale",
  "- Impostazioni: collegamento, regole, report, copie",
- "Il tasto F11 mette il programma a tutto schermo e lo toglie.",
-]),
+ "Il tasto F11 mette il programma a tutto schermo e lo toglie. Il «?» in "
+ "alto a destra riapre sempre questa guida.",
+ ]),
 
 ("Il giro di ogni giorno", [
  "Basta guardare due cose.",
@@ -61,6 +68,8 @@ CAPITOLI = [
  "# La schermata Oggi",
  "Chi è dentro adesso è in verde, con l'ora in cui è entrato. Chi è già "
  "uscito è in grigio, con le ore fatte.",
+ "! oggi.png | La schermata Oggi: in verde chi è al lavoro adesso, in "
+ "grigio chi è già uscito.",
 
  "Se sotto un nome compare una scritta gialla, quella giornata ha qualcosa "
  "che non torna: quasi sempre una timbratura dimenticata. Si sistema dalla "
@@ -78,11 +87,14 @@ CAPITOLI = [
 
  "Anche il bottone per esportare segue quello che stai guardando: se sei sul "
  "mese scrive «Esporta il mese».",
+ "! presenze-giorno-grafico.png | A giorno: la barra va dall'entrata "
+ "all'uscita, il buco in mezzo è la pausa.",
 
  "# A giorno",
  "Una riga per persona, con l'orario di entrata e di uscita e le ore fatte. "
  "Il bottone «dettaglio» apre tutte le timbrature di quella persona in quel "
  "giorno, ed è da lì che si correggono.",
+ "! presenze-giorno.png | Le ore di una giornata, una riga per persona.",
 
  "# A settimana e a mese",
  "La riga diventa il riassunto della persona: ore totali, giorni lavorati, "
@@ -99,6 +111,8 @@ CAPITOLI = [
  "A settimana e a mese c'è una colonna per giorno, alta quanto le ore fatte: "
  "in un colpo d'occhio si vede chi ha lavorato tanto e chi poco. Toccando "
  "una colonna si apre quel giorno.",
+ "! presenze-mese-grafico.png | Il mese: una colonna per giorno. I buchi "
+ "sono i lunedì di chiusura e i riposi.",
 
  "# Attenzione a un numero che sembra sbagliato",
  "Di chi è al lavoro in questo momento, le ore totali risultano zero: il "
@@ -116,6 +130,8 @@ CAPITOLI = [
  "- si preme «dettaglio» sulla persona",
  "- «Aggiungi timbratura» per una che manca, «annulla» per una sbagliata",
  "- si sceglie l'ora, se è un'entrata o un'uscita, e si scrive il motivo",
+ "! dettaglio.png | Il dettaglio di una giornata: ogni timbratura, e i "
+ "bottoni per correggere.",
 
  "Il motivo è obbligatorio. Senza, fra sei mesi nessuno sa più perché quel "
  "giorno è cambiato, e davanti a una contestazione è l'unica cosa che conta.",
@@ -134,9 +150,12 @@ CAPITOLI = [
  "La schermata Dipendenti mostra chi è iscritto nel terminale. Aggiungere o "
  "modificare qui scrive davvero dentro al dispositivo: non è un elenco a "
  "parte.",
+ "! dipendenti.png | Chi è iscritto sul terminale.",
 
  "# Un dipendente nuovo",
  "Si preme «Nuovo», si scrive il nome, e si sceglie come farlo identificare.",
+ "! dipendente.png | La scheda di un dipendente: tutto quello che si può "
+ "cambiare da qui.",
 
  "# La tessera si fa leggere al terminale",
  "Alla riga «Tessera» si preme «cambia» e poi «Leggila dal terminale»: "
@@ -144,6 +163,7 @@ CAPITOLI = [
  "numero arriva da solo. È la strada giusta, perché il numero stampato sul "
  "badge spesso non è quello che il lettore vede davvero.",
  "Si può anche scrivere il numero a mano, o togliere la tessera.",
+ "! tessera.png | Appoggia il badge al lettore: il numero arriva da solo.",
 
  "# Il codice personale",
  "Alla riga «PIN / password» si mette il numero che la persona digiterà sul "
@@ -183,6 +203,8 @@ CAPITOLI = [
 
  "Alla fine si accende l'interruttore in cima alla sezione. Finché mancano "
  "server, mittente o destinatario, l'interruttore si rifiuta di accendersi.",
+ "! impostazioni-posta.png | Tutto quello che serve per far partire il "
+ "report, in una sezione sola.",
 
  "# Provalo subito, non aspettare il primo del mese",
  "«Manda una prova adesso» dice in pochi secondi se le credenziali vanno. "
@@ -210,6 +232,8 @@ CAPITOLI = [
 ("Il codice di sblocco", [
  "Di fabbrica è 12345. Serve per entrare in Dipendenti e in Impostazioni, e "
  "per correggere una timbratura.",
+ "! pin.png | La richiesta del codice. Il lucchetto in cima si tiene premuto "
+ "tre secondi per il recupero.",
 
  "Una volta digitato resta valido un quarto d'ora, poi si richiude da solo. "
  "In Impostazioni c'è «Richiudi adesso» per chiuderlo subito, per esempio "
@@ -219,6 +243,7 @@ CAPITOLI = [
  "Impostazioni, sezione «Sicurezza», voce «PIN delle sezioni protette». "
  "Chiede prima quello vecchio, poi il nuovo due volte. Da quattro a otto "
  "cifre.",
+ "! impostazioni-sicurezza.png | La sezione Sicurezza.",
 
  "# Se lo dimentichi",
  "Nella finestra che chiede il codice, tieni premuto il lucchetto in alto "
@@ -238,6 +263,7 @@ CAPITOLI = [
 ("Le regole con cui si contano le ore", [
  "Stanno in Impostazioni, sezione «Regole del locale». Vanno decise dal "
  "titolare, non lasciate come capita: cambiano le ore che si pagano.",
+ "! impostazioni-regole.png | Le regole con cui si contano le ore.",
 
  "# La giornata comincia alle",
  "Una timbratura prima di quest'ora conta sul giorno precedente. È quello "
@@ -281,6 +307,8 @@ CAPITOLI = [
 
  "«Fai una copia adesso» ne fa una fuori turno, per esempio prima di una "
  "modifica grossa.",
+ "! impostazioni-copie.png | Quando è stata fatta l'ultima copia, e dove "
+ "sono tutte.",
 
  "# Se il computer muore",
  "Le timbrature sono ancora dentro al terminale, che non viene mai svuotato. "
@@ -313,6 +341,8 @@ CAPITOLI = [
  "Controlla in Dipendenti che sia iscritta e che abbia una tessera o un "
  "codice. Poi guarda in Timbrature se le sue passate arrivano: se ci sono "
  "lì ma non nelle presenze, è una questione di regole, non di collegamento.",
+ "! timbrature.png | L'elenco grezzo: così come arriva dal terminale, senza "
+ "interpretazioni.",
 
  "# Il mese esportato non si apre bene in Excel",
  "Il file è già preparato per Excel italiano. Se le colonne finiscono tutte "

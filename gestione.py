@@ -26,11 +26,13 @@ import queue
 import sqlite3
 import sys
 import threading
+import time
 import tkinter as tk
 
 import anviz
 import copie
 import guida
+import logo
 import posta
 import presenze
 import sicurezza
@@ -498,6 +500,7 @@ class Guida(Dialogo):
         self.testo = ListaScorrevole(corpo)
         self.testo.pack(side="left", fill="both", expand=True, padx=(12, 0))
 
+        self._immagini = []
         self.bottoni = []
         for n, (titolo, _) in enumerate(guida.CAPITOLI):
             b = Bottone(self.indice.interno, titolo,
@@ -514,6 +517,7 @@ class Guida(Dialogo):
             acceso = i == n
             b.tinta(BLU if acceso else CARD, BG if acceso else TESTO)
         self.testo.svuota()
+        self._immagini.clear()
         titolo, blocchi = guida.CAPITOLI[n]
         tk.Label(self.testo.interno, text=titolo, bg=BG, fg=TESTO,
                  font=F_TITOLO, anchor="w", justify="left",
@@ -531,12 +535,42 @@ class Guida(Dialogo):
                 tk.Label(riga, text=blocco[2:], bg=BG, fg=TESTO,
                          font=F_NORMALE, anchor="w", justify="left",
                          wraplength=580).pack(side="left", fill="x", expand=True)
+            elif blocco.startswith("! "):
+                self._figura(blocco[2:])
             else:
                 tk.Label(self.testo.interno, text=blocco, bg=BG, fg=TESTO,
                          font=F_NORMALE, anchor="w", justify="left",
                          wraplength=620).pack(fill="x", padx=8, pady=4)
         self.testo.segui_trascinamento(self.testo.interno)
         self.testo.tela.yview_moveto(0)
+
+    def _figura(self, riga):
+        """Una schermata del programma, con la sua didascalia.
+
+        Le immagini si tengono in una lista: Tk NON conserva un riferimento
+        alle PhotoImage, e se le lascia raccogliere dal garbage collector il
+        riquadro resta vuoto senza dare nessun errore.
+        """
+        nome, _, didascalia = riga.partition("|")
+        percorso = os.path.join(CARTELLA, "guida", nome.strip())
+        try:
+            immagine = tk.PhotoImage(file=percorso)
+        except tk.TclError:
+            tk.Label(self.testo.interno,
+                     text=f"(figura mancante: {nome.strip()} — si rifanno con "
+                          f"scatti_guida.py)", bg=BG, fg=TESTO_TENUE,
+                     font=F_PICCOLO, anchor="w").pack(fill="x", padx=8, pady=6)
+            return
+        self._immagini.append(immagine)
+        cornice = tk.Frame(self.testo.interno, bg=CARD_CHIARA)
+        cornice.pack(anchor="w", padx=8, pady=(10, 2))
+        tk.Label(cornice, image=immagine, bg=CARD_CHIARA, bd=0).pack(padx=2,
+                                                                    pady=2)
+        if didascalia.strip():
+            tk.Label(self.testo.interno, text=didascalia.strip(), bg=BG,
+                     fg=TESTO_TENUE, font=F_PICCOLO, anchor="w",
+                     justify="left", wraplength=620).pack(fill="x", padx=10,
+                                                          pady=(0, 10))
 
     @staticmethod
     def mostra(padre, capitolo=0):
@@ -2092,9 +2126,10 @@ class SchermataDipendenti(Schermata):
         ])
         tk.Label(self, bg=BG, fg=TESTO_TENUE, font=F_PICCOLO, anchor="w",
                  wraplength=900, justify="left",
-                 text="Nome, tessera, reparto e permessi si scrivono da qui "
-                      "direttamente sul terminale. Impronte e password no: "
-                      "richiedono il dito o la tastiera del dispositivo."
+                 text="Nome, tessera e PIN si scrivono da qui, direttamente "
+                      "sul terminale; la tessera puo' leggerla il lettore. "
+                      "Solo le impronte vanno iscritte sul dispositivo, e il "
+                      "permesso di amministratore si cambia dal suo menu."
                  ).pack(fill="x", padx=24, pady=(0, 10))
         self.lista = ListaScorrevole(self)
         self.lista.pack(fill="both", expand=True, padx=16, pady=(0, 16))
@@ -3004,6 +3039,14 @@ SCHERMATE = (SchermataOggi, SchermataPresenze, SchermataTimbrature,
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
+        # Il marchio mentre il programma si prepara. Aprire l'archivio,
+        # calcolare le presenze e far partire lo scheduler prende qualche
+        # istante: uno schermo vuoto in quel momento fa pensare che il doppio
+        # clic non abbia funzionato, e qualcuno ne apre un secondo.
+        self.withdraw()
+        partenza = time.monotonic()
+        splash = logo.Splash(self)
+        splash.scrivi("leggo la configurazione...")
         self.cfg = carica_config()
         self.regole = presenze.Regole.carica(FILE_REGOLE)
         self.coda: queue.Queue = queue.Queue()
@@ -3035,10 +3078,30 @@ class App(tk.Tk):
         self._corpo()
         self._barra_stato()
 
+        splash.scrivi("avvio la raccolta...")
         self.servizio = Servizio(self.cfg, self.coda)
         self.servizio.start()
         self.after(300, self._svuota_coda)
         self.mostra("Oggi")
+
+        # Il marchio resta a video almeno un attimo: se sparisse dopo 40
+        # millisecondi sembrerebbe un difetto grafico, non una partenza.
+        self.deiconify()
+        self.lift()
+        rimasti = max(0, int(900 - (time.monotonic() - partenza) * 1000))
+        self.after(rimasti, splash.destroy)
+        if guasto_configurazione:
+            self.after(rimasti + 200, self._avvisa_configurazione)
+
+    def _avvisa_configurazione(self):
+        Avviso.mostra(
+            self, "Configurazione illeggibile",
+            f"Il file delle impostazioni non si leggeva "
+            f"({guasto_configurazione}) e sono ripartito da quelle di "
+            f"fabbrica: codice di sblocco 12345, report mensile spento.\n\n"
+            f"Il file com'era e' stato messo da parte come "
+            f"{os.path.basename(FILE_CONFIG_ROTTA)}, cosi' si puo' ancora "
+            f"recuperare quello che c'era scritto.", GIALLO)
 
     # -- struttura --
     def _schermo_intero(self, _=None):

@@ -6,3 +6,4 @@ __pycache__/
 configurazione.json
 regole.json
 copie/
+guida/_finto.db*
