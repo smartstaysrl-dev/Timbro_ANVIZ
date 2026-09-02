@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Nicola Bonazzi, Andrea D'Aniello.
+# Tutti i diritti riservati. Uso consentito solo a chi ha ricevuto una
+# licenza scritta dai titolari: vedi LICENSE. Il fatto che il codice sia
+# leggibile non e' un permesso.
 """Collaudo del report mensile via email.
 
 La parte delicata non e' spedire: e' decidere QUANDO. Un mese saltato in

@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Nicola Bonazzi, Andrea D'Aniello.
+# Tutti i diritti riservati. Uso consentito solo a chi ha ricevuto una
+# licenza scritta dai titolari: vedi LICENSE. Il fatto che il codice sia
+# leggibile non e' un permesso.
 """Collaudo del trasloco dei dati fuori dalla cartella del codice.
 
 È il pezzo che rende possibile aggiornare il programma senza perdere niente:

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Nicola Bonazzi, Andrea D'Aniello.
+# Tutti i diritti riservati. Uso consentito solo a chi ha ricevuto una
+# licenza scritta dai titolari: vedi LICENSE. Il fatto che il codice sia
+# leggibile non e' un permesso.
 """
 Assegna un indirizzo al terminale rispondendo alle sue richieste DHCP.
 

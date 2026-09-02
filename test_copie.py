@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Nicola Bonazzi, Andrea D'Aniello.
+# Tutti i diritti riservati. Uso consentito solo a chi ha ricevuto una
+# licenza scritta dai titolari: vedi LICENSE. Il fatto che il codice sia
+# leggibile non e' un permesso.
 """Collaudo delle copie di sicurezza: la copia deve essere consistente anche
 se qualcuno sta scrivendo, deve essere verificata, e la rotazione non deve
 buttare via quello che serve."""

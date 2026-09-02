@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Nicola Bonazzi, Andrea D'Aniello.
+# Tutti i diritti riservati. Uso consentito solo a chi ha ricevuto una
+# licenza scritta dai titolari: vedi LICENSE. Il fatto che il codice sia
+# leggibile non e' un permesso.
 """
 Client per terminali Anviz — protocollo TC_B su TCP porta 5010.
 
@@ -145,15 +149,15 @@ RET = {
 # 1 set 2026 su W1C Pro firmware 03.52.CT con una timbratura a un'ora nota
 # (0x32282c2e a fronte di 2026-09-01 12:12:30), l'epoca vera e' il 2 gennaio.
 # Con quella della specifica si sbaglia di un giorno esatto, all'indietro.
+EPOCA_SPEC = dt.datetime(2000, 1, 1, 0, 0, 0)   # da specifica: NON usare
+EPOCA_VERA = dt.datetime(2000, 1, 2, 0, 0, 0)   # verificata sul dispositivo
+EPOCA_DEFAULT = EPOCA_VERA
+
 # Il PIN sta in 28 bit (20 nel record piu' un byte alto in coda), quindi il
 # valore piu' grande rappresentabile e' 268.435.455: otto cifre ci stanno
 # sempre, la nona no. Il terminale di suo ne accetta di meno (i menu ne
 # propongono sei), ma qui si limita solo cio' che la codifica non regge.
 MAX_CIFRE_PIN = 8
-
-EPOCA_SPEC = dt.datetime(2000, 1, 1, 0, 0, 0)   # da specifica: NON usare
-EPOCA_VERA = dt.datetime(2000, 1, 2, 0, 0, 0)   # verificata sul dispositivo
-EPOCA_DEFAULT = EPOCA_VERA
 
 
 # --- CRC16 ------------------------------------------------------------------

@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Nicola Bonazzi, Andrea D'Aniello.
+# Tutti i diritti riservati. Uso consentito solo a chi ha ricevuto una
+# licenza scritta dai titolari: vedi LICENSE. Il fatto che il codice sia
+# leggibile non e' un permesso.
 """Collaudo del PIN, del recupero e dell'offuscamento.
 
 Non si sta collaudando una cassaforte — vedi il commento in testa a

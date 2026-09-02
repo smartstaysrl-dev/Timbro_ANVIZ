@@ -1,0 +1,107 @@
+TIMBRA — Licenza d'uso
+======================
+
+Copyright (c) 2026 Nicola Bonazzi e Andrea D'Aniello.
+Tutti i diritti riservati.
+
+
+1. Che cosa copre
+
+   Questa licenza copre TIMBRA in ogni sua parte: il codice sorgente, il
+   programma compilato o impacchettato, il marchio, la guida, le immagini e
+   la documentazione. Nel seguito, "il Software".
+
+   Il Software è di proprietà di Nicola Bonazzi e Andrea D'Aniello, in
+   seguito "i Titolari".
+
+
+2. Il fatto che sia pubblico non è un permesso
+
+   Il codice è consultabile su GitHub. Questo serve a chi lo ha in uso per
+   capire come funziona e a chi ci lavora per mantenerlo: NON concede a
+   nessuno il diritto di usarlo, copiarlo, installarlo o distribuirlo.
+
+   Chi non ha una licenza scritta dai Titolari non ha alcun diritto sul
+   Software, nemmeno di usarlo per sé.
+
+
+3. Che cosa è concesso a chi ha la licenza
+
+   I Titolari concedono, per iscritto e caso per caso, il diritto di
+   installare e usare il Software su un numero definito di postazioni, per
+   la gestione delle presenze della propria attività.
+
+   La licenza è personale, non esclusiva e non cedibile: non passa a un
+   altro soggetto se l'attività cambia proprietario, salvo accordo scritto.
+
+   Il licenziatario può fare copie di sicurezza dell'installazione e dei
+   propri dati. I dati raccolti — le timbrature, l'anagrafica dei propri
+   dipendenti — sono e restano suoi.
+
+
+4. Che cosa non è concesso, a nessuno
+
+   Senza autorizzazione scritta dei Titolari non è consentito:
+
+   a) distribuire, rivendere, cedere, noleggiare o pubblicare il Software,
+      in tutto o in parte, in forma sorgente o compilata;
+   b) usarlo per erogare un servizio a terzi;
+   c) ricavarne opere derivate, o incorporarne parti in altri programmi;
+   d) togliere o alterare le note di copyright, il marchio o questa licenza;
+   e) aggirare le limitazioni della licenza ricevuta.
+
+
+5. Modifiche
+
+   Chi ha la licenza può adattare il Software alla propria installazione —
+   configurazioni, regole, testi. Le modifiche restano per uso interno: non
+   si distribuiscono e non danno diritti sul Software.
+
+
+6. Nessuna garanzia
+
+   Il Software è fornito "così com'è". I Titolari non garantiscono che sia
+   privo di difetti né adatto a uno scopo particolare.
+
+   Va detto chiaro, perché qui si contano ore di lavoro: il licenziatario
+   resta responsabile della correttezza dei dati che usa per le buste paga e
+   per gli adempimenti di legge. Il Software è uno strumento di raccolta e
+   di calcolo, non un sostituto del controllo umano e del consulente del
+   lavoro. Le timbrature originali restano sempre consultabili e non vengono
+   mai modificate, proprio perché la verifica sia possibile.
+
+
+7. Marchi di terzi
+
+   Anviz e W1C Pro sono marchi dei rispettivi proprietari, citati solo per
+   indicare con quale dispositivo il Software è compatibile. I Titolari non
+   sono collegati ad Anviz e non ne sono autorizzati o sponsorizzati.
+
+   Il Software non include documentazione di terzi.
+
+
+8. Durata e cessazione
+
+   La licenza dura quanto stabilito nell'accordo scritto. Cessa
+   immediatamente se il licenziatario ne viola i termini. Alla cessazione il
+   Software va disinstallato; i dati raccolti restano del licenziatario, che
+   può esportarli prima.
+
+
+9. Legge applicabile
+
+   Si applica la legge italiana.
+
+
+Per una licenza, scrivere ai Titolari.
+
+
+--------------------------------------------------------------------------
+ENGLISH SUMMARY — This is NOT open source software.
+
+Copyright (c) 2026 Nicola Bonazzi and Andrea D'Aniello. All rights reserved.
+
+The source is publicly readable so that licensees can inspect it and
+maintainers can work on it. Public visibility grants no rights: use,
+copying, installation and redistribution require a written licence from the
+copyright holders. No warranty of any kind. Italian law applies.

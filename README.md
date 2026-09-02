@@ -14,6 +14,14 @@ dito. Copre gli strati 2-5 dell'architettura del documento operativo v1.0
 
     python gestione.py
 
+## Licenza
+
+**Non è software libero.** Copyright (c) 2026 Nicola Bonazzi e Andrea
+D'Aniello, tutti i diritti riservati. Il codice è pubblico perché chi lo ha in
+uso possa vedere come funziona e chi ci lavora possa mantenerlo: **essere
+leggibile non è un permesso**. Uso, copia, installazione e distribuzione
+richiedono una licenza scritta dai titolari. Vedi [LICENSE](LICENSE).
+
 ## I pezzi
 
 | File | Cosa fa |

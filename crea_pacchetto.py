@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Nicola Bonazzi, Andrea D'Aniello.
+# Tutti i diritti riservati. Uso consentito solo a chi ha ricevuto una
+# licenza scritta dai titolari: vedi LICENSE. Il fatto che il codice sia
+# leggibile non e' un permesso.
 """
 Prepara la cartella da copiare in sede: TIMBRA che parte con un doppio clic,
 senza installare niente sul computer del cliente.
@@ -165,6 +169,12 @@ def main() -> int:
     os.makedirs(app)
     for nome in SORGENTI:
         shutil.copy2(os.path.join(CARTELLA, nome), app)
+    # La licenza viaggia col programma: il file su GitHub non lo vede
+    # nessuno, questo sta nella cartella che si consegna.
+    for accanto in ("LICENSE",):
+        origine = os.path.join(CARTELLA, accanto)
+        if os.path.exists(origine):
+            shutil.copy2(origine, radice)
     for cartella in CARTELLE:
         sorgente = os.path.join(CARTELLA, cartella)
         if os.path.isdir(sorgente):
