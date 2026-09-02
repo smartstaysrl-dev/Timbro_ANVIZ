@@ -22,6 +22,7 @@ import datetime as dt
 import os
 import re
 import sqlite3
+import threading
 
 GIORNALIERE_DA_TENERE = 7
 NOME = re.compile(r"^timbrature-(\d{4})-(\d{2})-(\d{2})\.db$")
@@ -68,17 +69,31 @@ def _verifica(percorso: str) -> int:
         con.close()
 
 
+# Una copia alla volta. La copia automatica dello scheduler e quella chiesta
+# a mano dalle Impostazioni possono partire nello stesso secondo: senza questo,
+# una delle due muore su os.replace perche' l'altra tiene ancora aperto il file
+# provvisorio, e l'utente vede "copia NON riuscita" mentre la copia c'e'.
+_LUCCHETTO = threading.Lock()
+
+
 def esegui(archivio: str, quando: dt.date | None = None) -> dict:
     """Fa la copia di oggi (o della data indicata) e la verifica.
 
     Ritorna un riepilogo con percorso, peso, numero di timbrature copiate e
     quante copie vecchie sono state tolte.
     """
+    with _LUCCHETTO:
+        return _esegui(archivio, quando)
+
+
+def _esegui(archivio: str, quando: dt.date | None = None) -> dict:
     giorno = quando or dt.date.today()
     cartella = cartella_copie(archivio)
     os.makedirs(cartella, exist_ok=True)
     destinazione = os.path.join(cartella, f"timbrature-{giorno.isoformat()}.db")
-    provvisorio = destinazione + ".parziale"
+    # Nome provvisorio unico per processo: due copie in corso non si toccano
+    # nemmeno se il lucchetto qui sopra un giorno non bastasse (due programmi).
+    provvisorio = f"{destinazione}.{os.getpid()}.parziale"
 
     sorgente = sqlite3.connect(archivio, timeout=30)
     copia = sqlite3.connect(provvisorio)
@@ -91,7 +106,10 @@ def esegui(archivio: str, quando: dt.date | None = None) -> dict:
     try:
         quante = _verifica(provvisorio)
     except Exception:
-        os.remove(provvisorio)          # una copia che non si apre non si tiene
+        try:
+            os.remove(provvisorio)      # una copia che non si apre non si tiene
+        except OSError:
+            pass
         raise
 
     # Solo adesso prende il nome buono: se qualcosa fosse andato storto, la

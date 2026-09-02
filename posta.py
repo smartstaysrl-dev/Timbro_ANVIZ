@@ -55,7 +55,11 @@ PROVIDER = [
     ("Tiscali", "smtp.tiscali.it", 465, "ssl"),
 ]
 
-MASSIMI_ARRETRATI = 24          # paracadute: non si spediscono anni di storia
+# Quanti mesi arretrati si recuperano al massimo. Il caso vero e' "il computer
+# e' stato spento per un mese o due"; oltre, non si sta recuperando un ritardo,
+# si sta rileggendo la storia — e una raffica di mail con allegato fa chiudere
+# la casella dal fornitore prima di arrivare in fondo.
+MASSIMI_ARRETRATI = 3
 
 
 # --- Impostazioni -------------------------------------------------------------
@@ -115,14 +119,32 @@ def mesi_da_inviare(oggi: dt.date, giorno: int, ultimo: str) -> list:
     partenza = None
     if ultimo:
         try:
-            partenza = (int(ultimo[:4]), int(ultimo[5:7]))
+            partenza = (int(str(ultimo)[:4]), int(str(ultimo)[5:7]))
             dt.date(partenza[0], partenza[1], 1)      # convalida
-        except (ValueError, IndexError):
+        except (TypeError, ValueError, IndexError):
             partenza = None
+
+    # Il mese appena chiuso: e' il punto di partenza naturale.
+    chiuso = _mese_prima(oggi.year, oggi.month)
+    primo_utile = _mese_prima(chiuso[0], chiuso[1])
+
     if partenza is None:
         # Prima configurazione: si parte dal mese appena chiuso, non da quando
         # ha aperto il locale. Nessuno vuole dodici mail tutte insieme.
-        partenza = _mese_prima(*_mese_prima(oggi.year, oggi.month))
+        partenza = primo_utile
+    elif partenza > chiuso:
+        # Segnato un mese che deve ancora finire: succede quando la batteria
+        # dell'orologio e' scarica e il computer crede di essere nel futuro.
+        # Lasciandolo, tutti i mesi veri fino a quella data resterebbero
+        # bloccati per sempre, in silenzio. Si tratta come un valore rovinato.
+        partenza = primo_utile
+    else:
+        # Tetto agli arretrati: non si torna indietro all'infinito.
+        piu_indietro = partenza
+        for _ in range(MASSIMI_ARRETRATI):
+            piu_indietro = _mese_dopo(*piu_indietro)
+        if piu_indietro < chiuso:
+            partenza = _mese_prima(*_indietro_di(chiuso, MASSIMI_ARRETRATI - 1))
 
     anno, mese = partenza
     fuori = []
@@ -132,6 +154,13 @@ def mesi_da_inviare(oggi: dt.date, giorno: int, ultimo: str) -> list:
             break
         fuori.append((anno, mese))
     return fuori
+
+
+def _indietro_di(mese_ancora: tuple, quanti: int) -> tuple:
+    anno, mese = mese_ancora
+    for _ in range(max(0, quanti)):
+        anno, mese = _mese_prima(anno, mese)
+    return (anno, mese)
 
 
 def sfasamento(chiave: str) -> int:
@@ -149,7 +178,10 @@ def _ora_limite(imp: dict, chiave: str) -> dt.time:
         ore, minuti = (int(x) for x in testo.split(":")[:2])
     except ValueError:
         ore, minuti = 8, 0
-    totale = min(ore * 60 + minuti + sfasamento(chiave), 23 * 60 + 59)
+    # Agganciato ai due estremi: un valore scritto a mano nel file ("-1:00",
+    # "99:00") non deve far esplodere il controllo a ogni giro dello
+    # scheduler, che vorrebbe dire report mai piu' spedito.
+    totale = min(max(0, ore * 60 + minuti + sfasamento(chiave)), 23 * 60 + 59)
     return dt.time(totale // 60, totale % 60)
 
 

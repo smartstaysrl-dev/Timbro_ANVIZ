@@ -106,11 +106,15 @@ class Interruttore(tk.Frame):
         self.pack_propagate(False)
         self.valore = bool(valore)
         self.al_cambio = al_cambio
-        tk.Label(self, text=testo, bg=CARD, fg=TESTO, font=F_NORMALE,
-                 anchor="w").pack(side="left", padx=16)
+        # L'etichetta col testo e' il bersaglio grande, quello che il dito
+        # centra: se non risponde, l'interruttore sembra rotto e si finisce a
+        # cercare la striscia vuota in mezzo.
+        self.etichetta = tk.Label(self, text=testo, bg=CARD, fg=TESTO,
+                                  font=F_NORMALE, anchor="w")
+        self.etichetta.pack(side="left", padx=16)
         self.spia = tk.Label(self, text="", bg=CARD, font=F_NORMALE, width=10)
         self.spia.pack(side="right", padx=16)
-        for w in (self, self.spia):
+        for w in (self, self.etichetta, self.spia):
             w.bind("<ButtonRelease-1>", self._premuto)
         self._disegna()
 
@@ -190,29 +194,53 @@ class Dialogo(tk.Toplevel):
         self.risultato = None
         self.resizable(False, False)
 
+    def limita_allo_schermo(self, margine=90):
+        """Se il dialogo e' piu' alto dello schermo, lo rende ridimensionabile
+        e lo accorcia. Su un registratore di cassa da 1024x600 una finestra
+        alta 786 pixel ha i bottoni Salva e Annulla FUORI dallo schermo: la
+        si puo' solo chiudere con la croce, cioe' non si puo' salvare."""
+        self.update_idletasks()
+        disponibile = self.winfo_screenheight() - margine
+        if self.winfo_reqheight() <= disponibile:
+            return
+        self.resizable(False, True)
+        self.geometry(f"{self.winfo_reqwidth()}x{disponibile}")
+
     def concludi(self):
         self.update_idletasks()
         p = self.master
         x = p.winfo_rootx() + (p.winfo_width() - self.winfo_width()) // 2
         y = p.winfo_rooty() + (p.winfo_height() - self.winfo_height()) // 3
         self.geometry(f"+{max(x, 0)}+{max(y, 0)}")
+        # Tk NON tiene una pila di grab: quando un dialogo figlio si chiude, il
+        # padre NON riprende la presa e l'applicazione resta senza modale, con
+        # la finestra sotto di nuovo cliccabile. Ce lo si riprende a mano.
+        precedente = self.grab_current()
         self.grab_set()
         self.wait_window(self)
+        if precedente is not None:
+            try:
+                if precedente.winfo_exists():
+                    precedente.grab_set()
+            except tk.TclError:
+                pass
         return self.risultato
 
 
 class TastieraTouch(Dialogo):
     RIGHE = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]
 
-    def __init__(self, padre, titolo, iniziale=""):
+    def __init__(self, padre, titolo, iniziale="", mascherata=False):
         super().__init__(padre, titolo)
+        self.mascherata = mascherata
         self.maiuscolo = True
         tk.Label(self, text=titolo, bg=BG, fg=TESTO, font=F_TITOLO).pack(pady=(18, 8))
         self.variabile = tk.StringVar(value=iniziale)
         tk.Entry(self, textvariable=self.variabile, font=("Segoe UI", 22),
                  bg=CARD, fg=TESTO, relief="flat", justify="center",
-                 insertbackground=TESTO).pack(fill="x", padx=24, ipady=12,
-                                              pady=(0, 14))
+                 insertbackground=TESTO,
+                 show="•" if mascherata else "").pack(
+            fill="x", padx=24, ipady=12, pady=(0, 14))
         tasti = tk.Frame(self, bg=BG)
         tasti.pack(padx=16, pady=(0, 10))
         self.tasti_lettera = []
@@ -256,8 +284,8 @@ class TastieraTouch(Dialogo):
         self.destroy()
 
     @staticmethod
-    def chiedi(padre, titolo, iniziale=""):
-        return TastieraTouch(padre, titolo, iniziale).concludi()
+    def chiedi(padre, titolo, iniziale="", mascherata=False):
+        return TastieraTouch(padre, titolo, iniziale, mascherata).concludi()
 
 
 class TastierinoNumerico(Dialogo):
@@ -458,6 +486,8 @@ class Attesa(Dialogo):
             self._finito.set()
 
     def _batti(self):
+        if not self.winfo_exists():
+            return
         if self._finito.is_set():
             self.risultato = (self._esito, self._errore)
             self.destroy()
@@ -470,4 +500,9 @@ class Attesa(Dialogo):
     def esegui(padre, testo, lavoro):
         """Ritorna (esito, errore). L'errore non viene sollevato: si sceglie."""
         esito = Attesa(padre, testo, lavoro).concludi()
-        return esito if esito else (None, None)
+        if esito is not None:
+            return esito
+        # La finestra e' sparita senza che il lavoro finisse (padre distrutto).
+        # Restituire (None, None) direbbe "riuscito, nessun errore", e chi
+        # chiama scriverebbe sul disco una cosa che non e' mai partita.
+        return (None, RuntimeError("l'operazione e' stata interrotta"))

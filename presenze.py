@@ -122,6 +122,22 @@ def aggiungi_timbratura(db, employee_code: int, quando: dt.datetime,
     db.commit()
 
 
+def togli_aggiunta(db, rettifica_id: int) -> bool:
+    """Cancella una timbratura AGGIUNTA a mano.
+
+    Serve perche' una correzione sbagliata va potuta correggere: senza questo,
+    un'uscita inserita alle 23:00 invece che alle 22:00 resterebbe li' per
+    sempre e l'unica strada sarebbe aprire il database a mano.
+
+    Si cancella solo la riga della rettifica: il grezzo del terminale non si
+    tocca mai, ne' qui ne' altrove.
+    """
+    cur = db.execute("DELETE FROM rettifiche WHERE id = ? AND tipo = 'aggiunta'",
+                     (rettifica_id,))
+    db.commit()
+    return cur.rowcount > 0
+
+
 def annulla_timbratura(db, employee_code: int, source_event_id: str,
                        motivo: str, autore: str) -> None:
     db.execute(
@@ -193,13 +209,16 @@ def punzoni(db, dal: dt.date, al: dt.date) -> list[Punzone]:
             p.scartato = "annullata a mano"
         fuori.append(p)
 
-    for codice, quando, verso in db.execute(
-            "SELECT employee_code, quando_locale, verso FROM rettifiche "
+    for rid, codice, quando, verso in db.execute(
+            "SELECT id, employee_code, quando_locale, verso FROM rettifiche "
             "WHERE tipo = 'aggiunta' AND quando_locale >= ? AND quando_locale < ?",
             (inizio, fine)):
         locale = _quando(quando)
+        # L'identificativo porta dentro il numero della rettifica: e' quello
+        # che permette di toglierla, se e' stata inserita per sbaglio.
         fuori.append(Punzone(codice, locale, _istante(locale), None,
-                             "inserita a mano", "rettifica", None, verso=verso))
+                             "inserita a mano", "rettifica",
+                             f"rettifica:{rid}", verso=verso))
 
     # Si ordina sull'istante: nella notte del ritorno all'ora solare due
     # punzoni possono avere la stessa ora locale ma essere a un'ora di distanza.

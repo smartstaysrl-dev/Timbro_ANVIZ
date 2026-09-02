@@ -101,6 +101,41 @@ def _():
     assert len(scritte) > 0, "il thread non ha scritto: la prova non prova nulla"
 
 
+@prova("due copie insieme: una sola vince, nessuna delle due fallisce")
+def _():
+    # La copia automatica dello scheduler e quella chiesta a mano dalle
+    # Impostazioni possono partire nello stesso secondo. Prima della
+    # correzione una delle due moriva su os.replace con PermissionError,
+    # perche' il nome del file provvisorio era lo stesso per tutte e due, e
+    # l'utente vedeva "copia NON riuscita" mentre la copia c'era.
+    a = archivio_con(300)
+    esiti, errori = [], []
+    partenza = threading.Barrier(2)
+
+    def fai():
+        partenza.wait()
+        try:
+            esiti.append(copie.esegui(a))
+        except Exception as e:                                   # noqa: BLE001
+            errori.append(e)
+
+    fili = [threading.Thread(target=fai) for _ in range(2)]
+    for t in fili:
+        t.start()
+    for t in fili:
+        t.join(timeout=30)
+    assert not errori, f"una delle due copie e' fallita: {errori}"
+    assert len(esiti) == 2, esiti
+    cartella = copie.cartella_copie(a)
+    residui = [f for f in os.listdir(cartella) if f.endswith(".parziale")]
+    assert not residui, f"file parziali lasciati in giro: {residui}"
+    con = sqlite3.connect(esiti[0]["percorso"])
+    try:
+        assert con.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+    finally:
+        con.close()
+
+
 @prova("una copia che non si apre viene buttata e non sostituisce la buona")
 def _():
     a = archivio_con(10)

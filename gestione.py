@@ -18,6 +18,7 @@ Le cinque schermate:
 from __future__ import annotations
 
 import calendar
+import copy
 import datetime as dt
 import json
 import os
@@ -29,6 +30,7 @@ import tkinter as tk
 
 import anviz
 import copie
+import guida
 import posta
 import presenze
 import sicurezza
@@ -79,20 +81,61 @@ def data_lunga(d: dt.date) -> str:
     return f"{GIORNI[d.weekday()]} {d.day} {MESI[d.month]} {d.year}"
 
 
+# Se la configurazione risulta illeggibile, il file rotto viene messo da parte
+# con questo nome invece di essere sovrascritto dai valori di fabbrica.
+FILE_CONFIG_ROTTA = FILE_CONFIG + ".rotta"
+
+# Cosa e' andato storto leggendo la configurazione, se e' andato storto
+# qualcosa. Lo legge l'interfaccia per dirlo, invece di ripartire in silenzio
+# col PIN di fabbrica e il report spento.
+guasto_configurazione: str | None = None
+
+
 def carica_config() -> dict:
-    cfg = dict(CONFIG_PREDEFINITA)
-    if os.path.exists(FILE_CONFIG):
+    """La configurazione, coi buchi riempiti dai valori di serie.
+
+    Copia PROFONDA dei valori predefiniti: `dict()` da sola condividerebbe il
+    sottodizionario della posta con la costante del modulo, e la prima
+    modifica lo cambierebbe per tutti.
+    """
+    global guasto_configurazione
+    guasto_configurazione = None
+    cfg = copy.deepcopy(CONFIG_PREDEFINITA)
+    if not os.path.exists(FILE_CONFIG):
+        return cfg
+    try:
+        with open(FILE_CONFIG, encoding="utf-8") as f:
+            letto = json.load(f)
+        if not isinstance(letto, dict):
+            raise ValueError("il file non contiene una configurazione")
+        cfg.update(letto)
+        return cfg
+    except (OSError, ValueError) as e:
+        # Ripartire zitti dai valori di fabbrica vorrebbe dire: PIN di nuovo
+        # 12345, report mensile spento, password della posta persa — e nessuno
+        # se ne accorge. Il file rotto si mette da parte prima che il primo
+        # salvataggio lo cancelli per sempre.
+        guasto_configurazione = f"{type(e).__name__}: {e}"
         try:
-            with open(FILE_CONFIG, encoding="utf-8") as f:
-                cfg.update(json.load(f))
-        except (OSError, ValueError):
+            os.replace(FILE_CONFIG, FILE_CONFIG_ROTTA)
+        except OSError:
             pass
     return cfg
 
 
 def salva_config(cfg: dict) -> None:
-    with open(FILE_CONFIG, "w", encoding="utf-8") as f:
+    """Scrittura atomica: prima un file a parte, poi il rinomino.
+
+    `open(..., "w")` tronca subito. Un calo di corrente in mezzo — su un PC di
+    cucina spento dall'interruttore — lascerebbe un JSON tagliato a meta', e al
+    riavvio si ripartirebbe dai valori di fabbrica.
+    """
+    provvisorio = f"{FILE_CONFIG}.{os.getpid()}.tmp"
+    with open(provvisorio, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(provvisorio, FILE_CONFIG)
 
 
 # --- Archivio ----------------------------------------------------------------
@@ -233,8 +276,18 @@ class Servizio(threading.Thread):
                         "quando": dt.datetime.now()}))
                 except Exception:
                     pass
-            self.sveglia.wait(max(60, self.cfg["minuti_fra_scarichi"] * 60))
+            self.sveglia.wait(self._pausa())
             self.sveglia.clear()
+
+    def _pausa(self) -> int:
+        """Secondi fra un giro e l'altro. Sta fuori dal try di sopra, quindi
+        NON puo' permettersi di sollevare: un valore scritto male nel file
+        ucciderebbe il thread in silenzio, e la raccolta si fermerebbe per
+        sempre senza che niente lo segnali."""
+        try:
+            return max(60, int(self.cfg["minuti_fra_scarichi"]) * 60)
+        except (KeyError, TypeError, ValueError):
+            return 300
 
     def un_giro(self):
         if not self.in_corso.acquire(blocking=False):
@@ -407,6 +460,87 @@ MODI_VERIFICA = {
     3: "solo tessera", 4: "impronta o password", 5: "impronta o tessera",
     6: "impronta, password o tessera",
 }
+
+
+class Guida(Dialogo):
+    """Il manuale, dentro il programma.
+
+    Un PDF finisce in una cartella e non lo apre piu' nessuno. La guida deve
+    stare dove serve, a un dito di distanza dalla schermata che si sta
+    guardando: si apre col «?» in alto a destra.
+    """
+
+    LARGA_INDICE = 300
+
+    def __init__(self, padre, capitolo=0):
+        super().__init__(padre, "Guida")
+        larghezza = min(1040, padre.winfo_screenwidth() - 60)
+        altezza = min(740, padre.winfo_screenheight() - 90)
+        self.geometry(f"{larghezza}x{altezza}")
+        self.resizable(True, True)
+
+        testata = tk.Frame(self, bg=BG)
+        testata.pack(fill="x", padx=24, pady=(18, 8))
+        tk.Label(testata, text="Guida", bg=BG, fg=TESTO,
+                 font=F_TITOLO).pack(side="left")
+        Bottone(testata, "Chiudi", self.destroy, font=F_NORMALE, altezza=52,
+                larghezza=150).pack(side="right")
+
+        corpo = tk.Frame(self, bg=BG)
+        corpo.pack(fill="both", expand=True, padx=16, pady=(0, 18))
+
+        colonna = tk.Frame(corpo, bg=BG, width=self.LARGA_INDICE)
+        colonna.pack(side="left", fill="y")
+        colonna.pack_propagate(False)
+        self.indice = ListaScorrevole(colonna)
+        self.indice.pack(fill="both", expand=True)
+
+        self.testo = ListaScorrevole(corpo)
+        self.testo.pack(side="left", fill="both", expand=True, padx=(12, 0))
+
+        self.bottoni = []
+        for n, (titolo, _) in enumerate(guida.CAPITOLI):
+            b = Bottone(self.indice.interno, titolo,
+                        lambda i=n: self.apri(i), font=F_NORMALE,
+                        altezza=64, larghezza=self.LARGA_INDICE - 16)
+            b.etichetta.config(wraplength=self.LARGA_INDICE - 40,
+                               justify="left", anchor="w")
+            b.pack(fill="x", pady=2, padx=4)
+            self.bottoni.append(b)
+        self.apri(capitolo)
+
+    def apri(self, n):
+        for i, b in enumerate(self.bottoni):
+            acceso = i == n
+            b.tinta(BLU if acceso else CARD, BG if acceso else TESTO)
+        self.testo.svuota()
+        titolo, blocchi = guida.CAPITOLI[n]
+        tk.Label(self.testo.interno, text=titolo, bg=BG, fg=TESTO,
+                 font=F_TITOLO, anchor="w", justify="left",
+                 wraplength=620).pack(fill="x", padx=8, pady=(4, 12))
+        for blocco in blocchi:
+            if blocco.startswith("# "):
+                tk.Label(self.testo.interno, text=blocco[2:], bg=BG, fg=BLU,
+                         font=F_GRANDE, anchor="w", justify="left",
+                         wraplength=620).pack(fill="x", padx=8, pady=(14, 4))
+            elif blocco.startswith("- "):
+                riga = tk.Frame(self.testo.interno, bg=BG)
+                riga.pack(fill="x", padx=8)
+                tk.Label(riga, text="•", bg=BG, fg=VERDE,
+                         font=F_NORMALE).pack(side="left", anchor="n", padx=(6, 8))
+                tk.Label(riga, text=blocco[2:], bg=BG, fg=TESTO,
+                         font=F_NORMALE, anchor="w", justify="left",
+                         wraplength=580).pack(side="left", fill="x", expand=True)
+            else:
+                tk.Label(self.testo.interno, text=blocco, bg=BG, fg=TESTO,
+                         font=F_NORMALE, anchor="w", justify="left",
+                         wraplength=620).pack(fill="x", padx=8, pady=4)
+        self.testo.segui_trascinamento(self.testo.interno)
+        self.testo.tela.yview_moveto(0)
+
+    @staticmethod
+    def mostra(padre, capitolo=0):
+        Guida(padre, capitolo).concludi()
 
 
 class ChiediPin(Dialogo):
@@ -584,6 +718,12 @@ class LetturaTessera(Dialogo):
         self.app = app
         self.errore = None
         self._ferma = threading.Event()
+        # Il conto alla rovescia non deve partire finche' il collegamento non
+        # e' aperto: se lo scheduler sta scaricando tiene il lucchetto del
+        # terminale, e i trenta secondi finirebbero in attesa, col dialogo che
+        # poi dice "non ho letto niente, riappoggia il badge" — una diagnosi
+        # falsa che fa riprovare all'infinito.
+        self._collegato = threading.Event()
         self._esito = {}
 
         tk.Label(self, text="Avvicina la tessera al lettore", bg=BG, fg=TESTO,
@@ -613,6 +753,7 @@ class LetturaTessera(Dialogo):
             with LUCCHETTO_TERMINALE, anviz.Terminale(
                     self.app.cfg["terminale_ip"],
                     self.app.cfg["terminale_porta"], timeout=5) as t:
+                self._collegato.set()
                 # Prima lettura buttata via: il terminale conserva l'ultima
                 # tessera passata, che puo' essere di ore fa. Senza questo
                 # svuotamento si iscriverebbe il badge di chi e' entrato prima.
@@ -646,6 +787,12 @@ class LetturaTessera(Dialogo):
             self.risultato = self._esito["numero"]
             self.destroy()
             return
+        if not self._collegato.is_set():
+            self.avanzamento.config(text="attendo il terminale", fg=GIALLO)
+            self.nota.config(text="Sta finendo di scaricare le timbrature. "
+                                  "Fra un attimo tocca a noi.")
+            self.after(400, self._batti)
+            return
         if self._scade <= 0:
             self._ferma.set()
             self.avanzamento.config(text="nessuna tessera", fg=GIALLO)
@@ -655,6 +802,8 @@ class LetturaTessera(Dialogo):
             self.after(1600, self.destroy)
             return
         self.avanzamento.config(text=f"{self._scade} s", fg=BLU)
+        if self.nota.cget("text"):
+            self.nota.config(text="")   # toglie l'avviso dell'attesa
         self._scade -= 1
         self.after(1000, self._batti)
 
@@ -681,7 +830,11 @@ class ModuloUtente(Dialogo):
         super().__init__(padre, "Nuovo dipendente" if nuovo else "Modifica")
         self.app = app
         self.nuovo = nuovo
-        self.u = utente or anviz.Utente(
+        # Copia, non l'oggetto vivo: anviz.Utente e' mutabile ed e' lo stesso
+        # che sta in app.utenti. Modificandolo sul posto, premere Annulla non
+        # annullerebbe niente e l'elenco mostrerebbe una tessera che sul
+        # terminale non e' mai stata scritta.
+        self.u = copy.copy(utente) if utente is not None else anviz.Utente(
             user_id=app.prossimo_id_libero(), badge=None, ha_password=False,
             nome="", reparto=0, gruppo=1, modo=6, impronte=0,
             amministratore=False)
@@ -696,7 +849,17 @@ class ModuloUtente(Dialogo):
                       "Solo le impronte vanno iscritte sul dispositivo, "
                       "perche' richiedono il dito.").pack(padx=30, pady=(0, 14))
 
-        self.campi = tk.Frame(self, bg=BG)
+        # I bottoni si impacchettano PRIMA e in basso: su un registratore di
+        # cassa da 1024x600 questa finestra chiedeva 786 pixel di altezza e
+        # Salva finiva fuori dallo schermo, cioe' il dipendente non si poteva
+        # salvare. Il resto scorre.
+        azioni = tk.Frame(self, bg=BG)
+        azioni.pack(side="bottom", fill="x", padx=30, pady=(12, 20))
+        self.scorrevole = ListaScorrevole(self)
+        self.scorrevole.pack(fill="both", expand=True)
+        self.scorrevole.tela.configure(
+            height=max(220, min(500, self.winfo_screenheight() - 320)))
+        self.campi = tk.Frame(self.scorrevole.interno, bg=BG)
         self.campi.pack(fill="x", padx=30)
         self.righe = {}
         self._riga("Nome", "nome", self._cambia_nome)
@@ -724,12 +887,11 @@ class ModuloUtente(Dialogo):
         tk.Label(f, text="solo dal menu del terminale", bg=CARD, fg=TESTO_TENUE,
                  font=F_PICCOLO).pack(side="right", padx=14)
 
-        self.stato_impronte = tk.Label(self, bg=BG, fg=TESTO_TENUE,
-                                       font=F_PICCOLO, anchor="w")
-        self.stato_impronte.pack(fill="x", padx=30, pady=(10, 0))
+        self.stato_impronte = tk.Label(self.scorrevole.interno, bg=BG,
+                                       fg=TESTO_TENUE, font=F_PICCOLO,
+                                       anchor="w")
+        self.stato_impronte.pack(fill="x", padx=30, pady=(10, 12))
 
-        azioni = tk.Frame(self, bg=BG)
-        azioni.pack(fill="x", padx=30, pady=(18, 22))
         Bottone(azioni, "Annulla", self.destroy, altezza=64,
                 larghezza=170).pack(side="left")
         if not nuovo:
@@ -817,7 +979,16 @@ class ModuloUtente(Dialogo):
                 "Lascia vuoto per togliere la tessera.")
             if v is None:
                 return
-            self.u.badge = int(v) if v.isdigit() and int(v) > 0 else None
+            numero = int(v) if v.isdigit() and int(v) > 0 else None
+            padrone = self._gia_di_chi(numero) if numero else None
+            if padrone is not None:
+                Avviso.mostra(
+                    self, "Tessera gia' assegnata",
+                    f"Il numero {numero} e' la tessera di "
+                    f"«{padrone.nome or padrone.user_id}». Due persone con la "
+                    f"stessa tessera non si distinguono.", ROSSO)
+                return
+            self.u.badge = numero
         else:
             numero = LetturaTessera.chiedi(self, self.app)
             if not numero:
@@ -854,7 +1025,11 @@ class ModuloUtente(Dialogo):
             return
         # Chi ha solo il PIN e nessuna tessera va messo in "solo password",
         # altrimenti il terminale continua a chiedergli il badge.
-        if self.u.password and not self.u.badge and self.u.modo not in (0, 2, 4):
+        # I modi che accettano gia' la password sono 2 "solo password", 4
+        # "impronta o password" e 6 "impronta, password o tessera". Lo 0 e'
+        # "come da gruppo" e non garantisce nulla, quindi si offre lo stesso.
+        if (self.u.password and not self.u.badge
+                and self.u.modo not in (2, 4, 6)):
             if Conferma.chiedi(
                     self, "Lo mettiamo a solo password?",
                     "Questa persona non ha tessera. Se resta impostata su "
@@ -891,6 +1066,21 @@ class ModuloUtente(Dialogo):
                           GIALLO)
             return
         self.u.nome = self.nome_locale
+        if self.nuovo:
+            # L'ID e' stato scelto all'apertura della finestra: nel frattempo
+            # qualcuno puo' aver iscritto una persona dal terminale con quello
+            # stesso numero, e salvare la sovrascriverebbe, impronte comprese.
+            altri = {u.user_id for u in (self.app.utenti or [])}
+            if self.u.user_id in altri:
+                libero = self.app.prossimo_id_libero()
+                Avviso.mostra(
+                    self, "Numero gia' preso",
+                    f"Mentre compilavi, il numero {self.u.user_id} e' stato "
+                    f"assegnato a qualcun altro sul terminale. "
+                    f"Uso il {libero}.", GIALLO)
+                self.u.user_id = libero
+                self._disegna()
+                return
 
         esito, errore = Attesa.esegui(
             self, "Scrivo sul terminale...",
@@ -954,7 +1144,7 @@ class DettaglioGiornata(Dialogo):
         self.app = app
         self.g = giornata
         self.nome = nome
-        self.geometry("640x720")
+        self.geometry(f"640x{min(720, self.winfo_screenheight() - 90)}")
         self.resizable(False, True)
 
         tk.Label(self, text=nome, bg=BG, fg=TESTO, font=F_TITOLO).pack(
@@ -1006,6 +1196,13 @@ class DettaglioGiornata(Dialogo):
                 Bottone(riga, "annulla", lambda x=p: self._annulla(x),
                         font=F_PICCOLO, altezza=44,
                         larghezza=110).pack(side="right", padx=12)
+            elif p.origine == "rettifica":
+                # Una correzione sbagliata va potuta correggere: senza questo,
+                # un'uscita messa alle 23:00 invece che alle 22:00 resterebbe
+                # li' per sempre.
+                Bottone(riga, "togli", lambda x=p: self._togli(x),
+                        font=F_PICCOLO, altezza=44,
+                        larghezza=110).pack(side="right", padx=12)
 
         for a in self.g.anomalie:
             tk.Label(self.lista.interno, text="⚠  " + a, bg=BG, fg=GIALLO,
@@ -1043,6 +1240,31 @@ class DettaglioGiornata(Dialogo):
                                          self.app.cfg["operatore"])
         finally:
             db.close()
+        self.risultato = True
+        self.destroy()
+
+    def _togli(self, punzone):
+        if not self.app.sbloccata(self, self.RETTIFICA):
+            return
+        if not Conferma.chiedi(
+                self, "Togliere questa aggiunta?",
+                f"La timbratura delle {punzone.quando:%H:%M} era stata "
+                f"inserita a mano. Toglierla la fa sparire del tutto: non e' "
+                f"un dato del terminale, e' una correzione.", pericoloso=True):
+            return
+        try:
+            numero = int(str(punzone.evento_id).split(":")[1])
+        except (AttributeError, IndexError, ValueError):
+            Avviso.errore(self, "Non riesco a risalire a questa correzione.")
+            return
+        db = apri_archivio(self.app.cfg["archivio"])
+        try:
+            tolta = presenze.togli_aggiunta(db, numero)
+        finally:
+            db.close()
+        if not tolta:
+            Avviso.errore(self, "La correzione non c'e' piu'.")
+            return
         self.risultato = True
         self.destroy()
 
@@ -1111,7 +1333,11 @@ class SchermataOggi(Schermata):
 
     def entra(self):
         self.lista.svuota()
-        oggi = dt.date.today()
+        # Il giorno OPERATIVO, non la data del calendario: per un ristorante
+        # che chiude alle due di notte, all'una e mezza "oggi" e' ancora la
+        # serata di ieri. Chiedendo date.today() lo schermo direbbe "nessuna
+        # timbratura oggi" con la cucina al completo.
+        oggi = presenze.giorno_operativo(dt.datetime.now(), self.app.regole)
         db = apri_archivio(self.app.cfg["archivio"])
         try:
             nomi = nomi_dipendenti(db)
@@ -1206,11 +1432,13 @@ class GraficoPresenze(tk.Canvas):
         self._x0 = self._passo = 0
         self._premuto_a = None
         self._larghezza_disegnata = 0
+        self._regole = presenze.Regole()
         self.bind("<Configure>", self._ridisposto)
         self.bind("<ButtonPress-1>", self._giu, add="+")
         self.bind("<ButtonRelease-1>", self._su, add="+")
 
-    def mostra(self, elenco, nomi, modo, dal, al):
+    def mostra(self, elenco, nomi, modo, dal, al, regole=None):
+        self._regole = regole or presenze.Regole()
         self._dati = (elenco, nomi, modo, dal, al)
         self._larghezza_disegnata = 0
         self._disegna()
@@ -1286,7 +1514,7 @@ class GraficoPresenze(tk.Canvas):
         return segmenti
 
     @classmethod
-    def _come_finisce(cls, giornata, turno, adesso, ultimo):
+    def _come_finisce(cls, giornata, turno, adesso, ultimo, oggi=None):
         """(inizio, fine, genere). `fine` e' None quando la barra e' un moncone.
 
         Un turno senza uscita significa tre cose diverse.
@@ -1305,19 +1533,23 @@ class GraficoPresenze(tk.Canvas):
             return turno.entrata.quando, turno.uscita.quando, cls.CHIUSO
         if not turno.entrata:
             return turno.uscita.quando, None, cls.SENZA_ENTRATA
-        if (ultimo and giornata.data == dt.date.today()
+        # Il confronto e' col giorno OPERATIVO, non con la data del calendario:
+        # all'una di notte date.today() e' gia' domani, e il cuoco entrato alle
+        # dieci di sera diventerebbe un'uscita mancante mentre sta lavorando.
+        if (ultimo and giornata.data == (oggi or dt.date.today())
                 and adesso > turno.entrata.quando):
             return turno.entrata.quando, adesso, cls.IN_CORSO
         return turno.entrata.quando, None, cls.SENZA_USCITA
 
     def _giornata(self, persone, larghezza, riga):
         adesso = dt.datetime.now()
+        oggi = presenze.giorno_operativo(adesso, self._regole)
         momenti = []
         for p in persone:
             segmenti = self._segmenti(p)
             for i, (g, t) in enumerate(segmenti):
                 inizio, fine, _ = self._come_finisce(
-                    g, t, adesso, i == len(segmenti) - 1)
+                    g, t, adesso, i == len(segmenti) - 1, oggi)
                 momenti.append(inizio)
                 if fine:
                     momenti.append(fine)
@@ -1370,7 +1602,7 @@ class GraficoPresenze(tk.Canvas):
             segmenti = self._segmenti(p)
             for i, (g, t) in enumerate(segmenti):
                 inizio, fine, genere = self._come_finisce(
-                    g, t, adesso, i == len(segmenti) - 1)
+                    g, t, adesso, i == len(segmenti) - 1, oggi)
                 xa = ics(inizio)
                 if fine is None:
                     # Manca meta' del turno: un moncone e la scritta, non una
@@ -1379,7 +1611,13 @@ class GraficoPresenze(tk.Canvas):
                              else "manca l'entrata")
                     self.create_rectangle(xa - 6, centro - 12, xa + 6,
                                           centro + 12, fill=ROSSO, outline="")
-                    self.create_text(xa + 11, centro + 21, anchor="w",
+                    # Se il moncone e' il momento piu' tardo della giornata
+                    # cade sul bordo destro e la scritta uscirebbe dalla tela:
+                    # in quel caso la si ancora dall'altra parte.
+                    a_destra = xa + 150 > x1
+                    self.create_text(xa + (-11 if a_destra else 11),
+                                     centro + 21,
+                                     anchor="e" if a_destra else "w",
                                      text=f"{inizio:%H:%M} · {manca}",
                                      fill=ROSSO, font=F_PICCOLO)
                     continue
@@ -1697,7 +1935,8 @@ class SchermataPresenze(Schermata):
             voci = [(VERDE, "turno chiuso"),
                     (GIALLO, "ancora al lavoro"),
                     (ROSSO, "manca l'entrata o l'uscita")]
-            coda = "L'ampiezza della barra e' il tempo passato al lavoro."
+            coda = ("La barra e' il tempo fra le due timbrature; il totale a "
+                    "destra e' al netto di pause e arrotondamenti.")
         else:
             voci = [(VERDE, "giornata lavorata"),
                     (GIALLO, "c'e' qualcosa da verificare"),
@@ -1718,7 +1957,7 @@ class SchermataPresenze(Schermata):
         grafico = GraficoPresenze(cornice, al_giorno=self._apri_giorno)
         grafico.pack(fill="x")
         self.lista.segui_trascinamento(grafico)
-        grafico.mostra(elenco, nomi, self.periodo, dal, al)
+        grafico.mostra(elenco, nomi, self.periodo, dal, al, self.app.regole)
 
     def _apri_giorno(self, giorno):
         self.giorno = giorno
@@ -1745,7 +1984,15 @@ class SchermataPresenze(Schermata):
                      else f"presenze-{dal:%Y-%m-%d}.csv" if dal == al
                      else f"presenze-{dal:%Y-%m-%d}_{al:%Y-%m-%d}.csv")
         percorso = os.path.join(CARTELLA, nome_file)
-        presenze.esporta_csv(percorso, elenco, nomi)
+        try:
+            presenze.esporta_csv(percorso, elenco, nomi)
+        except OSError as e:
+            # Il caso vero: il file di prima e' ancora aperto in Excel. Senza
+            # questo il bottone sembra semplicemente non fare niente.
+            Avviso.errore(
+                self, f"Non sono riuscito a scrivere il file.\n\n{e}\n\n"
+                      f"Se lo hai aperto in Excel, chiudilo e riprova.")
+            return
         anomale = sum(1 for g in elenco if g.anomalie)
         Avviso.mostra(
             self, "Esportato",
@@ -1871,6 +2118,11 @@ class SchermataDipendenti(Schermata):
             info = salvati.get(codice, {})
             nome = info.get("nome") or (u.nome if u and u.nome else "")
             sparito = u is None
+            # Chi e' stato eliminato di proposito e non e' piu' sul terminale
+            # non e' un guasto da segnalare: e' una persona che non lavora
+            # piu' qui. Le sue timbrature restano in archivio, la sua riga no.
+            if sparito and info and not info.get("attivo", 1):
+                continue
 
             riquadro = tk.Frame(self.lista.interno, bg=CARD)
             riquadro.pack(fill="x", pady=4, padx=8, ipady=12)
@@ -1966,9 +2218,16 @@ class SchermataImpostazioni(Schermata):
                  ).pack(fill="x", padx=20, pady=(0, 4))
 
         self._sezione("IL TERMINALE")
+        if d.get("errore_identita"):
+            self._voce("Non riesco a leggere il dispositivo",
+                       d["errore_identita"],
+                       nota="Modello, seriale e capienza restano vuoti finche' "
+                            "il terminale non risponde a queste domande. Le "
+                            "timbrature possono arrivare lo stesso.")
         self._voce("Modello", d.get("modello", "?"))
         self._voce("Numero di serie", d.get("seriale", "?"))
-        self._voce("Firmware", d.get("firmware", "?"))
+        self._voce("Firmware", d.get("firmware")
+                   or (d.get("configurazione") or {}).get("firmware") or "?")
         self._voce("Orologio", d.get("orologio", "?"))
         c = d.get("conteggi") or {}
         if c:
@@ -2168,8 +2427,18 @@ class SchermataImpostazioni(Schermata):
                  ).pack(fill="x", padx=20, pady=(8, 20))
 
     # -- posta --
-    def _salva_posta(self, imp):
-        self.app.cfg["posta"] = imp
+    def _salva_posta(self, modifiche: dict):
+        """Scrive SOLO le chiavi cambiate, su una rilettura fresca.
+
+        I dialoghi restano aperti minuti interi mentre si digita col dito.
+        Ributtando dentro la fotografia presa prima di aprirli si cancellerebbe
+        quello che lo scheduler ha scritto nel frattempo — per esempio "il
+        report di agosto e' partito", che tornerebbe indietro e farebbe
+        rispedire lo stesso mese al giro dopo.
+        """
+        fresche = posta.impostazioni(self.app.cfg)
+        fresche.update(modifiche)
+        self.app.cfg["posta"] = fresche
         self._salva_cfg()
 
     def _scegli_provider(self):
@@ -2184,10 +2453,10 @@ class SchermataImpostazioni(Schermata):
             return
         if scelta >= 0:
             _, server, porta, sic = posta.PROVIDER[scelta]
-            imp.update({"server": server, "porta": porta, "sicurezza": sic})
+            modifiche = {"server": server, "porta": porta, "sicurezza": sic}
             if not imp["utente"]:
-                imp["utente"] = imp["mittente"]
-            self._salva_posta(imp)
+                modifiche["utente"] = imp["mittente"]
+            self._salva_posta(modifiche)
             return
         self._cambia_smtp_server()
 
@@ -2195,8 +2464,7 @@ class SchermataImpostazioni(Schermata):
         imp = posta.impostazioni(self.app.cfg)
         v = TastieraTouch.chiedi(self, "Server SMTP", imp["server"])
         if v is not None:
-            imp["server"] = v.strip().lower()
-            self._salva_posta(imp)
+            self._salva_posta({"server": v.strip().lower()})
 
     def _cambia_smtp_porta(self):
         imp = posta.impostazioni(self.app.cfg)
@@ -2210,46 +2478,42 @@ class SchermataImpostazioni(Schermata):
         if sic is None:
             return                      # annullato
         if isinstance(sic, tuple):
-            imp["sicurezza"], imp["porta"] = sic
-            self._salva_posta(imp)
+            self._salva_posta({"sicurezza": sic[0], "porta": sic[1]})
             return
         v = TastierinoNumerico.chiedi(self, "Porta", str(imp["porta"]))
         if v and v.isdigit() and 0 < int(v) < 65536:
-            imp["porta"] = int(v)
-            self._salva_posta(imp)
+            self._salva_posta({"porta": int(v)})
 
     def _cambia_smtp_utente(self):
         imp = posta.impostazioni(self.app.cfg)
         v = TastieraTouch.chiedi(self, "Utente della casella", imp["utente"])
         if v is not None:
-            imp["utente"] = v.strip()
-            self._salva_posta(imp)
+            self._salva_posta({"utente": v.strip()})
 
     def _cambia_smtp_password(self):
         imp = posta.impostazioni(self.app.cfg)
-        v = TastieraTouch.chiedi(self, "Password della casella", "")
+        v = TastieraTouch.chiedi(self, "Password della casella", "",
+                                 mascherata=True)
         if v is None:
             return
-        imp["password"] = sicurezza.offusca(v.strip())
-        self._salva_posta(imp)
+        self._salva_posta({"password": sicurezza.offusca(v.strip())})
 
     def _cambia_mittente(self):
         imp = posta.impostazioni(self.app.cfg)
         v = TastieraTouch.chiedi(self, "Indirizzo che spedisce",
                                  imp["mittente"])
         if v is not None:
-            imp["mittente"] = v.strip()
+            modifiche = {"mittente": v.strip()}
             if not imp["destinatari"]:
-                imp["destinatari"] = imp["mittente"]
-            self._salva_posta(imp)
+                modifiche["destinatari"] = v.strip()
+            self._salva_posta(modifiche)
 
     def _cambia_destinatari(self):
         imp = posta.impostazioni(self.app.cfg)
         v = TastieraTouch.chiedi(self, "Chi riceve il report",
                                  imp["destinatari"])
         if v is not None:
-            imp["destinatari"] = v.strip()
-            self._salva_posta(imp)
+            self._salva_posta({"destinatari": v.strip()})
 
     def _cambia_giorno_report(self):
         imp = posta.impostazioni(self.app.cfg)
@@ -2257,19 +2521,18 @@ class SchermataImpostazioni(Schermata):
                                       str(imp["giorno"]),
                                       "Da 1 a 31.")
         if v and v.isdigit() and 1 <= int(v) <= 31:
-            imp["giorno"] = int(v)
-            self._salva_posta(imp)
+            self._salva_posta({"giorno": int(v)})
 
     def _cambia_ora_report(self):
         imp = posta.impostazioni(self.app.cfg)
         try:
-            ore, minuti = (int(x) for x in imp["ora"].split(":")[:2])
-        except ValueError:
-            ore, minuti = 8, 0
-        v = SceltaOra.chiedi(self, "A che ora", dt.time(ore, minuti))
+            ore, minuti = (int(x) for x in str(imp["ora"]).split(":")[:2])
+            iniziale = dt.time(ore, minuti)
+        except (AttributeError, TypeError, ValueError):
+            iniziale = dt.time(8, 0)
+        v = SceltaOra.chiedi(self, "A che ora", iniziale)
         if v is not None:
-            imp["ora"] = f"{v.hour:02d}:{v.minute:02d}"
-            self._salva_posta(imp)
+            self._salva_posta({"ora": f"{v.hour:02d}:{v.minute:02d}"})
 
     def _cambia_posta_attivo(self, valore):
         imp = posta.impostazioni(self.app.cfg)
@@ -2278,8 +2541,7 @@ class SchermataImpostazioni(Schermata):
                           "Prima servono almeno il server, il mittente e il "
                           "destinatario.", GIALLO)
             return self.entra()
-        imp["attivo"] = bool(valore)
-        self._salva_posta(imp)
+        self._salva_posta({"attivo": bool(valore)})
 
     def _prova_posta(self):
         imp = posta.impostazioni(self.app.cfg)
@@ -2351,6 +2613,8 @@ class SchermataImpostazioni(Schermata):
         if not nuovo:
             return
         ripetuto = TastierinoNumerico.chiedi(self, "Ripetilo", "")
+        if ripetuto is None:
+            return                      # annullato: non e' un errore
         if ripetuto != nuovo:
             Avviso.mostra(self, "Non coincidono",
                           "Il PIN non e' stato cambiato.", GIALLO)
@@ -2392,6 +2656,9 @@ class SchermataImpostazioni(Schermata):
         if v and v.isdigit() and int(v) >= 1:
             self.app.cfg["minuti_fra_scarichi"] = int(v)
             self._salva_cfg()
+            # Altrimenti la modifica ha effetto al prossimo risveglio, che con
+            # l'intervallo vecchio puo' essere fra un'ora.
+            self.app.servizio.sveglia.set()
 
     def _cambia_orologio(self, valore):
         self.app.cfg["allinea_orologio"] = valore
@@ -2705,7 +2972,12 @@ class SchermataImpostazioni(Schermata):
                 if righe:
                     db = apri_archivio(self.app.cfg["archivio"])
                     try:
-                        anviz.salva(db, self.app.cfg["terminale_ip"], righe)
+                        # La stessa identita' che usa lo scheduler. Salvare
+                        # con l'indirizzo IP darebbe una chiave diversa per lo
+                        # stesso evento, l'INSERT OR IGNORE non scarterebbe
+                        # niente, e ogni timbratura della storia entrerebbe in
+                        # archivio una seconda volta.
+                        anviz.salva(db, self.app.identita_dispositivo(), righe)
                     finally:
                         db.close()
                 t.azzera_timbrature()
@@ -2784,6 +3056,9 @@ class App(tk.Tk):
                         font=F_GRANDE, altezza=ALTEZZA_TOCCO + 12, larghezza=200)
             b.pack(side="left")
             self.bottoni_sezione[nome] = b
+        Bottone(barra, "?", lambda: Guida.mostra(self), colore=CARD,
+                font=F_TITOLO, altezza=ALTEZZA_TOCCO + 12,
+                larghezza=90).pack(side="right")
 
     def _corpo(self):
         self.contenitore = tk.Frame(self, bg=BG)
@@ -2837,8 +3112,36 @@ class App(tk.Tk):
                 timeout=timeout) as t:
             return azione(t)
 
+    def identita_dispositivo(self) -> str:
+        """La chiave con cui le timbrature entrano in archivio.
+
+        Il seriale, non l'indirizzo: l'indirizzo cambia (DHCP, trasloco di
+        rete) e cambierebbe la chiave degli eventi, facendo rientrare in
+        archivio tutta la storia sotto una seconda identita'.
+        """
+        return (self.servizio.seriale or self.cfg.get("terminale_seriale")
+                or self.cfg["terminale_ip"])
+
     def prossimo_id_libero(self) -> int:
+        """Il primo numero libero, guardando ANCHE lo storico.
+
+        Non basta guardare chi e' sul terminale adesso: un dipendente
+        licenziato e cancellato lascia le sue timbrature in archivio col suo
+        numero. Riusandolo, tutte le sue giornate passate prenderebbero il
+        nome del nuovo assunto — nelle presenze, nel grafico e nel foglio che
+        va alle paghe.
+        """
         usati = {u.user_id for u in (self.utenti or [])}
+        try:
+            db = apri_archivio(self.cfg["archivio"])
+            try:
+                usati |= {r[0] for r in db.execute(
+                    "SELECT employee_code FROM dipendenti "
+                    "UNION SELECT DISTINCT employee_code FROM raw_events")}
+            finally:
+                db.close()
+        except sqlite3.Error:
+            pass                # senza archivio si ripiega sul solo terminale
         n = 1
         while n in usati:
             n += 1
@@ -2872,7 +3175,23 @@ class App(tk.Tk):
                         text=f"Errore nell'aggiornare la schermata: "
                              f"{type(e).__name__}: {e}")
         finally:
+            self._sorveglia_serratura()
             self.after(500, self._svuota_coda)
+
+    def _sorveglia_serratura(self):
+        """Scaduti i quindici minuti si esce dalla sezione protetta.
+
+        Controllare il PIN solo all'ingresso vuol dire che chi resta fermo su
+        Impostazioni ce l'ha aperto per sempre: il tablet lasciato acceso in
+        sala e' esattamente lo scenario da cui il PIN dovrebbe difendere.
+        Qui si NAVIGA VIA e basta, non si apre nessuna finestra: aprire una
+        modale dentro il drenaggio della coda bloccherebbe il riarmo e
+        l'applicazione resterebbe viva ma sorda.
+        """
+        if (self.attuale is not None
+                and self.attuale.titolo in SEZIONI_PROTETTE
+                and not self.serratura.aperta()):
+            self.mostra("Oggi")
 
     def _applica(self, tipo, dati):
         if tipo == "chiamata":
@@ -2881,6 +3200,9 @@ class App(tk.Tk):
             return
         if tipo == "copia":
             self.ultima_copia = dati
+            self.stato.config(
+                text=f"Copia di sicurezza fatta e verificata: "
+                     f"{dati['timbrature']} timbrature in {dati['percorso']}")
             return
         if tipo == "copia_fallita":
             self.spia.config(fg=GIALLO)
@@ -2929,6 +3251,13 @@ class App(tk.Tk):
         """Modello, seriale e capienza cambiano di rado: si leggono una volta."""
         if self.dati_terminale.get("seriale"):
             return
+        # Due messaggi "ok" drenati nello stesso giro passerebbero entrambi la
+        # guardia qui sopra, perche' il seriale arriva solo dopo, via coda: due
+        # thread, due giri di comandi e due scansioni broadcast che si rubano
+        # le risposte a vicenda.
+        if getattr(self, "_identita_in_corso", False):
+            return
+        self._identita_in_corso = True
 
         def lavoro():
             info = {}
@@ -2952,6 +3281,8 @@ class App(tk.Tk):
                         info["mac"] = d["mac"]
             except Exception:                                    # noqa: BLE001
                 pass
+            finally:
+                self._identita_in_corso = False
             self._pianifica(self._aggiorna_dati, info)
 
         threading.Thread(target=lavoro, daemon=True).start()
@@ -2974,9 +3305,13 @@ class App(tk.Tk):
                 with LUCCHETTO_TERMINALE, anviz.Terminale(
                         self.cfg["terminale_ip"], self.cfg["terminale_porta"],
                         timeout=8) as t:
+                    # Anche gli stati passano dalla coda: pubblicarli qui,
+                    # dal thread di lavoro, li farebbe comparire prima del
+                    # resto e un "ok" dello scheduler in arrivo con la
+                    # fotografia vecchia li rimetterebbe come erano.
                     nuovi = {"configurazione": t.configurazione(),
-                             "configurazione2": t.configurazione2()}
-                    self.stati_ta = t.stati_ta()
+                             "configurazione2": t.configurazione2(),
+                             "stati_ta": t.stati_ta()}
             except Exception as e:                               # noqa: BLE001
                 nuovi = {"errore_identita": f"{type(e).__name__}: {e}"}
             self._pianifica(self._aggiorna_dati, nuovi)
@@ -2984,6 +3319,8 @@ class App(tk.Tk):
         threading.Thread(target=lavoro, daemon=True).start()
 
     def _aggiorna_dati(self, nuovi: dict):
+        if "stati_ta" in nuovi:
+            self.stati_ta = nuovi.pop("stati_ta")
         self.dati_terminale.update(nuovi)
         if isinstance(self.attuale, SchermataImpostazioni):
             self.attuale.entra()
