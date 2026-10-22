@@ -278,7 +278,9 @@ CAPITOLI = [
  "Il terminale saprebbe distinguerle, ma solo se il dipendente preme il "
  "tasto giusto prima di passare la tessera — e non lo fa quasi nessuno. Con "
  "«automatico» il programma usa il tasto quando c'è, altrimenti alterna: "
- "prima entrata, poi uscita, poi entrata.",
+ "prima entrata, poi uscita, poi entrata. E se il tasto racconta una "
+ "giornata che non sta in piedi, per esempio perché è rimasto su «uscita» "
+ "per tutti, lo ignora e alterna: lo scrive accanto alla giornata.",
 
  "# Doppioni",
  "Due passate ravvicinate della stessa persona contano per una. Meglio "

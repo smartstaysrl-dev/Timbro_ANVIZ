@@ -443,8 +443,19 @@ documento non è più "si può o non si può", ma:
 3. si deduce dall'alternanza a valle.
 
 Il motore le supporta tutte e tre: in "automatico" usa gli stati quando ce ne
-sono di diversi, altrimenti ripiega sull'alternanza, e scrive sempre a schermo
-quale criterio ha applicato.
+sono di diversi **e quando, letti alla lettera, reggono**; altrimenti ripiega
+sull'alternanza, e scrive sempre a schermo quale criterio ha applicato.
+
+Il "reggono" non è pignoleria. Il tasto IN/OUT non è un dato per timbratura: è
+uno stato che *resta* finché qualcuno non lo commuta di nuovo. Il 2 settembre
+2026, secondo giorno di prova, è scattato su OUT a metà mattina — quasi
+certamente premendo i tasti per digitare una password — e da lì ogni
+timbratura di chiunque è uscita con stato 1, per giorni. Nel giorno della
+commutazione c'erano entrambi gli stati, il motore li prendeva per buoni e
+produceva entrate senza uscita e uscite senza entrata a raffica: 52 minuti
+invece di 3 ore e 9. Ora, se ci sono stati diversi, il motore legge la
+giornata in tutti e due i modi e tiene quello con meno anomalie; a parità
+vincono gli stati, che sono una dichiarazione e non una deduzione.
 
 ### Cosa si configura da qui, e cosa no
 

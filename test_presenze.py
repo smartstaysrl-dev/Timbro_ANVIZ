@@ -233,6 +233,83 @@ def _():
     assert g.minuti_lavorati == 480, g.minuti_lavorati
 
 
+@prova("stato del terminale rimasto su OUT: gli stati non si prendono alla lettera")
+def _():
+    # Caso vero del 2 settembre 2026. A meta' mattina qualcuno ha commutato
+    # il tasto IN/OUT del terminale e da li' in poi ogni timbratura, di
+    # chiunque, e' uscita con stato 1. Letti alla lettera: un'entrata senza
+    # uscita e un'uscita senza entrata. Letti per alternanza: due turni puliti.
+    db = archivio()
+    punzona(db, 1, "2026-09-02 09:11:28", stato=0)
+    punzona(db, 1, "2026-09-02 09:53:53", stato=0)
+    punzona(db, 1, "2026-09-02 10:46:47", stato=1)
+    punzona(db, 1, "2026-09-02 13:14:14", stato=1)
+    g = sola(presenze.giornate(db, presenze.Regole(),
+                               dt.date(2026, 9, 2), dt.date(2026, 9, 2)),
+             "2026-09-02")
+    assert g.criterio.startswith("alternanza"), g.criterio
+    assert "incoerenti" in g.criterio, g.criterio
+    assert g.minuti_lavorati == 42 + 147, g.minuti_lavorati
+    assert not g.anomalie, g.anomalie
+
+
+@prova("stato rimasto su OUT, molte timbrature: niente raffica di 'manca l'entrata'")
+def _():
+    # Il collega dello stesso 2 settembre: una a stato 0 e poi sette a stato 1,
+    # piu' un doppione. Prima della correzione: 1 minuto lavorato e sei
+    # anomalie. Il doppione resta segnalato, perche' lo e' davvero.
+    db = archivio()
+    punzona(db, 5, "2026-09-02 09:53:20", stato=0)
+    punzona(db, 5, "2026-09-02 09:54:58", stato=1, metodo="password")
+    punzona(db, 5, "2026-09-02 10:46:17", stato=1)
+    punzona(db, 5, "2026-09-02 10:50:40", stato=1)
+    punzona(db, 5, "2026-09-02 11:38:25", stato=1)
+    punzona(db, 5, "2026-09-02 11:53:05", stato=1)
+    punzona(db, 5, "2026-09-02 11:59:11", stato=1)
+    punzona(db, 5, "2026-09-02 13:14:08", stato=1, metodo="password")
+    punzona(db, 5, "2026-09-02 13:14:39", stato=1)
+    g = sola(presenze.giornate(db, presenze.Regole(),
+                               dt.date(2026, 9, 2), dt.date(2026, 9, 2)),
+             "2026-09-02")
+    assert g.criterio.startswith("alternanza"), g.criterio
+    assert len(g.turni) == 4 and all(t.completo for t in g.turni), g.turni
+    assert g.minuti_lavorati == 1 + 4 + 14 + 74, g.minuti_lavorati
+    assert not any("manca" in a for a in g.anomalie), g.anomalie
+    assert any("doppione" in a for a in g.anomalie), g.anomalie
+
+
+@prova("stati usati bene: a parita' di anomalie vincono sull'alternanza")
+def _():
+    db = archivio()
+    punzona(db, 1, "2026-09-01 09:00:00", stato=0)
+    punzona(db, 1, "2026-09-01 13:00:00", stato=1)
+    punzona(db, 1, "2026-09-01 14:00:00", stato=0)
+    punzona(db, 1, "2026-09-01 18:00:00", stato=1)
+    g = sola(presenze.giornate(db, presenze.Regole(),
+                               dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
+             "2026-09-01")
+    assert g.criterio == "stati del terminale", g.criterio
+    assert g.minuti_lavorati == 480, g.minuti_lavorati
+    assert not g.anomalie, g.anomalie
+
+
+@prova("verso 'stati' scelto a mano: il programma non lo scavalca")
+def _():
+    # Se il titolare ha deciso che valgono gli stati, valgono anche quando
+    # producono anomalie: e' lui a dover vedere il problema, non il
+    # programma a nasconderglielo con una deduzione.
+    db = archivio()
+    punzona(db, 1, "2026-09-02 09:11:28", stato=0)
+    punzona(db, 1, "2026-09-02 09:53:53", stato=0)
+    punzona(db, 1, "2026-09-02 10:46:47", stato=1)
+    punzona(db, 1, "2026-09-02 13:14:14", stato=1)
+    g = sola(presenze.giornate(db, presenze.Regole(verso="stati"),
+                               dt.date(2026, 9, 2), dt.date(2026, 9, 2)),
+             "2026-09-02")
+    assert g.criterio == "stati del terminale", g.criterio
+    assert len([a for a in g.anomalie if "manca" in a]) == 2, g.anomalie
+
+
 @prova("rettifica: l'uscita mancante si aggiunge senza toccare il grezzo")
 def _():
     db = archivio()
@@ -393,9 +470,13 @@ def _():
 
     assert gestione.deriva_orologio(db) is None, "senza dati non deve inventare"
 
+    # Date relative a oggi: la stima guarda solo gli ultimi giorni, e una data
+    # fissa prima o poi esce dalla finestra (e' successo il 22 ottobre 2026).
+    ieri = (dt.date.today() - dt.timedelta(days=1)).isoformat()
+
     # Perde 1 secondo ogni ora: fanno 24 secondi al giorno.
     for n in range(6):
-        misura(f"2026-09-01 {8+n:02d}:00:00", -float(n))
+        misura(f"{ieri} {8+n:02d}:00:00", -float(n))
     db.commit()
     al_giorno, ore, campioni = gestione.deriva_orologio(db)
     assert abs(al_giorno + 24) < 0.5, al_giorno
@@ -410,12 +491,12 @@ def _():
                     (quando, scarto, riallineato))
     # Deriva costante di -1 s/ora; al quarto giro l'orologio viene rimesso,
     # quindi lo scarto torna a zero. Quel salto NON e' deriva.
-    m2("2026-09-01 08:00:00", 0.0)
-    m2("2026-09-01 09:00:00", -1.0)
-    m2("2026-09-01 10:00:00", -2.0)
-    m2("2026-09-01 11:00:00", -3.0, riallineato=1)    # misura, poi rimette l'ora
-    m2("2026-09-01 12:00:00", 0.0)                    # ripartito da zero
-    m2("2026-09-01 13:00:00", -1.0)
+    m2(f"{ieri} 08:00:00", 0.0)
+    m2(f"{ieri} 09:00:00", -1.0)
+    m2(f"{ieri} 10:00:00", -2.0)
+    m2(f"{ieri} 11:00:00", -3.0, riallineato=1)    # misura, poi rimette l'ora
+    m2(f"{ieri} 12:00:00", 0.0)                    # ripartito da zero
+    m2(f"{ieri} 13:00:00", -1.0)
     db2.commit()
     al_giorno2, _, campioni2 = gestione.deriva_orologio(db2)
     assert campioni2 == 4, f"intervalli usati: {campioni2} invece di 4"

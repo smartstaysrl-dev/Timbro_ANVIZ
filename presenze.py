@@ -45,8 +45,8 @@ class Regole:
     # Come si capisce se un punzone e' entrata o uscita:
     #   "stati"     - lo dice il terminale (tasto IN/OUT premuto dal dipendente)
     #   "alternanza"- si alternano: primo entrata, secondo uscita, ...
-    #   "automatico"- usa gli stati se il terminale li ha davvero differenziati,
-    #                 altrimenti ripiega sull'alternanza
+    #   "automatico"- usa gli stati se il terminale li ha davvero differenziati
+    #                 E se letti alla lettera reggono; altrimenti alternanza
     verso: str = "automatico"
 
     # Due timbrature della stessa persona entro questi secondi sono la stessa:
@@ -353,29 +353,72 @@ def _togli_doppioni(lista: list[Punzone], regole: Regole) -> None:
             ultimo = p
 
 
-def _assegna_verso(lista: list[Punzone], regole: Regole) -> str:
-    """Decide entrata/uscita per ogni punzone. Ritorna il criterio usato."""
-    vivi = [p for p in lista if not p.scartato]
-    stati = {p.stato for p in vivi if p.stato is not None}
+def _applica_verso(vivi: list[Punzone], modo: str) -> None:
+    """Riempie il verso dei punzoni che non ce l'hanno gia'.
 
-    modo = regole.verso
-    if modo == "automatico":
-        # Gli stati servono solo se il terminale ne ha davvero registrati di
-        # diversi: se tutti valgono 0, nessuno ha mai premuto il tasto.
-        modo = "stati" if len(stati) > 1 else "alternanza"
-
+    Chi ce l'ha gia' e' una rettifica in cui l'operatore ha dichiarato
+    entrata o uscita: quella parola vale piu' di qualunque deduzione.
+    """
     if modo == "stati":
         for p in vivi:
             if p.verso is None:
                 p.verso = "uscita" if p.stato == 1 else "entrata"
-        return "stati del terminale"
+        return
 
     atteso = "entrata"
     for p in vivi:
         if p.verso is None:
             p.verso = atteso
         atteso = "uscita" if p.verso == "entrata" else "entrata"
-    return "alternanza"
+
+
+def _stati_credibili(vivi: list[Punzone], regole: Regole) -> bool:
+    """Gli stati IN/OUT valgono solo se raccontano una giornata che sta in piedi.
+
+    Il tasto entrata/uscita del terminale non e' un dato per timbratura: e' uno
+    stato che RESTA. Se qualcuno lo commuta una volta, tutte le timbrature
+    successive, di tutti, escono con quello stato, per giorni. Nella giornata
+    della commutazione compaiono entrambi i valori, e prenderli per buoni
+    produce entrate senza uscita e uscite senza entrata a raffica: e' successo
+    il 2 settembre 2026, sul dispositivo vero, al secondo giorno di prova.
+
+    Si leggono i punzoni in tutti e due i modi e si tiene quello con meno
+    anomalie. A parita' vincono gli stati: sono una dichiarazione del
+    dipendente, l'alternanza e' solo una deduzione.
+    """
+    dichiarati = [p.verso for p in vivi]  # le rettifiche, da non toccare
+    anomalie = {}
+    for modo in ("stati", "alternanza"):
+        for p, v in zip(vivi, dichiarati):
+            p.verso = v
+        _applica_verso(vivi, modo)
+        anomalie[modo] = len(_accoppia(vivi, regole)[1])
+    for p, v in zip(vivi, dichiarati):
+        p.verso = v
+    return anomalie["stati"] <= anomalie["alternanza"]
+
+
+def _assegna_verso(lista: list[Punzone], regole: Regole) -> str:
+    """Decide entrata/uscita per ogni punzone. Ritorna il criterio usato."""
+    vivi = [p for p in lista if not p.scartato]
+    stati = {p.stato for p in vivi if p.stato is not None}
+
+    modo, criterio = regole.verso, None
+    if modo == "automatico":
+        # Gli stati servono solo se il terminale ne ha davvero registrati di
+        # diversi (se tutti valgono 0, nessuno ha mai premuto il tasto) E se
+        # letti alla lettera non producono una giornata assurda.
+        if len(stati) <= 1:
+            modo = "alternanza"
+        elif _stati_credibili(vivi, regole):
+            modo = "stati"
+        else:
+            modo, criterio = "alternanza", "alternanza (stati del terminale incoerenti)"
+
+    _applica_verso(vivi, modo)
+    if criterio:
+        return criterio
+    return "stati del terminale" if modo == "stati" else "alternanza"
 
 
 def _accoppia(lista: list[Punzone], regole: Regole) -> tuple[list[Turno], list[str]]:

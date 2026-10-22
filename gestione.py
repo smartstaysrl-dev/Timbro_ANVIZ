@@ -2526,7 +2526,7 @@ class SchermataImpostazioni(Schermata):
                    "Una timbratura prima di quest'ora conta sul giorno "
                    "precedente: e' cio' che tiene insieme i turni notturni.")
         self._voce("Entrata e uscita", {
-            "automatico": "automatico (stati se ci sono, altrimenti alternanza)",
+            "automatico": "automatico (stati se coerenti, altrimenti alternanza)",
             "stati": "come li marca il terminale",
             "alternanza": "alternanza",
         }.get(r.verso, r.verso), self._cambia_verso)
