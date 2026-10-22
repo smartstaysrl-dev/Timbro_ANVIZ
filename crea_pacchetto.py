@@ -41,11 +41,9 @@ NOME = "TIMBRA"
 
 # Quello che serve al programma. Le prove e gli strumenti da banco restano
 # fuori: in sede non servono, e uno strumento che rifà le figure della guida
-# accanto ai dati veri è solo un modo per fare danni.
-SORGENTI = ["anviz.py", "presenze.py", "interfaccia.py", "gestione.py",
-            "copie.py", "posta.py", "sicurezza.py", "guida.py", "logo.py",
-            "bootstrap_dhcp.py"]
-CARTELLE = ["guida", "logo"]
+# accanto ai dati veri è solo un modo per fare danni. La lista vive in
+# aggiorna.py: pacchetto e aggiornamento devono portare gli stessi file.
+from aggiorna import CARTELLE, FILE_VERSIONE, SORGENTI
 
 TKINTER = [("DLLs", "_tkinter.pyd"), ("DLLs", "tcl86t.dll"),
            ("DLLs", "tk86t.dll"), ("DLLs", "zlib1.dll")]
@@ -111,8 +109,10 @@ def scrivi_avvio(radice: str) -> None:
             "  dati\\    archivio delle timbrature, impostazioni, copie di\n"
             "           sicurezza. QUESTA NON SI TOCCA MAI.\n"
             "  python\\  il motore. Non serve guardarci dentro.\n\n"
-            "Per aggiornare: si chiude il programma, si sostituisce la sola\n"
-            "cartella app\\ con quella nuova, si riapre. I dati restano.\n\n"
+            "Per aggiornare: quando c'e' una versione nuova il programma lo\n"
+            "dice in basso a destra; si preme «Aggiorna», TIMBRA si chiude e\n"
+            "si riapre da sola. I dati restano. La versione di prima resta\n"
+            "in app.precedente\\, per tornare indietro a mano se servisse.\n\n"
             "Per il backup: si copia tutta la cartella TIMBRA, o almeno\n"
             "dati\\ che e' quella che conta.\n\n"
             "La cartella si puo' spostare dove si vuole, basta spostarla\n"
@@ -150,6 +150,30 @@ def crea_collegamento(radice: str) -> None:
         print(f"  collegamento: {os.path.basename(lnk)}")
 
 
+def etichetta_corrente() -> str:
+    """La versione e' l'etichetta git del commit da cui si impacchetta.
+
+    Senza etichetta il pacchetto si fa lo stesso, ma si dichiara "sviluppo":
+    l'aggiornatore lo considera piu' vecchio di qualunque versione vera, e la
+    prima pubblicata lo sostituisce. Con modifiche non salvate si avvisa,
+    perche' il pacchetto non corrisponderebbe a nessuna versione.
+    """
+    import subprocess
+
+    def git(*args):
+        r = subprocess.run(["git", *args], cwd=CARTELLA, capture_output=True,
+                           text=True)
+        return r.stdout.strip() if r.returncode == 0 else ""
+
+    if git("status", "--porcelain", "--untracked-files=no"):
+        print("  ATTENZIONE: ci sono modifiche non salvate in git")
+        return "sviluppo"
+    etichetta = git("describe", "--tags", "--exact-match", "HEAD")
+    if not etichetta:
+        print("  ATTENZIONE: questo commit non ha un'etichetta di versione")
+    return etichetta or "sviluppo"
+
+
 def main() -> int:
     radice = os.path.join(USCITA, NOME)
     if os.path.exists(radice):
@@ -181,6 +205,10 @@ def main() -> int:
             shutil.copytree(sorgente, os.path.join(app, cartella),
                             ignore=shutil.ignore_patterns("_finto.db*"))
     print(f"  {len(SORGENTI)} file + {len(CARTELLE)} cartelle")
+    versione = etichetta_corrente()
+    with open(os.path.join(app, FILE_VERSIONE), "w", encoding="utf-8") as f:
+        f.write(versione + "\n")
+    print(f"  versione: {versione}")
 
     # La cartella dei dati nasce vuota, accanto al codice e non dentro:
     # aggiornare vuol dire sostituire "app", e quello che sta li' dentro deve

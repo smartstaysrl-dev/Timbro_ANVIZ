@@ -36,10 +36,11 @@ richiedono una licenza scritta dai titolari. Vedi [LICENSE](LICENSE).
 | `sicurezza.py` | il PIN delle sezioni pericolose, l'offuscamento, l'istanza unica |
 | `guida.py` | il manuale dell'operatore, che si apre dal «?» dentro il programma |
 | `logo.py` | il marchio disegnato su tela Tk, e la finestrella di avvio |
+| `aggiorna.py` | l'aggiornatore: trova la versione nuova su GitHub, la installa quando l'operatore preme il bottone |
 | `scatti_guida.py` | rifà le figure della guida su un archivio inventato |
 | `crea_pacchetto.py` · `crea_icona.py` | preparano la cartella da copiare in sede |
 | `guida_pdf.py` | stampa la stessa guida in PDF (`TIMBRA - guida.pdf`) |
-| `test_anviz.py` · `test_presenze.py` · `test_copie.py` · `test_grafico.py` · `test_sicurezza.py` · `test_posta.py` · `test_dati.py` | i collaudi |
+| `test_anviz.py` · `test_presenze.py` · `test_copie.py` · `test_grafico.py` · `test_sicurezza.py` · `test_posta.py` · `test_dati.py` · `test_aggiorna.py` | i collaudi |
 
 Nessuna dipendenza esterna: solo la libreria standard di Python 3.10+.
 
@@ -606,6 +607,29 @@ La password della casella sta in `configurazione.json` **offuscata, non
 cifrata**: la chiave è dentro `sicurezza.py`, in chiaro. Ferma l'occhiata di
 passaggio al file aperto sul monitor, non chi ha il sorgente. Meglio una
 password per app o una casella dedicata.
+
+## Gli aggiornamenti
+
+`aggiorna.py`. **Il programma avvisa, l'operatore preme il bottone: mai da
+solo, mai di notte.** Ogni sei ore TIMBRA guarda su GitHub; se c'e' una
+versione nuova compare un bottone verde in basso a destra (e in Impostazioni ›
+Programma). Premuto, chiede il PIN, fa una copia dell'archivio, scarica,
+controlla che tutti i file ci siano e si compilino, si chiude e si riapre
+aggiornata in pochi secondi. La versione di prima resta in `app.precedente`.
+
+**Conta come versione solo un'etichetta git a forma di data.** Il lavoro sul
+ramo principale non arriva in sede finche' non lo si pubblica:
+
+    git tag 2026.10.22 && git push origin 2026.10.22
+
+(la seconda dello stesso giorno: `2026.10.22.2`). `crea_pacchetto.py` scrive
+nel file `app/VERSIONE` l'etichetta del commit da cui impacchetta: va quindi
+lanciato *dopo* aver messo l'etichetta, altrimenti il pacchetto si dichiara
+"sviluppo" e la prima versione pubblicata lo sostituisce.
+
+Il repository e' pubblico, quindi sul computer del cliente non c'e' nessuna
+credenziale. Se un giorno diventa privato, servira' un token in sola lettura
+per installazione.
 
 ## Una copia sola
 

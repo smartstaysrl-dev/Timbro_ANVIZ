@@ -34,6 +34,7 @@ import threading
 import time
 import tkinter as tk
 
+import aggiorna
 import anviz
 import copie
 import guida
@@ -75,6 +76,7 @@ def _cartella_dati() -> str:
 
 
 CARTELLA_DATI = _cartella_dati()
+VERSIONE = aggiorna.versione_installata(CARTELLA)
 FILE_CONFIG = os.path.join(CARTELLA_DATI, "configurazione.json")
 FILE_REGOLE = os.path.join(CARTELLA_DATI, "regole.json")
 
@@ -2630,6 +2632,21 @@ class SchermataImpostazioni(Schermata):
         Bottone(self.lista.interno, "Richiudi adesso", self._richiudi).pack(
             fill="x", padx=8, pady=4)
 
+        self._sezione("PROGRAMMA")
+        self._voce("Versione in uso", VERSIONE)
+        self._voce("Ultima pubblicata",
+                   self.app.ultima_versione or "non ancora controllata",
+                   nota="Si controlla da sola ogni sei ore. Quando c'e' una "
+                        "versione nuova compare un bottone verde in basso: "
+                        "si aggiorna solo premendolo, mai da sola.")
+        Bottone(self.lista.interno, "Cerca aggiornamenti adesso",
+                self._cerca_aggiornamenti).pack(fill="x", padx=8, pady=4)
+        if self.app.c_e_aggiornamento():
+            Bottone(self.lista.interno,
+                    f"Aggiorna adesso alla {self.app.ultima_versione}",
+                    self.app.aggiorna_programma, colore=VERDE,
+                    colore_testo=BG).pack(fill="x", padx=8, pady=4)
+
         self._sezione("MANUTENZIONE")
         azioni = tk.Frame(self.lista.interno, bg=BG)
         azioni.pack(fill="x", padx=8, pady=4)
@@ -3124,6 +3141,24 @@ class SchermataImpostazioni(Schermata):
                 lambda t: t.imposta_configurazione(lingua=v))
 
     # -- copie --
+    def _cerca_aggiornamenti(self):
+        etichetta, errore = Attesa.esegui(
+            self, "Guardo se c'e' una versione nuova...",
+            aggiorna.ultima_disponibile)
+        if errore:
+            Avviso.errore(self, f"Non riesco a controllare: serve la "
+                                f"connessione a internet.\n\n{errore}")
+            return
+        self.app.annuncia_versione(etichetta)
+        if not aggiorna.installabile(CARTELLA):
+            Avviso.mostra(self, "Copia di sviluppo",
+                          f"Ultima pubblicata: {etichetta or 'nessuna'}. "
+                          f"Questa copia gira dai sorgenti e non si aggiorna "
+                          f"da qui.")
+        elif not self.app.c_e_aggiornamento():
+            Avviso.mostra(self, "Gia' aggiornato",
+                          f"La {VERSIONE} e' l'ultima versione.", VERDE)
+
     def _copia_adesso(self):
         esito, errore = Attesa.esegui(
             self, "Copio l'archivio...",
@@ -3253,6 +3288,8 @@ class App(tk.Tk):
         self.dati_terminale: dict = {}
         self.collegato = False
         self.ultima_copia: dict | None = None
+        self.ultima_versione: str | None = None   # l'ultima pubblicata
+        self.esito_aggiornamento = aggiorna.ultimo_esito(CARTELLA_DATI)
         self.serratura = sicurezza.Serratura(self.cfg,
                                              lambda: salva_config(self.cfg))
 
@@ -3308,6 +3345,16 @@ class App(tk.Tk):
             pass
         if guasto_configurazione:
             self._avvisa_configurazione()
+        if self.esito_aggiornamento:
+            riuscito = self.esito_aggiornamento.endswith(" aggiornato")
+            Avviso.mostra(
+                self, "Aggiornamento fatto" if riuscito
+                else "Aggiornamento non riuscito",
+                f"Versione in uso: {VERSIONE}.\n\n{self.esito_aggiornamento}",
+                VERDE if riuscito else GIALLO)
+        # Il primo controllo aspetta che il programma sia in piedi: appena
+        # acceso il computer la rete spesso non c'e' ancora.
+        self.after(15_000, self._controlla_aggiornamenti)
 
     def _avvisa_configurazione(self):
         Avviso.mostra(
@@ -3361,6 +3408,10 @@ class App(tk.Tk):
         self.stato.pack(side="left", fill="x", expand=True)
         tk.Label(barra, text="F11 schermo intero", bg=CARD, fg=TESTO_TENUE,
                  font=F_PICCOLO).pack(side="right", padx=16)
+        # Compare solo quando c'e' una versione nuova da installare.
+        self.bottone_aggiorna = Bottone(
+            barra, "Aggiorna", self.aggiorna_programma, colore=VERDE,
+            colore_testo=BG, font=F_PICCOLO, altezza=38, larghezza=260)
 
     def mostra(self, nome):
         if nome in SEZIONI_PROTETTE and not self.sbloccata():
@@ -3575,6 +3626,77 @@ class App(tk.Tk):
             self._pianifica(self._aggiorna_dati, info)
 
         threading.Thread(target=lavoro, daemon=True).start()
+
+    # -- aggiornamenti --
+    def _controlla_aggiornamenti(self):
+        """Guarda su GitHub se c'e' una versione nuova, ogni sei ore.
+
+        In sottofondo e in silenzio: senza rete non succede niente e si
+        riprova al giro dopo. Se c'e' qualcosa, compare un bottone verde in
+        basso. Installare resta una decisione di chi sta davanti allo schermo.
+        """
+        def lavoro():
+            try:
+                etichetta = aggiorna.ultima_disponibile()
+            except Exception:                                    # noqa: BLE001
+                return
+            self._pianifica(self.annuncia_versione, etichetta)
+
+        threading.Thread(target=lavoro, daemon=True).start()
+        self.after(6 * 3600 * 1000, self._controlla_aggiornamenti)
+
+    def c_e_aggiornamento(self) -> bool:
+        return (aggiorna.installabile(CARTELLA)
+                and aggiorna.piu_nuova(self.ultima_versione, VERSIONE))
+
+    def annuncia_versione(self, etichetta):
+        """Gira sul thread principale. Nessuna finestra qui: arriva dal
+        drenaggio della coda, e una modale lo bloccherebbe."""
+        self.ultima_versione = etichetta
+        if self.c_e_aggiornamento():
+            self.bottone_aggiorna.testo(f"Aggiorna alla {etichetta}")
+            self.bottone_aggiorna.pack(side="right", padx=4, pady=4)
+        else:
+            self.bottone_aggiorna.pack_forget()
+        if isinstance(self.attuale, SchermataImpostazioni):
+            self.attuale.entra()
+
+    def aggiorna_programma(self):
+        etichetta = self.ultima_versione
+        if not self.c_e_aggiornamento():
+            return
+        if not self.sbloccata(spiegazione="Per aggiornare il programma "
+                                          "serve il PIN."):
+            return
+        if not Conferma.chiedi(
+                self, f"Aggiornare alla {etichetta}?",
+                f"Adesso c'e' la {VERSIONE}. TIMBRA si chiude e si riapre da "
+                f"sola, in meno di un minuto.\n\nArchivio, impostazioni e "
+                f"copie non si toccano. Il terminale intanto continua a "
+                f"registrare: le timbrature arrivano alla riapertura."):
+            return
+        # Prima una copia dell'archivio: costa un secondo, e se la versione
+        # nuova avesse un difetto che tocca i dati c'e' da dove ripartire.
+        _, errore = Attesa.esegui(self, "Copia di sicurezza...",
+                                  lambda: copie.esegui(self.cfg["archivio"]))
+        if errore:
+            Avviso.errore(self, f"Non aggiorno: la copia di sicurezza non e' "
+                                f"riuscita, e senza non si rischia.\n\n{errore}")
+            return
+        pronta, errore = Attesa.esegui(
+            self, f"Scarico la {etichetta}...",
+            lambda: aggiorna.prepara(etichetta, CARTELLA_DATI))
+        if errore:
+            Avviso.errore(self, f"Aggiornamento non riuscito: il programma "
+                                f"resta com'era.\n\n{errore}")
+            return
+        try:
+            aggiorna.avvia_sostituzione(CARTELLA, pronta, CARTELLA_DATI)
+        except OSError as e:
+            Avviso.errore(self, f"Aggiornamento non riuscito: il programma "
+                                f"resta com'era.\n\n{e}")
+            return
+        self._chiudi()
 
     def _pianifica(self, funzione, *args):
         """Fa eseguire qualcosa al thread principale.
