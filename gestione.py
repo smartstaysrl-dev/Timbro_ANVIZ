@@ -3812,8 +3812,8 @@ class App(tk.Tk):
         # Gli schermi dei registratori di cassa sono piccoli: 1024x768, a volte
         # 1024x600. Una misura minima fissa piu' grande dello schermo lascia i
         # bottoni in fondo fuori dalla finestra, irraggiungibili. Ci si adatta.
-        # La misura serve quando si esce dallo schermo intero con Esc: si
-        # parte sempre a schermo intero (vedi _dopo_avvio).
+        # La misura serve quando si rimpicciolisce la finestra: si
+        # parte sempre ingrandita (vedi _dopo_avvio).
         schermo_l = self.winfo_screenwidth()
         schermo_a = self.winfo_screenheight()
         self.geometry(f"{min(1100, schermo_l)}x{min(760, schermo_a - 60)}")
@@ -3850,11 +3850,13 @@ class App(tk.Tk):
         """
         try:
             self.deiconify()
-            # A schermo intero da subito: e' il computer della cassa, e una
-            # finestra piccola in mezzo al desktop invita a chiuderla o a
-            # perderla dietro il browser. Esc o F11 per uscirne.
-            if self.cfg.get("schermo_intero", True):
-                self.attributes("-fullscreen", True)
+            # Ingrandita da subito, ma con la barra in alto: si vede che e'
+            # una finestra e la si chiude con la X. Lo schermo intero vero
+            # (senza barra) resta su F11, per chi lo vuole.
+            try:
+                self.state("zoomed")
+            except tk.TclError:
+                pass
             self.lift()
             self.attributes("-topmost", True)
             self.after(400, lambda: self.attributes("-topmost", False))
@@ -3929,7 +3931,7 @@ class App(tk.Tk):
         self.stato = tk.Label(barra, text="Avvio...", bg=CARD, fg=TESTO_TENUE,
                               font=F_PICCOLO, anchor="w")
         self.stato.pack(side="left", fill="x", expand=True)
-        tk.Label(barra, text="F11 / Esc: schermo intero", bg=CARD, fg=TESTO_TENUE,
+        tk.Label(barra, text="F11 schermo intero", bg=CARD, fg=TESTO_TENUE,
                  font=F_PICCOLO).pack(side="right", padx=16)
         # Compare solo quando c'e' una versione nuova da installare.
         self.bottone_aggiorna = Bottone(
