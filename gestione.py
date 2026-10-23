@@ -1089,14 +1089,14 @@ class ModuloUtente(Dialogo):
         f = tk.Frame(self.campi, bg=CARD, height=ALTEZZA_TOCCO)
         f.pack(fill="x", pady=3)
         f.pack_propagate(False)
-        tk.Label(f, text="Amministratore del terminale", bg=CARD, fg=TESTO_TENUE,
-                 font=F_NORMALE, width=22, anchor="w").pack(side="left", padx=16)
+        tk.Label(f, text="solo dal menu del terminale", bg=CARD, fg=TESTO_TENUE,
+                 font=F_PICCOLO).pack(side="right", padx=14)
+        tk.Label(f, text="Amministratore", bg=CARD, fg=TESTO_TENUE,
+                 font=F_NORMALE, width=17, anchor="w").pack(side="left", padx=16)
         tk.Label(f, text="si" if self.u.amministratore else "no", bg=CARD,
                  fg=VERDE if self.u.amministratore else TESTO,
                  font=F_NORMALE, anchor="w").pack(side="left", fill="x",
                                                   expand=True)
-        tk.Label(f, text="solo dal menu del terminale", bg=CARD, fg=TESTO_TENUE,
-                 font=F_PICCOLO).pack(side="right", padx=14)
 
         self.stato_impronte = tk.Label(self.scorrevole.interno, bg=BG,
                                        fg=TESTO_TENUE, font=F_PICCOLO,
@@ -1121,13 +1121,20 @@ class ModuloUtente(Dialogo):
         f = tk.Frame(self.campi, bg=CARD, height=ALTEZZA_TOCCO)
         f.pack(fill="x", pady=3)
         f.pack_propagate(False)
-        tk.Label(f, text=etichetta, bg=CARD, fg=TESTO_TENUE, font=F_NORMALE,
-                 width=22, anchor="w").pack(side="left", padx=16)
+        # Il bottone si impacchetta PER PRIMO: pack da' lo spazio in ordine,
+        # e con lo schermo ingrandito (DPI al 150-200%) l'ultimo arrivato
+        # finiva fuori dal bordo — "cambia" spariva e il campo non si poteva
+        # piu' modificare. Per lo stesso motivo tutta la riga e' toccabile.
+        Bottone(f, "cambia", comando, font=F_PICCOLO, altezza=44,
+                larghezza=110).pack(side="right", padx=10)
+        nome = tk.Label(f, text=etichetta, bg=CARD, fg=TESTO_TENUE,
+                        font=F_NORMALE, width=17, anchor="w")
+        nome.pack(side="left", padx=16)
         valore = tk.Label(f, text="", bg=CARD, fg=TESTO, font=F_NORMALE,
                           anchor="w")
         valore.pack(side="left", fill="x", expand=True)
-        Bottone(f, "cambia", comando, font=F_PICCOLO, altezza=44,
-                larghezza=110).pack(side="right", padx=10)
+        for w in (f, nome, valore):
+            w.bind("<Button-1>", lambda _e: comando())
         self.righe[chiave] = valore
 
     def _disegna(self):
@@ -2399,13 +2406,19 @@ class SchermataImpostazioni(Schermata):
         f = tk.Frame(self.lista.interno, bg=CARD, height=ALTEZZA_TOCCO)
         f.pack(fill="x", pady=2, padx=8)
         f.pack_propagate(False)
-        tk.Label(f, text=etichetta, bg=CARD, fg=TESTO_TENUE, font=F_NORMALE,
-                 width=28, anchor="w").pack(side="left", padx=16)
-        tk.Label(f, text=str(valore), bg=CARD, fg=TESTO, font=F_NORMALE,
-                 anchor="w").pack(side="left", fill="x", expand=True)
+        # Bottone per primo e riga toccabile: vedi ModuloUtente._riga.
         if comando:
             Bottone(f, "cambia", comando, font=F_PICCOLO, altezza=44,
                     larghezza=110).pack(side="right", padx=10)
+        nome = tk.Label(f, text=etichetta, bg=CARD, fg=TESTO_TENUE,
+                        font=F_NORMALE, width=28, anchor="w")
+        nome.pack(side="left", padx=16)
+        testo = tk.Label(f, text=str(valore), bg=CARD, fg=TESTO,
+                         font=F_NORMALE, anchor="w")
+        testo.pack(side="left", fill="x", expand=True)
+        if comando:
+            for w in (f, nome, testo):
+                w.bind("<Button-1>", lambda _e: comando())
         if nota:
             tk.Label(self.lista.interno, text=nota, bg=BG, fg=TESTO_TENUE,
                      font=F_PICCOLO, anchor="w", wraplength=880,
