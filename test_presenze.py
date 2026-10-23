@@ -436,6 +436,29 @@ def _():
     assert len(altro) == len(intestazione)
 
 
+@prova("export CSV: monte ore per persona e per tutto il periodo")
+def _():
+    db = archivio()
+    for giorno in ("2026-09-07", "2026-09-08"):
+        punzona(db, 1, f"{giorno} 09:00:00")
+        punzona(db, 1, f"{giorno} 17:30:00")           # 8h30 al giorno
+    punzona(db, 2, "2026-09-07 18:00:00")
+    punzona(db, 2, "2026-09-07 23:00:00")              # 5h
+    elenco = presenze.giornate(db, presenze.Regole(),
+                               dt.date(2026, 9, 7), dt.date(2026, 9, 8))
+    righe = [r.split(";") for r in presenze.testo_csv(
+        elenco, {1: "Mario Rossi", 2: "Anna Bianchi"}).splitlines()]
+    colonne = righe[0]
+    ore, minuti = colonne.index("ore"), colonne.index("minuti")
+    totali = {r[0]: r for r in righe if r and r[0].startswith("TOTALE")}
+    assert totali["TOTALE Mario Rossi"][ore] == "17:00", totali
+    assert totali["TOTALE Anna Bianchi"][ore] == "5:00"
+    assert totali["TOTALE PERIODO"][ore] == "22:00"
+    assert totali["TOTALE PERIODO"][minuti] == "1320"
+    assert "2 giorni lavorati" in totali["TOTALE Mario Rossi"][-1]
+    assert all(len(r) == len(colonne) for r in totali.values())
+
+
 @prova("ora legale, notte in cui si dorme un'ora in piu': il turno dura 7 ore")
 def _():
     # 25 ottobre 2026: alle 03:00 CEST l'orologio torna alle 02:00 CET.

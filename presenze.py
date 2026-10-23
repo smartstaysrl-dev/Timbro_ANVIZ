@@ -565,6 +565,32 @@ def testo_csv(elenco: list[Giornata], nomi: dict[int, str]) -> str:
             g.ore, g.minuti_lavorati, g.minuti_straordinario,
             " | ".join(g.anomalie),
         ])
+
+    # Il monte ore: una riga per persona e una per tutto il periodo, nelle
+    # stesse colonne delle giornate, cosi' chi fa le paghe non deve sommare
+    # a mano (ne' sapere che "8:30" vuol dire otto ore e mezza, non 8,30).
+    def totale(nome, giornate, codice=""):
+        minuti = sum(g.minuti_lavorati for g in giornate)
+        w.writerow([
+            nome, codice, "", *([""] * 2 * coppie),
+            sum(len([t for t in g.turni if t.completo]) for g in giornate),
+            f"{minuti // 60}:{minuti % 60:02d}", minuti,
+            sum(g.minuti_straordinario for g in giornate),
+            f"{len({g.data for g in giornate if g.minuti_lavorati})} "
+            f"giorni lavorati",
+        ])
+
+    if elenco:
+        w.writerow([])
+        persone = {}
+        for g in elenco:
+            persone.setdefault(g.employee_code, []).append(g)
+        for codice, giornate in sorted(
+                persone.items(),
+                key=lambda x: nomi.get(x[0], f"Utente {x[0]}").lower()):
+            totale(f"TOTALE {nomi.get(codice, f'Utente {codice}')}",
+                   giornate, codice)
+        totale("TOTALE PERIODO", elenco)
     return buffer.getvalue()
 
 
