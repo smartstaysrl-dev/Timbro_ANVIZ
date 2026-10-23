@@ -398,6 +398,25 @@ def _():
     assert n == 1 and "Mario Rossi" in testo and "8:00" in testo, testo
 
 
+@prova("un annullamento si puo' togliere: la timbratura torna a contare")
+def _():
+    db = archivio()
+    punzona(db, 1, "2026-09-03 09:00:00")
+    punzona(db, 1, "2026-09-03 17:00:00")
+    giorno = dt.date(2026, 9, 3)
+    evento = db.execute("SELECT source_event_id FROM raw_events "
+                        "ORDER BY occurred_at_local DESC").fetchone()[0]
+    presenze.annulla_timbratura(db, 1, evento, "prova", "io")
+    g = sola(presenze.giornate(db, presenze.Regole(), giorno, giorno),
+             "2026-09-03")
+    assert g.minuti_lavorati == 0, g.minuti_lavorati
+    assert presenze.togli_annullamento(db, evento)
+    assert not presenze.togli_annullamento(db, evento), "gia' tolto"
+    g = sola(presenze.giornate(db, presenze.Regole(), giorno, giorno),
+             "2026-09-03")
+    assert g.minuti_lavorati == 480, g.minuti_lavorati
+
+
 @prova("export CSV: pranzo e cena, tutte e quattro le timbrature")
 def _():
     db = archivio()

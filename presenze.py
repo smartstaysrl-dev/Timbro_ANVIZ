@@ -142,6 +142,16 @@ def togli_aggiunta(db, rettifica_id: int) -> bool:
     return cur.rowcount > 0
 
 
+def togli_annullamento(db, source_event_id: str) -> bool:
+    """Rimette nel conteggio una timbratura del terminale annullata per
+    sbaglio. Come togli_aggiunta: si cancella la correzione, il grezzo
+    resta com'era."""
+    cur = db.execute("DELETE FROM rettifiche WHERE tipo = 'annullamento' "
+                     "AND evento_annullato = ?", (source_event_id,))
+    db.commit()
+    return cur.rowcount > 0
+
+
 def annulla_timbratura(db, employee_code: int, source_event_id: str,
                        motivo: str, autore: str) -> None:
     db.execute(

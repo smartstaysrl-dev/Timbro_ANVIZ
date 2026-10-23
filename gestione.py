@@ -1962,13 +1962,16 @@ class SchermataPresenze(Schermata):
     titolo = "Presenze"
 
     PERIODI = (("Giorno", "giorno"), ("Settimana", "settimana"),
-               ("Mese", "mese"))
+               ("Mese", "mese"), ("Dal… al…", "intervallo"))
     NOMI_PERIODO = {"giorno": "il giorno", "settimana": "la settimana",
-                    "mese": "il mese"}
+                    "mese": "il mese", "intervallo": "il periodo"}
 
     def costruisci(self):
         self.giorno = dt.date.today()
         self.periodo = "giorno"
+        # Le date di "Dal... al...": le paghe non seguono sempre il mese di
+        # calendario (dal 16 al 15, una quindicina, un contratto a termine).
+        self.dal = self.al = self.giorno
         barra = self.intestazione("Presenze")
         self.b_esporta = Bottone(barra, "Esporta il mese", self._esporta,
                                  colore=VIOLA, colore_testo=BG, font=F_NORMALE,
@@ -2001,10 +2004,21 @@ class SchermataPresenze(Schermata):
 
     # --- periodo mostrato -------------------------------------------------
     def _periodo(self, chiave):
+        if chiave == "intervallo":
+            dal = SceltaGiorno.chiedi(self, "Dal giorno", self._intervallo()[0])
+            if dal is None:
+                return
+            al = SceltaGiorno.chiedi(self, "Al giorno (compreso)",
+                                     max(dal, self._intervallo()[1]))
+            if al is None:
+                return
+            self.dal, self.al = min(dal, al), max(dal, al)
         self.periodo = chiave
         self.entra()
 
     def _intervallo(self) -> tuple[dt.date, dt.date]:
+        if self.periodo == "intervallo":
+            return self.dal, self.al
         if self.periodo == "giorno":
             return self.giorno, self.giorno
         if self.periodo == "settimana":
@@ -2015,6 +2029,10 @@ class SchermataPresenze(Schermata):
             day=calendar.monthrange(primo.year, primo.month)[1])
 
     def _titolo_periodo(self, dal, al) -> str:
+        if self.periodo == "intervallo":
+            giorni = (al - dal).days + 1
+            return (f"dal {dal.day} {MESI[dal.month]} {dal.year} al {al.day} "
+                    f"{MESI[al.month]} {al.year} · {giorni} giorni")
         if self.periodo == "giorno":
             return data_lunga(dal)
         if self.periodo == "settimana":
@@ -2025,6 +2043,13 @@ class SchermataPresenze(Schermata):
         return f"{MESI[dal.month]} {dal.year}"
 
     def _sposta(self, passi):
+        if self.periodo == "intervallo":
+            # Le frecce spostano tutto il periodo della sua lunghezza: dal
+            # 16/09-15/10 si passa al 16/10-14/11, lungo uguale.
+            durata = dt.timedelta(days=(self.al - self.dal).days + 1)
+            self.dal += durata * passi
+            self.al += durata * passi
+            return self.entra()
         if self.periodo == "giorno":
             self.giorno += dt.timedelta(days=passi)
         elif self.periodo == "settimana":
@@ -2043,6 +2068,10 @@ class SchermataPresenze(Schermata):
 
     def _oggi(self):
         self.giorno = dt.date.today()
+        if self.periodo == "intervallo":
+            # Stessa lunghezza, ma che finisca oggi.
+            self.dal += self.giorno - self.al
+            self.al = self.giorno
         self.entra()
 
     # --- contenuto ---------------------------------------------------------
@@ -2068,7 +2097,8 @@ class SchermataPresenze(Schermata):
                      bg=BG, fg=TESTO_TENUE, font=F_GRANDE).pack(pady=50)
             return
 
-        if self.periodo == "giorno":
+        if self.periodo == "giorno" or (self.periodo == "intervallo"
+                                        and dal == al):
             self._schede_giorno(elenco, nomi)
         else:
             self._schede_periodo(elenco, nomi)
@@ -2150,7 +2180,8 @@ class SchermataPresenze(Schermata):
         cornice.pack(fill="x", padx=8, pady=(10, 20))
         titoli = {"giorno": "La giornata a colpo d'occhio",
                   "settimana": "La settimana a colpo d'occhio",
-                  "mese": "Il mese a colpo d'occhio"}
+                  "mese": "Il mese a colpo d'occhio",
+                  "intervallo": "Il periodo a colpo d'occhio"}
         tk.Label(cornice, text=titoli[self.periodo], bg=BG, fg=TESTO,
                  font=F_NORMALE, anchor="w").pack(fill="x", pady=(0, 2))
         if self.periodo == "giorno":
@@ -2179,7 +2210,12 @@ class SchermataPresenze(Schermata):
         grafico = GraficoPresenze(cornice, al_giorno=self._apri_giorno)
         grafico.pack(fill="x")
         self.lista.segui_trascinamento(grafico)
-        grafico.mostra(elenco, nomi, self.periodo, dal, al, self.app.regole)
+        # Il grafico conosce solo giorno, settimana e mese: un periodo scelto
+        # a mano si disegna come l'uno o l'altro secondo quanto e' lungo.
+        modo = self.periodo
+        if modo == "intervallo":
+            modo = "settimana" if (al - dal).days < 7 else "mese"
+        grafico.mostra(elenco, nomi, modo, dal, al, self.app.regole)
 
     def _apri_giorno(self, giorno):
         self.giorno = giorno
@@ -2225,19 +2261,114 @@ class SchermataPresenze(Schermata):
             GIALLO if anomale else VERDE)
 
 
+class SceltaGiorno(Dialogo):
+    """Un giorno, con i bottoni: dal tavolo si corregge quasi sempre ieri o
+    l'altro ieri, e scrivere una data col dito e' il modo di sbagliarla."""
+
+    def __init__(self, padre, titolo, iniziale: dt.date):
+        super().__init__(padre, titolo)
+        self.giorno = iniziale
+        tk.Label(self, text=titolo, bg=BG, fg=TESTO, font=F_TITOLO).pack(
+            pady=(18, 10), padx=30)
+        self.display = tk.Label(self, text="", bg=CARD, fg=TESTO,
+                                font=F_GRANDE, width=24)
+        self.display.pack(padx=30, ipady=14)
+        riga = tk.Frame(self, bg=BG)
+        riga.pack(pady=10)
+        for testo, giorni in (("−7", -7), ("− 1 giorno", -1),
+                              ("+ 1 giorno", 1), ("+7", 7)):
+            Bottone(riga, testo, lambda g=giorni: self._muovi(g),
+                    font=F_NORMALE, altezza=60,
+                    larghezza=150 if abs(giorni) == 1 else 90).pack(
+                side="left", padx=4)
+        azioni = tk.Frame(self, bg=BG)
+        azioni.pack(fill="x", padx=30, pady=(10, 20))
+        Bottone(azioni, "Annulla", self.destroy, altezza=64,
+                larghezza=200).pack(side="left")
+        Bottone(azioni, "Conferma", self._conferma, colore=VERDE,
+                colore_testo=BG, altezza=64, larghezza=200).pack(side="right")
+        self._disegna()
+
+    def _muovi(self, giorni):
+        self.giorno += dt.timedelta(days=giorni)
+        self._disegna()
+
+    def _disegna(self):
+        self.display.config(text=data_lunga(self.giorno))
+
+    def _conferma(self):
+        self.risultato = self.giorno
+        self.destroy()
+
+    @staticmethod
+    def chiedi(padre, titolo, iniziale):
+        return SceltaGiorno(padre, titolo, iniziale).concludi()
+
+
+class SceltaDipendente(Dialogo):
+    """Come Scelta, ma scorre: i dipendenti possono essere piu' di quanti
+    bottoni stanno su uno schermo da 1024x600."""
+
+    def __init__(self, padre, nomi: dict[int, str]):
+        super().__init__(padre, "Chi?")
+        tk.Label(self, text="Di chi e' la timbratura?", bg=BG, fg=TESTO,
+                 font=F_TITOLO).pack(pady=(18, 10), padx=30)
+        alto = min(440, self.winfo_screenheight() - 260)
+        lista = ListaScorrevole(self)
+        lista.tela.config(height=alto, width=460)
+        lista.pack(fill="both", expand=True, padx=30)
+        for codice, nome in sorted(nomi.items(), key=lambda x: x[1].lower()):
+            b = Bottone(lista.interno, f"{nome}   ·   {codice}",
+                        lambda c=codice: self._scegli(c), font=F_NORMALE,
+                        altezza=60)
+            b.pack(fill="x", pady=3)
+            lista.segui_trascinamento(b)
+        Bottone(self, "Annulla", self.destroy, altezza=60,
+                larghezza=200).pack(pady=(14, 20))
+
+    def _scegli(self, codice):
+        self.risultato = codice
+        self.destroy()
+
+    @staticmethod
+    def chiedi(padre, nomi):
+        return SceltaDipendente(padre, nomi).concludi()
+
+
 class SchermataTimbrature(Schermata):
     titolo = "Timbrature"
     PER_PAGINA = 40
+    RETTIFICA = ("Le correzioni cambiano le ore che poi si pagano: "
+                 "guardarle e' libero, correggerle no.")
+
+    # Le timbrature del terminale e quelle aggiunte a mano, in un elenco
+    # solo. Il grezzo non si tocca: correggere un'ora vuol dire annullare
+    # la timbratura del terminale (che resta in archivio, barrata) e
+    # aggiungerne una a mano con l'ora giusta e il motivo.
+    ELENCO = """
+        SELECT 'terminale', source_event_id, employee_code,
+               occurred_at_local, metodo, event_type, NULL,
+               source_event_id IN (SELECT evento_annullato FROM rettifiche
+                                   WHERE tipo = 'annullamento'), NULL
+          FROM raw_events
+        UNION ALL
+        SELECT 'mano', 'rettifica:' || id, employee_code, quando_locale,
+               'a mano', NULL, verso, 0, motivo
+          FROM rettifiche WHERE tipo = 'aggiunta'
+    """
 
     def costruisci(self):
         self.pagina = 0
-        barra = self.intestazione("Timbrature grezze")
+        barra = self.intestazione("Timbrature", [
+            ("+ Aggiungi timbratura", self._aggiungi, BLU)])
         self.etichetta_pagina = tk.Label(barra, text="", bg=BG, fg=TESTO_TENUE,
                                          font=F_NORMALE)
         self.etichetta_pagina.pack(side="right", padx=16)
         tk.Label(self, bg=BG, fg=TESTO_TENUE, font=F_PICCOLO, anchor="w",
-                 text="Cosi' come arrivano dal terminale, senza "
-                      "interpretazioni. Questo archivio non si modifica mai."
+                 justify="left", wraplength=900,
+                 text="Tocca una timbratura per correggerla. Quella del "
+                      "terminale non si cancella mai: si annulla e resta "
+                      "in archivio, barrata, accanto alla correzione."
                  ).pack(fill="x", padx=24, pady=(0, 8))
         self.lista = ListaScorrevole(self)
         self.lista.pack(fill="both", expand=True, padx=16)
@@ -2261,12 +2392,11 @@ class SchermataTimbrature(Schermata):
         self.lista.svuota()
         db = apri_archivio(self.app.cfg["archivio"])
         try:
-            nomi = nomi_dipendenti(db)
-            totale = db.execute("SELECT COUNT(*) FROM raw_events").fetchone()[0]
+            self.nomi = nomi_dipendenti(db)
+            totale = db.execute(
+                f"SELECT COUNT(*) FROM ({self.ELENCO})").fetchone()[0]
             righe = list(db.execute(
-                "SELECT employee_code, occurred_at_local, metodo, event_type "
-                "FROM raw_events ORDER BY occurred_at_local DESC "
-                "LIMIT ? OFFSET ?",
+                f"{self.ELENCO} ORDER BY 4 DESC LIMIT ? OFFSET ?",
                 (self.PER_PAGINA, self.pagina * self.PER_PAGINA)))
         finally:
             db.close()
@@ -2285,19 +2415,154 @@ class SchermataTimbrature(Schermata):
             return
 
         stati = self.app.stati_ta or {}
-        for codice, quando, metodo, stato in righe:
+        for voce in righe:
+            origine, evento, codice, quando, metodo, stato, verso, \
+                annullata, motivo = voce
+            if annullata:
+                colore, accanto = TESTO_TENUE, "annullata"
+            elif origine == "mano":
+                colore, accanto = BLU, (verso or "?").upper()
+            else:
+                colore, accanto = TESTO, stati.get(stato, f"stato {stato}")
             riga = tk.Frame(self.lista.interno, bg=CARD)
             riga.pack(fill="x", pady=2, padx=8, ipady=10)
-            tk.Label(riga, text=quando[:16], bg=CARD, fg=TESTO, font=F_MONO,
-                     width=17, anchor="w").pack(side="left", padx=(14, 8))
-            tk.Label(riga, text=nomi.get(codice, f"Utente {codice}"), bg=CARD,
-                     fg=TESTO, font=F_NORMALE, anchor="w").pack(
-                side="left", fill="x", expand=True)
-            tk.Label(riga, text=stati.get(stato, f"stato {stato}"), bg=CARD,
-                     fg=TESTO_TENUE, font=F_PICCOLO, width=8).pack(side="right")
-            tk.Label(riga, text=metodo, bg=CARD, fg=TESTO_TENUE,
-                     font=F_PICCOLO, width=10).pack(side="right", padx=8)
+            pezzi = [
+                tk.Label(riga, text=quando[:16], bg=CARD, fg=colore,
+                         font=F_MONO + (("overstrike",) if annullata else ()),
+                         width=17, anchor="w"),
+                tk.Label(riga, text=self.nomi.get(codice, f"Utente {codice}")
+                         + (f"   ·   {motivo}" if motivo else ""), bg=CARD,
+                         fg=colore, font=F_NORMALE, anchor="w"),
+                tk.Label(riga, text=accanto, bg=CARD, fg=colore,
+                         font=F_PICCOLO, width=9),
+                tk.Label(riga, text=metodo, bg=CARD, fg=TESTO_TENUE,
+                         font=F_PICCOLO, width=10),
+            ]
+            pezzi[0].pack(side="left", padx=(14, 8))
+            pezzi[2].pack(side="right")
+            pezzi[3].pack(side="right", padx=8)
+            pezzi[1].pack(side="left", fill="x", expand=True)
             self.lista.segui_trascinamento(riga)
+            for w in [riga, *pezzi]:
+                w.bind("<ButtonPress-1>", self._premuto, add="+")
+                w.bind("<ButtonRelease-1>",
+                       lambda e, v=voce: self._tocca(e, v), add="+")
+
+    # -- correzioni --
+    def _premuto(self, evento):
+        self._y_premuto = evento.y_root
+
+    def _tocca(self, evento, voce):
+        # Un trascinamento per scorrere l'elenco non e' un tocco.
+        if abs(evento.y_root - getattr(self, "_y_premuto", evento.y_root)) > 12:
+            return
+        origine, ev, codice, quando, _metodo, _stato, verso, annullata, _ = voce
+        quando = dt.datetime.fromisoformat(quando)
+        chi = self.nomi.get(codice, f"Utente {codice}")
+        titolo = f"{chi}, {quando:%d/%m %H:%M}"
+        if origine == "mano":
+            scelta = Scelta.chiedi(self, titolo, [
+                ("Cambia l'ora", "ora"), ("Togli questa timbratura", "togli")],
+                "Questa timbratura e' stata aggiunta a mano.")
+        elif annullata:
+            scelta = Scelta.chiedi(self, titolo, [
+                ("Rimettila nel conteggio", "ripristina")],
+                "Questa timbratura del terminale e' annullata: non conta "
+                "nelle ore.")
+        else:
+            scelta = Scelta.chiedi(self, titolo, [
+                ("Correggi l'ora", "ora"), ("Annullala (non contarla)",
+                                            "annulla")],
+                "Il dato del terminale resta in archivio in ogni caso.")
+        if not scelta or not self.app.sbloccata(self, self.RETTIFICA):
+            return
+
+        if scelta == "ripristina":
+            db = apri_archivio(self.app.cfg["archivio"])
+            try:
+                presenze.togli_annullamento(db, ev)
+            finally:
+                db.close()
+            return self._fatto()
+
+        if scelta == "ora":
+            ora = SceltaOra.chiedi(self, "Ora giusta", quando.time())
+            if ora is None:
+                return
+            nuovo_verso = Scelta.chiedi(self, "Entrata o uscita?", [
+                ("Entrata", "entrata"), ("Uscita", "uscita")])
+            if nuovo_verso is None:
+                return
+        motivo = self._motivo("Perche' la correggi?")
+        if not motivo:
+            return
+        db = apri_archivio(self.app.cfg["archivio"])
+        try:
+            if origine == "mano":
+                presenze.togli_aggiunta(db, int(ev.split(":")[1]))
+            else:
+                presenze.annulla_timbratura(db, codice, ev, motivo,
+                                            self.app.cfg["operatore"])
+            if scelta == "ora":
+                presenze.aggiungi_timbratura(
+                    db, codice, dt.datetime.combine(quando.date(), ora),
+                    nuovo_verso, motivo, self.app.cfg["operatore"])
+        finally:
+            db.close()
+        self._fatto()
+
+    def _aggiungi(self):
+        if not self.app.sbloccata(self, self.RETTIFICA):
+            return
+        db = apri_archivio(self.app.cfg["archivio"])
+        try:
+            nomi = nomi_dipendenti(db)
+        finally:
+            db.close()
+        for u in self.app.utenti or []:
+            nomi.setdefault(u.user_id, u.nome or f"Utente {u.user_id}")
+        if not nomi:
+            Avviso.mostra(self, "Nessun dipendente",
+                          "Prima si crea il dipendente, da Dipendenti.",
+                          GIALLO)
+            return
+        codice = SceltaDipendente.chiedi(self, nomi)
+        if codice is None:
+            return
+        oggi = presenze.giorno_operativo(dt.datetime.now(), self.app.regole)
+        giorno = SceltaGiorno.chiedi(self, "Che giorno?", oggi)
+        if giorno is None:
+            return
+        ora = SceltaOra.chiedi(self, "A che ora?")
+        if ora is None:
+            return
+        verso = Scelta.chiedi(self, "Entrata o uscita?", [
+            ("Entrata", "entrata"), ("Uscita", "uscita")])
+        if verso is None:
+            return
+        motivo = self._motivo("Perche' la aggiungi?")
+        if not motivo:
+            return
+        db = apri_archivio(self.app.cfg["archivio"])
+        try:
+            presenze.aggiungi_timbratura(
+                db, codice, dt.datetime.combine(giorno, ora), verso, motivo,
+                self.app.cfg["operatore"])
+        finally:
+            db.close()
+        self._fatto()
+
+    def _motivo(self, titolo):
+        motivo = TastieraTouch.chiedi(self, titolo)
+        if not motivo:
+            Avviso.mostra(self, "Serve il motivo",
+                          "Ogni correzione deve restare spiegata: senza motivo "
+                          "non si sa piu' perche' quel giorno e' cambiato.",
+                          GIALLO)
+        return motivo
+
+    def _fatto(self):
+        self.entra()
 
 
 class SchermataDipendenti(Schermata):
