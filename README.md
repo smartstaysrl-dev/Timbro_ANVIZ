@@ -14,6 +14,22 @@ dito. Copre gli strati 2-5 dell'architettura del documento operativo v1.0
 
     python gestione.py
 
+## Installare sul computer del locale
+
+Si scarica **`INSTALLA.bat`** da questa repo e ci si fa doppio clic. Scarica
+l'ultima versione pubblicata (la sezione *Releases*), la mette in `C:\TIMBRA`,
+crea l'icona sul desktop e in avvio automatico e apre il programma. Non serve
+installare Python né altro. Se TIMBRA c'è già non tocca niente: gli
+aggiornamenti passano dal bottone verde dentro il programma.
+
+Senza internet: si scarica a mano `TIMBRA-<versione>.zip` dalle *Releases*,
+si estrae dove si vuole e si fa doppio clic su `TIMBRA.bat`, che crea l'icona.
+
+Per pubblicare una versione: etichetta, `python crea_pacchetto.py`, e lo zip
+di `pacchetto/TIMBRA` allegato a una *Release* con lo stesso nome
+dell'etichetta. Senza lo zip allegato `INSTALLA.bat` non trova niente da
+installare (l'aggiornamento dal programma invece usa solo l'etichetta).
+
 ## Licenza
 
 **Non è software libero.** Copyright (c) 2026 Nicola Bonazzi e Andrea

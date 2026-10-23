@@ -1,0 +1,3 @@
+# I file di comandi di Windows vogliono gli a capo di Windows: con quelli
+# di Linux cmd.exe salta righe e le etichette non si trovano.
+*.bat text eol=crlf
