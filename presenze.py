@@ -539,9 +539,10 @@ def testo_csv(elenco: list[Giornata], nomi: dict[int, str]) -> str:
     # Ogni timbratura in una colonna sua: il ristorante fa pranzo e cena,
     # quindi quattro al giorno, e chi controlla le ore vuole vederle tutte.
     # Prima uscivano solo la prima entrata e l'ultima uscita, e la pausa
-    # del pomeriggio spariva dal foglio. Le coppie sono almeno due, di piu'
-    # se in quel periodo qualcuno ha fatto un terzo turno.
-    coppie = max([2] + [len(g.turni) for g in elenco])
+    # del pomeriggio spariva dal foglio. Le coppie sono sempre almeno tre
+    # (pranzo, cena e una in piu'), cosi' il foglio ha le stesse colonne
+    # ogni mese; di piu' se qualcuno ha timbrato ancora.
+    coppie = max([3] + [len(g.turni) for g in elenco])
     colonne = []
     for n in range(1, coppie + 1):
         colonne += [f"entrata_{n}", f"uscita_{n}"]

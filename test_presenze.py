@@ -427,12 +427,12 @@ def _():
                                dt.date(2026, 9, 2), dt.date(2026, 9, 2))
     righe = presenze.testo_csv(elenco, {1: "Mario Rossi"}).splitlines()
     intestazione = righe[0].split(";")
-    assert intestazione[3:7] == ["entrata_1", "uscita_1", "entrata_2",
-                                 "uscita_2"], intestazione
+    assert intestazione[3:9] == ["entrata_1", "uscita_1", "entrata_2",
+                                 "uscita_2", "entrata_3", "uscita_3"],         intestazione
     mario = next(r.split(";") for r in righe if "Mario Rossi" in r)
     assert mario[3:7] == ["11:00", "15:00", "18:30", "23:30"], mario
     altro = next(r.split(";") for r in righe[1:] if "Mario" not in r)
-    assert altro[3:7] == ["10:00", "", "", ""], altro
+    assert altro[3:9] == ["10:00", "", "", "", "", ""], altro
     assert len(altro) == len(intestazione)
 
 
