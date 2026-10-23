@@ -129,8 +129,10 @@ def _():
     pronta = aggiorna.prepara("2026.10.22", dati)
     with open(os.path.join(pronta, "gestione.py"), "w") as f:
         f.write("import os\nopen(os.path.join('..', 'dati', 'ripartita'),"
-                " 'w').write(open('VERSIONE').read())\n")
-    aggiorna.avvia_sostituzione(app, pronta, dati)
+                " 'w').write(open('VERSIONE').read())\n"
+                "open(os.path.join('..', 'dati', 'aggiornamento_partito'),"
+                " 'w').write('si')\n")
+    aggiorna.avvia_sostituzione(app, pronta, dati, "2026.10.22")
 
     vecchio.wait()
     segno = os.path.join(dati, "ripartita")
@@ -147,6 +149,44 @@ def _():
     esito = aggiorna.ultimo_esito(dati)
     assert esito and esito.endswith(" aggiornato"), esito
     assert aggiorna.ultimo_esito(dati) is None, "l'esito si legge una volta"
+
+
+@prova("ritorno indietro: la versione nuova non parte, torna la vecchia")
+def _():
+    radice = tempfile.mkdtemp()
+    app = os.path.join(radice, "app")
+    dati = os.path.join(radice, "dati")
+    os.makedirs(app)
+    os.makedirs(dati)
+    with open(os.path.join(app, "VERSIONE"), "w") as f:
+        f.write("2026.10.1\n")
+    # La vecchia, quando la si riapre, lascia un segno.
+    with open(os.path.join(app, "gestione.py"), "w") as f:
+        f.write("import os\nopen(os.path.join('..', 'dati', 'vecchia'),"
+                " 'w').write('si')\n")
+    con_github([], lambda e: finto_zip(e))
+    pronta = aggiorna.prepara("2026.10.22", dati)
+    # La nuova si pianta subito: non scrivera' mai "sono partita".
+    with open(os.path.join(pronta, "gestione.py"), "w") as f:
+        f.write("raise SystemExit(3)\n")
+    prima = aggiorna.SECONDI_PER_PARTIRE
+    aggiorna.SECONDI_PER_PARTIRE = 5
+    try:
+        aggiorna.avvia_sostituzione(app, pronta, dati, "2026.10.22")
+    finally:
+        aggiorna.SECONDI_PER_PARTIRE = prima
+    segno = os.path.join(dati, "vecchia")
+    for _ in range(60):
+        if os.path.exists(segno):
+            break
+        time.sleep(0.5)
+    time.sleep(0.5)
+    assert os.path.exists(segno), "la versione vecchia non e' stata riaperta"
+    assert aggiorna.versione_installata(app) == "2026.10.1"
+    assert aggiorna.versione_installata(app + ".guasta") == "2026.10.22"
+    assert aggiorna.scartata(dati) == "2026.10.22"
+    esito = aggiorna.ultimo_esito(dati)
+    assert esito and "NON aggiornato" in esito, esito
 
 
 # --------------------------------------------------------------------------

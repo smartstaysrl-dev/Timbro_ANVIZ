@@ -3,12 +3,18 @@
 # licenza scritta dai titolari: vedi LICENSE. Il fatto che il codice sia
 # leggibile non e' un permesso.
 """
-L'aggiornatore: il programma avvisa, l'operatore preme il bottone.
+L'aggiornatore.
 
-Mai da solo, mai di notte. Un aggiornamento andato storto alle tre, a locale
-chiuso, lo scopre il primo cameriere che timbra la mattina — e intanto il
-terminale ha registrato lo stesso, ma nessuno lo sta scaricando. Di giorno,
-con qualcuno davanti allo schermo, se qualcosa non va lo si vede subito.
+Due modi. Col bottone verde, quando lo preme qualcuno. E da solo, ma SOLO
+all'apertura del programma (interruttore in Impostazioni, acceso di
+partenza): e' il momento in cui nessuno lo sta usando e qualcuno e' davanti
+allo schermo. Mai di notte, mai mentre gira: un aggiornamento andato storto
+alle tre, a locale chiuso, lo scopre il primo cameriere che timbra la
+mattina.
+
+Da solo si puo' perche' c'e' il ritorno indietro: se la versione nuova non
+parte entro un minuto e mezzo, il sostituto rimette quella di prima, la
+segna come scartata (cosi' all'apertura dopo non ci riprova) e lo dice.
 
 **Cosa conta come versione nuova.** Non ogni modifica pubblicata su GitHub:
 solo le *etichette* (tag git) col formato di una data, `2026.10.22`, o
@@ -43,6 +49,11 @@ import zipfile
 
 REPO = "smartstaysrl-dev/Timbro_ANVIZ"
 FILE_VERSIONE = "VERSIONE"
+# Stanno in dati/ e non in dati/aggiornamento: quella cartella la cancella
+# la versione nuova appena parte, leggendo l'esito.
+PARTITA = "aggiornamento_partito"      # la versione nuova scrive: sono viva
+SCARTATA = "aggiornamento_scartato"    # la versione che non partiva
+SECONDI_PER_PARTIRE = 90
 
 # Quello che serve al programma, e quindi quello che un aggiornamento porta.
 # Sta qui e non in crea_pacchetto.py perche' le due liste DEVONO coincidere:
@@ -151,17 +162,56 @@ def prepara(etichetta: str, cartella_dati: str, timeout: float = 60) -> str:
     return pronta
 
 
+def segna_partenza(cartella_dati: str, versione: str) -> None:
+    """La versione appena partita lo dice al sostituto che aspetta."""
+    try:
+        with open(os.path.join(cartella_dati, PARTITA), "w",
+                  encoding="utf-8") as f:
+            f.write(versione + "\n")
+    except OSError:
+        pass
+
+
+def scartata(cartella_dati: str) -> str | None:
+    try:
+        with open(os.path.join(cartella_dati, SCARTATA),
+                  encoding="utf-8") as f:
+            return f.read().strip() or None
+    except OSError:
+        return None
+
+
 # Il sostituto: gira DOPO che TIMBRA si e' chiusa, con un Python a parte.
 # Volutamente senza import dal programma: deve funzionare anche se la
 # versione nuova o quella vecchia hanno un problema.
 SOSTITUTO = r'''
 import os, shutil, subprocess, sys, time
-app, pronta, esito = sys.argv[1], sys.argv[2], sys.argv[3]
+app, pronta, esito, etichetta, dati = sys.argv[1:6]
 precedente = app + ".precedente"
+partita = os.path.join(dati, "{PARTITA}")
+attesa = {SECONDI_PER_PARTIRE}
 
 def scrivi(testo):
+    os.makedirs(os.path.dirname(esito), exist_ok=True)
     with open(esito, "w", encoding="utf-8") as f:
         f.write(time.strftime("%Y-%m-%d %H:%M:%S ") + testo + "\n")
+
+pythonw = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
+if not os.path.exists(pythonw):
+    pythonw = sys.executable
+
+def apri():
+    return subprocess.Popen([pythonw, "gestione.py"], cwd=app,
+                            creationflags=getattr(subprocess, "DETACHED_PROCESS", 0))
+
+def sposta(da, a):
+    for _ in range(40):
+        try:
+            os.rename(da, a)
+            return
+        except OSError:
+            time.sleep(0.5)
+    os.rename(da, a)
 
 # Aspetta che TIMBRA si chiuda: finche' gira, Windows non lascia spostare
 # la sua cartella. Un minuto abbondante, poi si rinuncia senza danni.
@@ -178,29 +228,59 @@ for _ in range(120):
 
 if not spostata:
     scrivi("NON aggiornato: la cartella del programma era ancora in uso")
-else:
-    try:
-        os.rename(pronta, app)
-        scrivi("aggiornato")
-    except OSError as e:
-        os.rename(precedente, app)        # si rimette la versione di prima
-        scrivi(f"NON aggiornato, rimessa la versione di prima: {e}")
+    apri()
+    sys.exit()
+try:
+    os.rename(pronta, app)
+except OSError as e:
+    os.rename(precedente, app)            # si rimette la versione di prima
+    scrivi(f"NON aggiornato, rimessa la versione di prima: {e}")
+    apri()
+    sys.exit()
 
-pythonw = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
-if not os.path.exists(pythonw):
-    pythonw = sys.executable
-subprocess.Popen([pythonw, "gestione.py"], cwd=app,
-                 creationflags=getattr(subprocess, "DETACHED_PROCESS", 0))
+scrivi("aggiornato")
+try:
+    os.remove(partita)
+except OSError:
+    pass
+nuova = apri()
+# La versione nuova, appena in piedi, scrive il file "partita". Se non
+# arriva — si e' chiusa da sola o si e' piantata — si torna indietro.
+viva = False
+for _ in range(attesa * 2):
+    if os.path.exists(partita):
+        viva = True
+        break
+    if nuova.poll() is not None:
+        break
+    time.sleep(0.5)
+if not viva:
+    try:
+        nuova.kill()
+    except OSError:
+        pass
+    time.sleep(1)
+    guasta = app + ".guasta"
+    shutil.rmtree(guasta, ignore_errors=True)
+    sposta(app, guasta)
+    sposta(precedente, app)
+    with open(os.path.join(dati, "{SCARTATA}"), "w", encoding="utf-8") as f:
+        f.write(etichetta + "\n")
+    scrivi(f"NON aggiornato: la {etichetta} non partiva, rimessa la "
+           f"versione di prima. La nuova e' in app.guasta.")
+    apri()
 '''
 
 
 def avvia_sostituzione(cartella_app: str, pronta: str,
-                       cartella_dati: str) -> None:
+                       cartella_dati: str, etichetta: str = "") -> None:
     """Lancia il sostituto. Subito dopo, chi chiama deve chiudere TIMBRA."""
     lavoro = os.path.join(cartella_dati, "aggiornamento")
     script = os.path.join(lavoro, "sostituisci.py")
     with open(script, "w", encoding="utf-8") as f:
-        f.write(SOSTITUTO)
+        f.write(SOSTITUTO.replace("{PARTITA}", PARTITA)
+                .replace("{SCARTATA}", SCARTATA)
+                .replace("{SECONDI_PER_PARTIRE}", str(SECONDI_PER_PARTIRE)))
     esito = os.path.join(lavoro, "esito.txt")
     eseguibile = sys.executable
     if os.path.basename(eseguibile).lower() == "pythonw.exe":
@@ -211,8 +291,10 @@ def avvia_sostituzione(cartella_app: str, pronta: str,
             eseguibile = accanto
     # cwd fuori da `app`: un processo con la cartella corrente li' dentro
     # impedirebbe di spostarla, cioe' bloccherebbe proprio se stesso.
+    etichetta = etichetta or versione_installata(pronta)
     subprocess.Popen([eseguibile, script, os.path.abspath(cartella_app),
-                      os.path.abspath(pronta), esito], cwd=lavoro,
+                      os.path.abspath(pronta), esito, etichetta,
+                      os.path.abspath(cartella_dati)], cwd=lavoro,
                      creationflags=getattr(subprocess, "DETACHED_PROCESS", 0)
                      | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
 

@@ -2005,14 +2005,11 @@ class SchermataPresenze(Schermata):
     # --- periodo mostrato -------------------------------------------------
     def _periodo(self, chiave):
         if chiave == "intervallo":
-            dal = SceltaGiorno.chiedi(self, "Dal giorno", self._intervallo()[0])
-            if dal is None:
+            scelta = Calendario.chiedi_intervallo(
+                self, "Tocca il primo e l'ultimo giorno", *self._intervallo())
+            if scelta is None:
                 return
-            al = SceltaGiorno.chiedi(self, "Al giorno (compreso)",
-                                     max(dal, self._intervallo()[1]))
-            if al is None:
-                return
-            self.dal, self.al = min(dal, al), max(dal, al)
+            self.dal, self.al = scelta
         self.periodo = chiave
         self.entra()
 
@@ -2263,48 +2260,129 @@ class SchermataPresenze(Schermata):
             GIALLO if anomale else VERDE)
 
 
-class SceltaGiorno(Dialogo):
-    """Un giorno, con i bottoni: dal tavolo si corregge quasi sempre ieri o
-    l'altro ieri, e scrivere una data col dito e' il modo di sbagliarla."""
+class Calendario(Dialogo):
+    """Il calendario del mese, da toccare col dito.
 
-    def __init__(self, padre, titolo, iniziale: dt.date):
+    Con intervallo=True si toccano due giorni, il primo e l'ultimo, e quelli
+    in mezzo si colorano: si vede subito quanti giorni si stanno prendendo.
+    Un terzo tocco ricomincia da capo.
+    """
+
+    INTESTAZIONE = ["lun", "mar", "mer", "gio", "ven", "sab", "dom"]
+
+    def __init__(self, padre, titolo, dal: dt.date, al: dt.date | None = None,
+                 intervallo=False):
         super().__init__(padre, titolo)
-        self.giorno = iniziale
+        self.intervallo = intervallo
+        self.dal, self.al = dal, (al or dal)
+        self._secondo = False          # il prossimo tocco e' il giorno finale?
+        self.mese = self.dal.replace(day=1)
         tk.Label(self, text=titolo, bg=BG, fg=TESTO, font=F_TITOLO).pack(
-            pady=(18, 10), padx=30)
-        self.display = tk.Label(self, text="", bg=CARD, fg=TESTO,
-                                font=F_GRANDE, width=24)
-        self.display.pack(padx=30, ipady=14)
-        riga = tk.Frame(self, bg=BG)
-        riga.pack(pady=10)
-        for testo, giorni in (("−7", -7), ("− 1 giorno", -1),
-                              ("+ 1 giorno", 1), ("+7", 7)):
-            Bottone(riga, testo, lambda g=giorni: self._muovi(g),
-                    font=F_NORMALE, altezza=60,
-                    larghezza=150 if abs(giorni) == 1 else 90).pack(
-                side="left", padx=4)
+            pady=(16, 6), padx=24)
+
+        testa = tk.Frame(self, bg=BG)
+        testa.pack(fill="x", padx=24)
+        Bottone(testa, "◀", lambda: self._mese(-1), font=F_TITOLO,
+                altezza=52, larghezza=80).pack(side="left")
+        Bottone(testa, "▶", lambda: self._mese(1), font=F_TITOLO,
+                altezza=52, larghezza=80).pack(side="right")
+        self.titolo_mese = tk.Label(testa, text="", bg=BG, fg=TESTO,
+                                    font=F_GRANDE)
+        self.titolo_mese.pack(side="left", expand=True)
+
+        griglia = tk.Frame(self, bg=BG)
+        griglia.pack(padx=24, pady=(10, 4))
+        for c, nome in enumerate(self.INTESTAZIONE):
+            tk.Label(griglia, text=nome, bg=BG,
+                     fg=BLU if c >= 5 else TESTO_TENUE,
+                     font=F_PICCOLO).grid(row=0, column=c, pady=(0, 4))
+        self.celle = []
+        for r in range(6):
+            for c in range(7):
+                cella = tk.Label(griglia, text="", width=4, bg=CARD, fg=TESTO,
+                                 font=F_NORMALE, pady=12)
+                cella.grid(row=r + 1, column=c, padx=2, pady=2)
+                cella.bind("<Button-1>", lambda _e, i=len(self.celle):
+                           self._tocca(i))
+                self.celle.append(cella)
+
+        self.riepilogo = tk.Label(self, text="", bg=BG, fg=TESTO_TENUE,
+                                  font=F_NORMALE)
+        self.riepilogo.pack(pady=(6, 0))
         azioni = tk.Frame(self, bg=BG)
-        azioni.pack(fill="x", padx=30, pady=(10, 20))
-        Bottone(azioni, "Annulla", self.destroy, altezza=64,
-                larghezza=200).pack(side="left")
+        azioni.pack(fill="x", padx=24, pady=(12, 18))
+        Bottone(azioni, "Annulla", self.destroy, altezza=60,
+                larghezza=180).pack(side="left")
         Bottone(azioni, "Conferma", self._conferma, colore=VERDE,
-                colore_testo=BG, altezza=64, larghezza=200).pack(side="right")
+                colore_testo=BG, altezza=60, larghezza=180).pack(side="right")
         self._disegna()
 
-    def _muovi(self, giorni):
-        self.giorno += dt.timedelta(days=giorni)
+    def _giorni_mostrati(self):
+        primo = self.mese - dt.timedelta(days=self.mese.weekday())
+        return [primo + dt.timedelta(days=i) for i in range(42)]
+
+    def _mese(self, passo):
+        self.mese = ((self.mese + dt.timedelta(days=32)).replace(day=1)
+                     if passo > 0
+                     else (self.mese - dt.timedelta(days=1)).replace(day=1))
+        self._disegna()
+
+    def _tocca(self, i):
+        giorno = self._giorni_mostrati()[i]
+        if not self.intervallo:
+            self.dal = self.al = giorno
+        elif not self._secondo:
+            self.dal = self.al = giorno
+            self._secondo = True
+        else:
+            self.dal, self.al = min(self.dal, giorno), max(self.dal, giorno)
+            self._secondo = False
+        if giorno.month != self.mese.month:
+            self.mese = giorno.replace(day=1)
         self._disegna()
 
     def _disegna(self):
-        self.display.config(text=data_lunga(self.giorno))
+        self.titolo_mese.config(
+            text=f"{MESI[self.mese.month]} {self.mese.year}".capitalize())
+        oggi = dt.date.today()
+        for cella, giorno in zip(self.celle, self._giorni_mostrati()):
+            fuori = giorno.month != self.mese.month
+            if giorno in (self.dal, self.al):
+                sfondo, testo = BLU, BG
+            elif self.dal < giorno < self.al:
+                sfondo, testo = "#3E5585", TESTO     # blu spento: i giorni presi
+            else:
+                sfondo = BG if fuori else CARD
+                testo = (GIALLO if giorno == oggi
+                         else TESTO_TENUE if fuori else TESTO)
+            cella.config(text=str(giorno.day), bg=sfondo, fg=testo)
+        if not self.intervallo:
+            self.riepilogo.config(text=data_lunga(self.dal))
+        elif self._secondo:
+            self.riepilogo.config(
+                text=f"dal {data_lunga(self.dal)} — ora tocca l'ultimo giorno")
+        else:
+            giorni = (self.al - self.dal).days + 1
+            self.riepilogo.config(
+                text=f"dal {self.dal:%d/%m/%Y} al {self.al:%d/%m/%Y} · "
+                     f"{giorni} giorn{'o' if giorni == 1 else 'i'}")
 
     def _conferma(self):
-        self.risultato = self.giorno
+        self.risultato = ((self.dal, self.al) if self.intervallo
+                          else self.dal)
         self.destroy()
 
     @staticmethod
+    def chiedi_intervallo(padre, titolo, dal, al):
+        return Calendario(padre, titolo, dal, al, intervallo=True).concludi()
+
+
+class SceltaGiorno:
+    """Un giorno solo, dal calendario."""
+
+    @staticmethod
     def chiedi(padre, titolo, iniziale):
-        return SceltaGiorno(padre, titolo, iniziale).concludi()
+        return Calendario(padre, titolo, iniziale).concludi()
 
 
 class SceltaDipendente(Dialogo):
@@ -2921,9 +2999,18 @@ class SchermataImpostazioni(Schermata):
         self._voce("Versione in uso", VERSIONE)
         self._voce("Ultima pubblicata",
                    self.app.ultima_versione or "non ancora controllata",
-                   nota="Si controlla da sola ogni sei ore. Quando c'e' una "
-                        "versione nuova compare un bottone verde in basso: "
-                        "si aggiorna solo premendolo, mai da sola.")
+                   nota="Si controlla all'apertura e poi ogni sei ore. "
+                        "Quando c'e' una versione nuova compare un bottone "
+                        "verde in basso.")
+        self._voce("Aggiornamento automatico all'apertura",
+                   "acceso" if self.app.cfg.get("aggiorna_da_solo", True)
+                   else "spento", self._cambia_aggiorna_da_solo,
+                   "Acceso: aprendo TIMBRA, se c'e' una versione nuova si "
+                   "aggiorna da sola (prima fa la copia dei dati). Se la "
+                   "versione nuova non parte, torna da sola a quella di "
+                   "prima e non ci riprova."
+                   + (f" Scartata: la {aggiorna.scartata(CARTELLA_DATI)}."
+                      if aggiorna.scartata(CARTELLA_DATI) else ""))
         Bottone(self.lista.interno, "Cerca aggiornamenti adesso",
                 self._cerca_aggiornamenti).pack(fill="x", padx=8, pady=4)
         if self.app.c_e_aggiornamento():
@@ -3434,6 +3521,14 @@ class SchermataImpostazioni(Schermata):
                 lambda t: t.imposta_configurazione(lingua=v))
 
     # -- copie --
+    def _cambia_aggiorna_da_solo(self):
+        v = Scelta.chiedi(self, "Aggiornamento automatico all'apertura",
+                          [("Acceso", True), ("Spento", False)])
+        if v is not None:
+            self.app.cfg["aggiorna_da_solo"] = v
+            salva_config(self.app.cfg)
+            self.entra()
+
     def _cerca_aggiornamenti(self):
         etichetta, errore = Attesa.esegui(
             self, "Guardo se c'e' una versione nuova...",
@@ -3645,9 +3740,14 @@ class App(tk.Tk):
                 else "Aggiornamento non riuscito",
                 f"Versione in uso: {VERSIONE}.\n\n{self.esito_aggiornamento}",
                 VERDE if riuscito else GIALLO)
-        # Il primo controllo aspetta che il programma sia in piedi: appena
-        # acceso il computer la rete spesso non c'e' ancora.
-        self.after(15_000, self._controlla_aggiornamenti)
+        # Sono in piedi: lo si dice al sostituto, se c'e' un aggiornamento
+        # in prova. Senza questo segno, fra un minuto e mezzo rimetterebbe
+        # la versione di prima.
+        aggiorna.segna_partenza(CARTELLA_DATI, VERSIONE)
+        # Il primo controllo e' quello che puo' aggiornare da solo: subito,
+        # prima che qualcuno cominci a lavorare. Qualche secondo di attesa
+        # perche' appena acceso il computer la rete spesso non c'e' ancora.
+        self.after(4_000, lambda: self._controlla_aggiornamenti(True))
 
     def _avvisa_configurazione(self):
         Avviso.mostra(
@@ -3921,19 +4021,21 @@ class App(tk.Tk):
         threading.Thread(target=lavoro, daemon=True).start()
 
     # -- aggiornamenti --
-    def _controlla_aggiornamenti(self):
-        """Guarda su GitHub se c'e' una versione nuova, ogni sei ore.
+    def _controlla_aggiornamenti(self, all_apertura=False):
+        """Guarda su GitHub se c'e' una versione nuova: all'apertura e poi
+        ogni sei ore.
 
         In sottofondo e in silenzio: senza rete non succede niente e si
-        riprova al giro dopo. Se c'e' qualcosa, compare un bottone verde in
-        basso. Installare resta una decisione di chi sta davanti allo schermo.
+        riprova al giro dopo. Se c'e' qualcosa compare il bottone verde; al
+        controllo dell'apertura, se l'interruttore e' acceso, si aggiorna
+        anche da solo (vedi aggiorna.py per il ritorno indietro).
         """
         def lavoro():
             try:
                 etichetta = aggiorna.ultima_disponibile()
             except Exception:                                    # noqa: BLE001
                 return
-            self._pianifica(self.annuncia_versione, etichetta)
+            self._pianifica(self.annuncia_versione, etichetta, all_apertura)
 
         threading.Thread(target=lavoro, daemon=True).start()
         self.after(6 * 3600 * 1000, self._controlla_aggiornamenti)
@@ -3942,13 +4044,19 @@ class App(tk.Tk):
         return (aggiorna.installabile(CARTELLA)
                 and aggiorna.piu_nuova(self.ultima_versione, VERSIONE))
 
-    def annuncia_versione(self, etichetta):
+    def annuncia_versione(self, etichetta, all_apertura=False):
         """Gira sul thread principale. Nessuna finestra qui: arriva dal
-        drenaggio della coda, e una modale lo bloccherebbe."""
+        drenaggio della coda, e una modale lo bloccherebbe — l'aggiornamento
+        da solo parte con after(), fuori dal drenaggio."""
         self.ultima_versione = etichetta
         if self.c_e_aggiornamento():
             self.bottone_aggiorna.testo(f"Aggiorna alla {etichetta}")
             self.bottone_aggiorna.pack(side="right", padx=4, pady=4)
+            if (all_apertura and self.cfg.get("aggiorna_da_solo", True)
+                    and etichetta != aggiorna.scartata(CARTELLA_DATI)
+                    and not self.grab_current()):
+                self.after(200, lambda: self._esegui_aggiornamento(
+                    etichetta, da_solo=True))
         else:
             self.bottone_aggiorna.pack_forget()
         if isinstance(self.attuale, SchermataImpostazioni):
@@ -3968,6 +4076,11 @@ class App(tk.Tk):
                 f"copie non si toccano. Il terminale intanto continua a "
                 f"registrare: le timbrature arrivano alla riapertura."):
             return
+        self._esegui_aggiornamento(etichetta)
+
+    def _esegui_aggiornamento(self, etichetta, da_solo=False):
+        if da_solo and (self.grab_current() or not self.c_e_aggiornamento()):
+            return      # qualcuno ha gia' aperto una finestra: non si disturba
         # Prima una copia dell'archivio: costa un secondo, e se la versione
         # nuova avesse un difetto che tocca i dati c'e' da dove ripartire.
         _, errore = Attesa.esegui(self, "Copia di sicurezza...",
@@ -3977,14 +4090,16 @@ class App(tk.Tk):
                                 f"riuscita, e senza non si rischia.\n\n{errore}")
             return
         pronta, errore = Attesa.esegui(
-            self, f"Scarico la {etichetta}...",
+            self, f"Aggiorno da solo alla {etichetta}..." if da_solo
+            else f"Scarico la {etichetta}...",
             lambda: aggiorna.prepara(etichetta, CARTELLA_DATI))
         if errore:
             Avviso.errore(self, f"Aggiornamento non riuscito: il programma "
                                 f"resta com'era.\n\n{errore}")
             return
         try:
-            aggiorna.avvia_sostituzione(CARTELLA, pronta, CARTELLA_DATI)
+            aggiorna.avvia_sostituzione(CARTELLA, pronta, CARTELLA_DATI,
+                                        etichetta)
         except OSError as e:
             Avviso.errore(self, f"Aggiornamento non riuscito: il programma "
                                 f"resta com'era.\n\n{e}")
