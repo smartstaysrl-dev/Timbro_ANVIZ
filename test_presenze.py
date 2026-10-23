@@ -436,6 +436,37 @@ def _():
     assert len(altro) == len(intestazione)
 
 
+@prova("cartellino Excel: riepilogo + un foglio per dipendente, ore come numeri")
+def _():
+    import re
+    import zipfile
+    db = archivio()
+    for giorno in ("2026-09-07", "2026-09-08"):
+        punzona(db, 1, f"{giorno} 09:00:00")
+        punzona(db, 1, f"{giorno} 17:30:00")           # 8h30 al giorno
+    punzona(db, 2, "2026-09-07 18:00:00")
+    punzona(db, 2, "2026-09-07 23:00:00")              # 5h
+    dal, al = dt.date(2026, 9, 7), dt.date(2026, 9, 9)
+    elenco = presenze.giornate(db, presenze.Regole(), dal, al)
+    percorso = pathlib.Path(tempfile.mkdtemp()) / "cartellino.xlsx"
+    n = presenze.esporta_xlsx(str(percorso), elenco,
+                              {1: "Mario Rossi", 2: "Anna Bianchi"}, dal, al)
+    assert n == 2
+    with zipfile.ZipFile(percorso) as z:
+        libro = z.read("xl/workbook.xml").decode()
+        fogli = re.findall(r'<sheet name="([^"]+)"', libro)
+        assert fogli == ["Riepilogo", "Anna Bianchi", "Mario Rossi"], fogli
+        riepilogo = z.read("xl/worksheets/sheet1.xml").decode()
+        mario = z.read("xl/worksheets/sheet3.xml").decode()
+    # 22 ore = 22/24 di giorno: il totale e' un numero che Excel somma.
+    assert f"<v>{22 * 60 / 1440}</v>" in riepilogo, riepilogo[-600:]
+    # Tutti i giorni del periodo, anche il 9 senza timbrature.
+    for giorno in ("Lu 07/09/2026", "Ma 08/09/2026", "Me 09/09/2026"):
+        assert giorno in mario, giorno
+    assert f"<v>{17 * 60 / 1440}</v>" in mario           # monte ore di Mario
+    assert "TOTALE" in mario
+
+
 @prova("export CSV: monte ore per persona e per tutto il periodo")
 def _():
     db = archivio()

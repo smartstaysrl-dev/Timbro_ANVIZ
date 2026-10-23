@@ -605,3 +605,255 @@ def esporta_csv(percorso: str, elenco: list[Giornata],
     with open(percorso, "w", newline="", encoding="utf-8-sig") as f:
         f.write(testo_csv(elenco, nomi))
     return len(elenco)
+
+
+# --- Cartellino in Excel -----------------------------------------------------
+# Un file .xlsx scritto a mano: e' solo uno zip di XML, e la libreria standard
+# basta. Sta qui e non in un modulo nuovo apposta: un file nuovo lo porterebbe
+# solo un aggiornatore che lo conosce gia', e le copie installate con la lista
+# vecchia ripartirebbero senza.
+#
+# Orari e ore sono NUMERI (frazioni di giorno con formato hh:mm e [h]:mm), non
+# testo: cosi' in Excel si sommano, si filtrano e il totale si ricontrolla.
+
+_GIORNI_BREVI = ["Lu", "Ma", "Me", "Gi", "Ve", "Sa", "Do"]
+
+# Indici degli stili in styles.xml, nell'ordine in cui sono scritti sotto.
+_S_VUOTO, _S_TESTO, _S_GRASSETTO, _S_ORA, _S_DURATA, _S_DURATA_G, \
+    _S_TESTA, _S_TITOLO, _S_ETICHETTA = range(9)
+
+_STILI = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<numFmts count="2"><numFmt numFmtId="164" formatCode="hh:mm"/>
+<numFmt numFmtId="165" formatCode="[h]:mm"/></numFmts>
+<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font>
+<font><b/><sz val="11"/><name val="Calibri"/></font>
+<font><b/><sz val="16"/><name val="Calibri"/></font></fonts>
+<fills count="3"><fill><patternFill patternType="none"/></fill>
+<fill><patternFill patternType="gray125"/></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FFC5CAE9"/></patternFill></fill></fills>
+<borders count="2"><border/><border><left style="thin"><color rgb="FF9FA8DA"/></left>
+<right style="thin"><color rgb="FF9FA8DA"/></right><top style="thin"><color rgb="FF9FA8DA"/></top>
+<bottom style="thin"><color rgb="FF9FA8DA"/></bottom></border></borders>
+<cellStyleXfs count="1"><xf/></cellStyleXfs>
+<cellXfs count="9">
+<xf/>
+<xf borderId="1" applyBorder="1"/>
+<xf fontId="1" borderId="1" applyFont="1" applyBorder="1"/>
+<xf numFmtId="164" borderId="1" applyNumberFormat="1" applyBorder="1"><alignment horizontal="center"/></xf>
+<xf numFmtId="165" borderId="1" applyNumberFormat="1" applyBorder="1"><alignment horizontal="center"/></xf>
+<xf numFmtId="165" fontId="1" borderId="1" applyNumberFormat="1" applyFont="1" applyBorder="1"><alignment horizontal="center"/></xf>
+<xf fontId="1" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center"/></xf>
+<xf fontId="2" applyFont="1"/>
+<xf fontId="1" applyFont="1"/>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>"""
+
+
+def _colonna(n: int) -> str:
+    lettere = ""
+    n += 1
+    while n:
+        n, resto = divmod(n - 1, 26)
+        lettere = chr(65 + resto) + lettere
+    return lettere
+
+
+def _xml(testo) -> str:
+    return (str(testo).replace("&", "&amp;").replace("<", "&lt;")
+            .replace(">", "&gt;").replace('"', "&quot;"))
+
+
+def _foglio_xml(righe: list[list], larghezze: list[int]) -> str:
+    """righe: liste di celle; una cella e' None, oppure (valore, stile).
+    Un valore numerico resta numero, una stringa diventa testo."""
+    pezzi = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+             '<worksheet xmlns="http://schemas.openxmlformats.org/'
+             'spreadsheetml/2006/main"><sheetPr><pageSetUpPr fitToPage="1"/>'
+             '</sheetPr><cols>']
+    for i, w in enumerate(larghezze, start=1):
+        pezzi.append(f'<col min="{i}" max="{i}" width="{w}" customWidth="1"/>')
+    pezzi.append("</cols><sheetData>")
+    for r, riga in enumerate(righe, start=1):
+        pezzi.append(f'<row r="{r}">')
+        for c, cella in enumerate(riga):
+            if cella is None:
+                continue
+            valore, stile = cella
+            rif = f"{_colonna(c)}{r}"
+            if isinstance(valore, (int, float)):
+                pezzi.append(f'<c r="{rif}" s="{stile}"><v>{valore}</v></c>')
+            else:
+                pezzi.append(f'<c r="{rif}" s="{stile}" t="inlineStr"><is>'
+                             f'<t xml:space="preserve">{_xml(valore)}</t>'
+                             f'</is></c>')
+        pezzi.append("</row>")
+    # In stampa: tutta la larghezza su un foglio, in orizzontale.
+    pezzi.append('</sheetData><pageMargins left="0.4" right="0.4" '
+                 'top="0.5" bottom="0.5" header="0.3" footer="0.3"/>'
+                 '<pageSetup orientation="landscape" fitToWidth="1" '
+                 'fitToHeight="0"/></worksheet>')
+    return "".join(pezzi)
+
+
+def _nome_foglio(nome: str, usati: set) -> str:
+    pulito = "".join(c for c in nome if c not in '[]:*?/\\').strip()[:28]
+    pulito = pulito or "Dipendente"
+    finale, n = pulito, 2
+    while finale.lower() in usati:
+        finale = f"{pulito[:25]} {n}"
+        n += 1
+    usati.add(finale.lower())
+    return finale
+
+
+def _frazione(quando: dt.datetime | None):
+    return (quando.hour * 60 + quando.minute) / 1440 if quando else None
+
+
+def _durata(minuti: int):
+    return minuti / 1440
+
+
+def esporta_xlsx(percorso: str, elenco: list[Giornata], nomi: dict[int, str],
+                 dal: dt.date, al: dt.date, locale: str = "") -> int:
+    """Il cartellino: un foglio di riepilogo e un foglio per dipendente, con
+    tutti i giorni del periodo (anche quelli senza timbrature, come sui
+    cartellini di carta) e il monte ore in fondo. Ritorna i dipendenti."""
+    import zipfile
+
+    persone: dict[int, list[Giornata]] = {}
+    for g in elenco:
+        persone.setdefault(g.employee_code, []).append(g)
+    ordine = sorted(persone, key=lambda c: nomi.get(c, f"Utente {c}").lower())
+    coppie = max([3] + [len(g.turni) for g in elenco])
+    periodo = f"dal {dal:%d/%m/%Y} al {al:%d/%m/%Y}"
+    giorni = [dal + dt.timedelta(days=i) for i in range((al - dal).days + 1)]
+
+    def testa(t):
+        return (t, _S_TESTA)
+
+    fogli = []          # (nome, xml)
+    usati = {"riepilogo"}
+
+    # Riepilogo
+    righe = [[(f"Monte ore {locale}".strip(), _S_TITOLO)],
+             [(periodo, _S_VUOTO)], [],
+             [testa("Dipendente"), testa("Codice"), testa("Giorni lavorati"),
+              testa("Ore lavorate"), testa("Ordinarie"), testa("Straordinario")]]
+    tot_lav = tot_str = 0
+    for codice in ordine:
+        gg = persone[codice]
+        lav = sum(g.minuti_lavorati for g in gg)
+        stra = sum(g.minuti_straordinario for g in gg)
+        tot_lav, tot_str = tot_lav + lav, tot_str + stra
+        righe.append([(nomi.get(codice, f"Utente {codice}"), _S_TESTO),
+                      (codice, _S_TESTO),
+                      (len({g.data for g in gg if g.minuti_lavorati}), _S_TESTO),
+                      (_durata(lav), _S_DURATA), (_durata(lav - stra), _S_DURATA),
+                      (_durata(stra), _S_DURATA)])
+    righe.append([("TOTALE PERIODO", _S_GRASSETTO), None, None,
+                  (_durata(tot_lav), _S_DURATA_G),
+                  (_durata(tot_lav - tot_str), _S_DURATA_G),
+                  (_durata(tot_str), _S_DURATA_G)])
+    fogli.append(("Riepilogo", _foglio_xml(righe, [30, 9, 15, 14, 12, 14])))
+
+    # Un foglio per dipendente
+    for codice in ordine:
+        nome = nomi.get(codice, f"Utente {codice}")
+        per_giorno = {g.data: g for g in persone[codice]}
+        intestazione = [testa("Data")]
+        for _ in range(coppie):
+            intestazione += [testa("ENT"), testa("USC")]
+        intestazione += [testa("LAV"), testa("ORD"), testa("STRA"),
+                         testa("Note")]
+        righe = [[("Cartellino", _S_TITOLO), None, None,
+                  (locale, _S_ETICHETTA)],
+                 [("Dipendente", _S_ETICHETTA), (nome, _S_VUOTO)],
+                 [("Codice", _S_ETICHETTA), (codice, _S_VUOTO)],
+                 [("Periodo", _S_ETICHETTA), (periodo, _S_VUOTO)],
+                 [], intestazione]
+        lav_tot = stra_tot = lavorati = 0
+        for giorno in giorni:
+            g = per_giorno.get(giorno)
+            riga = [(f"{_GIORNI_BREVI[giorno.weekday()]} "
+                     f"{giorno:%d/%m/%Y}", _S_TESTO)]
+            orari = []
+            if g:
+                for t in g.turni:
+                    orari += [t.entrata.quando if t.entrata else None,
+                              t.uscita.quando if t.uscita else None]
+            orari += [None] * (2 * coppie - len(orari))
+            riga += [(_frazione(q), _S_ORA) if q else ("", _S_ORA)
+                     for q in orari]
+            if g and g.minuti_lavorati:
+                lavorati += 1
+                lav_tot += g.minuti_lavorati
+                stra_tot += g.minuti_straordinario
+                riga += [(_durata(g.minuti_lavorati), _S_DURATA),
+                         (_durata(g.minuti_lavorati - g.minuti_straordinario),
+                          _S_DURATA),
+                         (_durata(g.minuti_straordinario), _S_DURATA)
+                         if g.minuti_straordinario else ("", _S_DURATA)]
+            else:
+                riga += [("", _S_DURATA)] * 3
+            riga.append((" | ".join(g.anomalie) if g else "", _S_TESTO))
+            righe.append(riga)
+        righe.append([(f"TOTALE · {lavorati} giorni", _S_GRASSETTO)]
+                     + [("", _S_GRASSETTO)] * (2 * coppie)
+                     + [(_durata(lav_tot), _S_DURATA_G),
+                        (_durata(lav_tot - stra_tot), _S_DURATA_G),
+                        (_durata(stra_tot), _S_DURATA_G), ("", _S_GRASSETTO)])
+        fogli.append((_nome_foglio(nome, usati), _foglio_xml(
+            righe, [16] + [8] * (2 * coppie) + [8, 8, 8, 40])))
+
+    tipo = "application/vnd.openxmlformats-officedocument.spreadsheetml"
+    with zipfile.ZipFile(percorso, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("[Content_Types].xml",
+                   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                   '<Types xmlns="http://schemas.openxmlformats.org/package/'
+                   '2006/content-types"><Default Extension="rels" ContentType='
+                   '"application/vnd.openxmlformats-package.relationships+xml"/>'
+                   '<Default Extension="xml" ContentType="application/xml"/>'
+                   f'<Override PartName="/xl/workbook.xml" ContentType="{tipo}'
+                   '.sheet.main+xml"/><Override PartName="/xl/styles.xml" '
+                   f'ContentType="{tipo}.styles+xml"/>'
+                   + "".join(f'<Override PartName="/xl/worksheets/sheet{i}.xml"'
+                             f' ContentType="{tipo}.worksheet+xml"/>'
+                             for i in range(1, len(fogli) + 1))
+                   + "</Types>")
+        z.writestr("_rels/.rels",
+                   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                   '<Relationships xmlns="http://schemas.openxmlformats.org/'
+                   'package/2006/relationships"><Relationship Id="r1" Type='
+                   '"http://schemas.openxmlformats.org/officeDocument/2006/'
+                   'relationships/officeDocument" Target="xl/workbook.xml"/>'
+                   '</Relationships>')
+        z.writestr("xl/workbook.xml",
+                   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                   '<workbook xmlns="http://schemas.openxmlformats.org/'
+                   'spreadsheetml/2006/main" xmlns:r="http://schemas.'
+                   'openxmlformats.org/officeDocument/2006/relationships">'
+                   '<sheets>'
+                   + "".join(f'<sheet name="{_xml(n)}" sheetId="{i}" '
+                             f'r:id="r{i}"/>'
+                             for i, (n, _) in enumerate(fogli, start=1))
+                   + "</sheets></workbook>")
+        z.writestr("xl/_rels/workbook.xml.rels",
+                   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                   '<Relationships xmlns="http://schemas.openxmlformats.org/'
+                   'package/2006/relationships">'
+                   + "".join(f'<Relationship Id="r{i}" Type="http://schemas.'
+                             'openxmlformats.org/officeDocument/2006/'
+                             f'relationships/worksheet" Target="worksheets/'
+                             f'sheet{i}.xml"/>'
+                             for i in range(1, len(fogli) + 1))
+                   + f'<Relationship Id="r{len(fogli) + 1}" Type="http://'
+                   'schemas.openxmlformats.org/officeDocument/2006/'
+                   'relationships/styles" Target="styles.xml"/>'
+                   "</Relationships>")
+        z.writestr("xl/styles.xml", _STILI)
+        for i, (_, contenuto) in enumerate(fogli, start=1):
+            z.writestr(f"xl/worksheets/sheet{i}.xml", contenuto)
+    return len(ordine)

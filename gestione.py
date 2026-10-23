@@ -2237,12 +2237,17 @@ class SchermataPresenze(Schermata):
             Avviso.mostra(self, "Niente da esportare",
                           "Nessuna presenza nel periodo mostrato.", GIALLO)
             return
-        nome_file = (f"presenze-{dal:%Y-%m}.csv" if self.periodo == "mese"
-                     else f"presenze-{dal:%Y-%m-%d}.csv" if dal == al
-                     else f"presenze-{dal:%Y-%m-%d}_{al:%Y-%m-%d}.csv")
-        percorso = os.path.join(CARTELLA_DATI, nome_file)
+        # Il cartellino in Excel: un foglio di riepilogo col monte ore e un
+        # foglio per dipendente. Accanto, lo stesso in CSV per chi lo
+        # importa in un altro programma.
+        base = (f"presenze-{dal:%Y-%m}" if self.periodo == "mese"
+                else f"presenze-{dal:%Y-%m-%d}" if dal == al
+                else f"presenze-{dal:%Y-%m-%d}_{al:%Y-%m-%d}")
+        percorso = os.path.join(CARTELLA_DATI, base + ".xlsx")
         try:
-            presenze.esporta_csv(percorso, elenco, nomi)
+            presenze.esporta_xlsx(percorso, elenco, nomi, dal, al)
+            presenze.esporta_csv(os.path.join(CARTELLA_DATI, base + ".csv"),
+                                 elenco, nomi)
         except OSError as e:
             # Il caso vero: il file di prima e' ancora aperto in Excel. Senza
             # questo il bottone sembra semplicemente non fare niente.
@@ -2251,13 +2256,19 @@ class SchermataPresenze(Schermata):
                       f"Se lo hai aperto in Excel, chiudilo e riprova.")
             return
         anomale = sum(1 for g in elenco if g.anomalie)
+        persone = len({g.employee_code for g in elenco})
         Avviso.mostra(
             self, "Esportato",
-            f"{len(elenco)} giornate salvate in:\n\n{percorso}\n\n"
+            f"Cartellino di {persone} dipendenti, un foglio ciascuno, piu' "
+            f"il riepilogo col monte ore del periodo:\n\n{percorso}\n\n"
             + (f"Attenzione: {anomale} giornate hanno anomalie aperte. "
                f"Conviene sistemarle prima di mandarlo alle paghe."
                if anomale else "Nessuna anomalia aperta."),
             GIALLO if anomale else VERDE)
+        try:
+            os.startfile(percorso)          # si apre in Excel
+        except (AttributeError, OSError):
+            pass                            # niente Excel: il file resta li'
 
 
 class Calendario(Dialogo):
