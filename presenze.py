@@ -75,6 +75,11 @@ class Regole:
     # Da qui in su e' straordinario.
     minuti_ordinari: int = 480
 
+    # Il giorno da cui parte la settimana nelle Presenze: 0 = lunedi',
+    # 2 = mercoledi'... Un ristorante chiuso il martedi' ragiona spesso
+    # "da mercoledi' a martedi'", e anche le paghe a volte vanno cosi'.
+    inizio_settimana: int = 0
+
     @staticmethod
     def carica(percorso: str) -> "Regole":
         if os.path.exists(percorso):

@@ -2022,8 +2022,10 @@ class SchermataPresenze(Schermata):
         if self.periodo == "giorno":
             return self.giorno, self.giorno
         if self.periodo == "settimana":
-            lunedi = self.giorno - dt.timedelta(days=self.giorno.weekday())
-            return lunedi, lunedi + dt.timedelta(days=6)
+            indietro = (self.giorno.weekday()
+                        - self.app.regole.inizio_settimana) % 7
+            primo = self.giorno - dt.timedelta(days=indietro)
+            return primo, primo + dt.timedelta(days=6)
         primo = self.giorno.replace(day=1)
         return primo, primo.replace(
             day=calendar.monthrange(primo.year, primo.month)[1])
@@ -2828,6 +2830,11 @@ class SchermataImpostazioni(Schermata):
                    self._cambia_pausa)
         self._voce("Straordinario oltre", f"{r.minuti_ordinari // 60} ore",
                    self._cambia_ordinarie)
+        self._voce("La settimana comincia di",
+                   GIORNI[r.inizio_settimana % 7],
+                   self._cambia_inizio_settimana,
+                   "Vale per la vista Settimana delle Presenze e per la sua "
+                   "esportazione.")
 
         self._sezione("COPIE DI SICUREZZA")
         elenco = copie.elenco(cfg["archivio"])
@@ -3187,6 +3194,14 @@ class SchermataImpostazioni(Schermata):
     def _cambia_orologio(self, valore):
         self.app.cfg["allinea_orologio"] = valore
         salva_config(self.app.cfg)
+
+    def _cambia_inizio_settimana(self):
+        v = Scelta.chiedi(self, "La settimana comincia di",
+                          [(nome, n) for n, nome
+                           in enumerate(GIORNI)])
+        if v is not None:
+            self.app.regole.inizio_settimana = v
+            self._salva_regole()
 
     def _cambia_inizio(self):
         v = SceltaOra.chiedi(self, "La giornata comincia alle",
