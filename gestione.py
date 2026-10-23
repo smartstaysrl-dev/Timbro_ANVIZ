@@ -2226,21 +2226,35 @@ class SchermataPresenze(Schermata):
             self.entra()
 
     def _esporta(self):
-        dal, al = self._intervallo()
         db = apri_archivio(self.app.cfg["archivio"])
         try:
             nomi = nomi_dipendenti(db)
-            elenco = presenze.giornate(db, self.app.regole, dal, al)
+        finally:
+            db.close()
+        for u in self.app.utenti or []:
+            nomi.setdefault(u.user_id, u.nome or f"Utente {u.user_id}")
+        scelta = SceltaEsportazione.chiedi(self, nomi, *self._intervallo())
+        if scelta is None:
+            return
+        dal, al, scelti = scelta
+        db = apri_archivio(self.app.cfg["archivio"])
+        try:
+            elenco = [g for g in presenze.giornate(db, self.app.regole,
+                                                   dal, al)
+                      if g.employee_code in scelti]
         finally:
             db.close()
         if not elenco:
             Avviso.mostra(self, "Niente da esportare",
-                          "Nessuna presenza nel periodo mostrato.", GIALLO)
+                          "Nessuna presenza per i dipendenti scelti nel "
+                          "periodo scelto.", GIALLO)
             return
         # Il cartellino in Excel: un foglio di riepilogo col monte ore e un
         # foglio per dipendente. Accanto, lo stesso in CSV per chi lo
         # importa in un altro programma.
-        base = (f"presenze-{dal:%Y-%m}" if self.periodo == "mese"
+        mese_intero = (dal.day == 1 and (dal.year, dal.month) == (al.year, al.month)
+                       and al.day == calendar.monthrange(al.year, al.month)[1])
+        base = (f"presenze-{dal:%Y-%m}" if mese_intero
                 else f"presenze-{dal:%Y-%m-%d}" if dal == al
                 else f"presenze-{dal:%Y-%m-%d}_{al:%Y-%m-%d}")
         percorso = os.path.join(CARTELLA_DATI, base + ".xlsx")
@@ -2269,6 +2283,107 @@ class SchermataPresenze(Schermata):
             os.startfile(percorso)          # si apre in Excel
         except (AttributeError, OSError):
             pass                            # niente Excel: il file resta li'
+
+
+class SceltaEsportazione(Dialogo):
+    """Prima di esportare: il periodo e i dipendenti, come sui gestionali
+    delle paghe. Di partenza il periodo mostrato a schermo e tutti spuntati."""
+
+    def __init__(self, padre, nomi: dict[int, str], dal: dt.date,
+                 al: dt.date):
+        super().__init__(padre, "Esporta il cartellino")
+        self.dal, self.al = dal, al
+        self.nomi = nomi
+        self.scelti = set(nomi)
+        tk.Label(self, text="Esporta il cartellino", bg=BG, fg=TESTO,
+                 font=F_TITOLO).pack(pady=(16, 8), padx=24)
+
+        riga = tk.Frame(self, bg=CARD)
+        riga.pack(fill="x", padx=24, pady=(0, 10), ipady=6)
+        tk.Label(riga, text="Periodo", bg=CARD, fg=TESTO_TENUE,
+                 font=F_NORMALE).pack(side="left", padx=14)
+        Bottone(riga, "cambia", self._cambia_periodo, font=F_PICCOLO,
+                altezza=44, larghezza=110).pack(side="right", padx=10)
+        self.testo_periodo = tk.Label(riga, text="", bg=CARD, fg=TESTO,
+                                      font=F_NORMALE, anchor="w")
+        self.testo_periodo.pack(side="left", fill="x", expand=True)
+        riga.bind("<Button-1>", lambda _e: self._cambia_periodo())
+        self.testo_periodo.bind("<Button-1>",
+                                lambda _e: self._cambia_periodo())
+
+        testa = tk.Frame(self, bg=BG)
+        testa.pack(fill="x", padx=24)
+        self.conteggio = tk.Label(testa, text="", bg=BG, fg=TESTO_TENUE,
+                                  font=F_NORMALE)
+        self.conteggio.pack(side="left")
+        Bottone(testa, "Nessuno", lambda: self._tutti(False), font=F_PICCOLO,
+                altezza=44, larghezza=110).pack(side="right")
+        Bottone(testa, "Tutti", lambda: self._tutti(True), font=F_PICCOLO,
+                altezza=44, larghezza=110).pack(side="right", padx=8)
+
+        lista = ListaScorrevole(self)
+        lista.tela.config(height=min(380, self.winfo_screenheight() - 380),
+                          width=520)
+        lista.pack(fill="both", expand=True, padx=24, pady=8)
+        self.righe = {}
+        for codice, nome in sorted(nomi.items(), key=lambda x: x[1].lower()):
+            r = tk.Label(lista.interno, text="", bg=CARD, fg=TESTO,
+                         font=F_NORMALE, anchor="w", padx=14, pady=12)
+            r.pack(fill="x", pady=2)
+            r.bind("<Button-1>", lambda _e, c=codice: self._inverti(c))
+            lista.segui_trascinamento(r)
+            self.righe[codice] = r
+
+        azioni = tk.Frame(self, bg=BG)
+        azioni.pack(fill="x", padx=24, pady=(6, 18))
+        Bottone(azioni, "Annulla", self.destroy, altezza=60,
+                larghezza=180).pack(side="left")
+        self.b_esporta = Bottone(azioni, "Esporta", self._conferma,
+                                 colore=VIOLA, colore_testo=BG, altezza=60,
+                                 larghezza=180)
+        self.b_esporta.pack(side="right")
+        self._disegna()
+
+    def _cambia_periodo(self):
+        scelta = Calendario.chiedi_intervallo(
+            self, "Tocca il primo e l'ultimo giorno", self.dal, self.al)
+        if scelta:
+            self.dal, self.al = scelta
+            self._disegna()
+
+    def _tutti(self, si):
+        self.scelti = set(self.nomi) if si else set()
+        self._disegna()
+
+    def _inverti(self, codice):
+        self.scelti ^= {codice}
+        self._disegna()
+
+    def _disegna(self):
+        giorni = (self.al - self.dal).days + 1
+        self.testo_periodo.config(
+            text=f"dal {self.dal:%d/%m/%Y} al {self.al:%d/%m/%Y} · "
+                 f"{giorni} giorn{'o' if giorni == 1 else 'i'}")
+        for codice, r in self.righe.items():
+            dentro = codice in self.scelti
+            r.config(text=f"{'☑' if dentro else '☐'}   {self.nomi[codice]}"
+                          f"   ·   {codice}",
+                     bg=CARD_CHIARA if dentro else CARD,
+                     fg=TESTO if dentro else TESTO_TENUE)
+        self.conteggio.config(
+            text=f"Dipendenti: {len(self.scelti)} su {len(self.nomi)}")
+
+    def _conferma(self):
+        if not self.scelti:
+            Avviso.mostra(self, "Nessun dipendente",
+                          "Spunta almeno un dipendente.", GIALLO)
+            return
+        self.risultato = (self.dal, self.al, set(self.scelti))
+        self.destroy()
+
+    @staticmethod
+    def chiedi(padre, nomi, dal, al):
+        return SceltaEsportazione(padre, nomi, dal, al).concludi()
 
 
 class Calendario(Dialogo):
