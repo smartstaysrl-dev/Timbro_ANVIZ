@@ -521,14 +521,30 @@ def testo_csv(elenco: list[Giornata], nomi: dict[int, str]) -> str:
     tutto in una colonna sola e qualcuno lo rifa' a mano."""
     buffer = io.StringIO()
     w = csv.writer(buffer, delimiter=";", lineterminator="\r\n")
-    w.writerow(["data", "codice", "dipendente", "entrata", "uscita",
+    # Ogni timbratura in una colonna sua: il ristorante fa pranzo e cena,
+    # quindi quattro al giorno, e chi controlla le ore vuole vederle tutte.
+    # Prima uscivano solo la prima entrata e l'ultima uscita, e la pausa
+    # del pomeriggio spariva dal foglio. Le coppie sono almeno due, di piu'
+    # se in quel periodo qualcuno ha fatto un terzo turno.
+    coppie = max([2] + [len(g.turni) for g in elenco])
+    colonne = []
+    for n in range(1, coppie + 1):
+        colonne += [f"entrata_{n}", f"uscita_{n}"]
+    w.writerow(["data", "codice", "dipendente", *colonne,
                 "turni", "ore", "minuti", "straordinario_min", "anomalie"])
+
+    def ora(p):
+        return f"{p.quando:%H:%M}" if p else ""
+
     for g in elenco:
+        orari = []
+        for t in g.turni:
+            orari += [ora(t.entrata), ora(t.uscita)]
+        orari += [""] * (2 * coppie - len(orari))
         w.writerow([
             g.data.isoformat(), g.employee_code,
             nomi.get(g.employee_code, f"Utente {g.employee_code}"),
-            f"{g.prima_entrata:%H:%M}" if g.prima_entrata else "",
-            f"{g.ultima_uscita:%H:%M}" if g.ultima_uscita else "",
+            *orari,
             len([t for t in g.turni if t.completo]),
             g.ore, g.minuti_lavorati, g.minuti_straordinario,
             " | ".join(g.anomalie),

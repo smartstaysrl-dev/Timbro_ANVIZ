@@ -398,6 +398,25 @@ def _():
     assert n == 1 and "Mario Rossi" in testo and "8:00" in testo, testo
 
 
+@prova("export CSV: pranzo e cena, tutte e quattro le timbrature")
+def _():
+    db = archivio()
+    for ora in ("11:00", "15:00", "18:30", "23:30"):
+        punzona(db, 1, f"2026-09-02 {ora}:00")
+    punzona(db, 2, "2026-09-02 10:00:00")          # una sola, senza uscita
+    elenco = presenze.giornate(db, presenze.Regole(),
+                               dt.date(2026, 9, 2), dt.date(2026, 9, 2))
+    righe = presenze.testo_csv(elenco, {1: "Mario Rossi"}).splitlines()
+    intestazione = righe[0].split(";")
+    assert intestazione[3:7] == ["entrata_1", "uscita_1", "entrata_2",
+                                 "uscita_2"], intestazione
+    mario = next(r.split(";") for r in righe if "Mario Rossi" in r)
+    assert mario[3:7] == ["11:00", "15:00", "18:30", "23:30"], mario
+    altro = next(r.split(";") for r in righe[1:] if "Mario" not in r)
+    assert altro[3:7] == ["10:00", "", "", ""], altro
+    assert len(altro) == len(intestazione)
+
+
 @prova("ora legale, notte in cui si dorme un'ora in piu': il turno dura 7 ore")
 def _():
     # 25 ottobre 2026: alle 03:00 CEST l'orologio torna alle 02:00 CET.
