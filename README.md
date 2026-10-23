@@ -533,7 +533,7 @@ salvava il vuoto.
 `python crea_pacchetto.py` prepara `pacchetto/TIMBRA/`: dentro c'è un Python
 "incorporato" (la distribuzione ufficiale ridotta, presa da python.org) più i
 sorgenti. Si copia la cartella **intera** sul computer del locale e si fa
-doppio clic sul collegamento con l'icona. Non si installa niente, non si tocca
+doppio clic su `TIMBRA.bat`, che crea anche il collegamento con l'icona. Non si installa niente, non si tocca
 il resto della macchina. Circa 35 MB.
 
 **Perché non un eseguibile.** Un exe di PyInstaller non firmato viene
@@ -553,6 +553,11 @@ prepara il pacchetto. Stessa versione, stessa architettura.
 Il collegamento punta a `pythonw.exe`, non a `python.exe`: altrimenti a ogni
 avvio resterebbe aperta anche una finestra nera di console, che prima o poi
 qualcuno chiude credendo di chiudere una cosa inutile.
+
+Il collegamento non si crea quando si impacchetta: un `.lnk` di Windows
+contiene percorsi assoluti, e quello fatto sul banco puntava alla cartella
+del banco. Lo rifà `TIMBRA.bat` a ogni avvio, quindi punta sempre a dove
+la cartella sta adesso, anche dopo uno spostamento.
 
 ## Il PIN, e cosa non è
 

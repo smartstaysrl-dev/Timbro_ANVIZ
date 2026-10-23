@@ -11,7 +11,7 @@ senza installare niente sul computer del cliente.
 
 Dentro ci finisce un Python "incorporato" — la distribuzione ufficiale
 ridotta, scaricata da python.org — più i sorgenti. Il ristoratore vede solo
-un collegamento con l'icona.
+un collegamento con l'icona, che TIMBRA.bat crea al primo avvio.
 
 **Perché non un .exe.** Un eseguibile fatto con PyInstaller e non firmato
 digitalmente viene BLOCCATO da Smart App Control, che è acceso di serie sulle
@@ -88,11 +88,25 @@ def scrivi_percorsi(destinazione: str) -> None:
 
 
 def scrivi_avvio(radice: str) -> None:
-    """Due modi per partire: il collegamento (senza finestra nera) e un file
-    di comandi di scorta, per quando il collegamento si perde in una copia."""
+    """Si parte da TIMBRA.bat, che a ogni avvio rifa' anche il collegamento
+    con l'icona. Un collegamento di Windows contiene percorsi assoluti: fatto
+    qui, puntava alla cartella del banco e sul computer del locale non
+    partiva. Rifatto dal .bat punta sempre a dove la cartella sta adesso,
+    anche dopo averla spostata."""
+    collegamento = (
+        '$d=(Get-Location).Path; '
+        '$l=(New-Object -ComObject WScript.Shell).CreateShortcut($d+'
+        f"'\\{NOME}.lnk'); "
+        "$l.TargetPath=$d+'\\python\\pythonw.exe'; "
+        "$l.Arguments='gestione.py'; "
+        "$l.WorkingDirectory=$d+'\\app'; "
+        "$l.IconLocation=$d+'\\app\\logo\\timbra.ico'; "
+        "$l.Description='TIMBRA - presenze'; $l.Save()")
     with open(os.path.join(radice, f"{NOME}.bat"), "w", encoding="ascii") as f:
         f.write("@echo off\r\n")
         f.write('cd /d "%~dp0"\r\n')
+        f.write(f'powershell -NoProfile -WindowStyle Hidden -Command '
+                f'"{collegamento}" >nul 2>&1\r\n')
         f.write('start "" "python\\pythonw.exe" "app\\gestione.py"\r\n')
 
     with open(os.path.join(radice, "LEGGIMI.txt"), "w",
@@ -100,8 +114,10 @@ def scrivi_avvio(radice: str) -> None:
         f.write(
             "TIMBRA — presenze\n"
             "=================\n\n"
-            "Per partire: doppio clic su TIMBRA (l'icona con la spirale).\n"
-            "Se il collegamento si perde, va bene anche TIMBRA.bat.\n\n"
+            "La prima volta: doppio clic su TIMBRA.bat. Crea anche l'icona\n"
+            "TIMBRA con la spirale, che da li' in poi si usa al suo posto\n"
+            "(e si puo' copiare sul desktop e nell'avvio automatico).\n"
+            "Se la cartella si sposta, si rilancia TIMBRA.bat una volta.\n\n"
             "Non serve installare niente: il Python sta dentro la cartella\n"
             "python\\ e non tocca il resto del computer.\n\n"
             "Cosa c'e' dentro:\n"
@@ -118,36 +134,6 @@ def scrivi_avvio(radice: str) -> None:
             "La cartella si puo' spostare dove si vuole, basta spostarla\n"
             "INTERA.\n\n"
             "La guida sta dentro il programma, col «?» in alto a destra.\n")
-
-
-def crea_collegamento(radice: str) -> None:
-    """Il collegamento con l'icona. Si usa pythonw.exe, non python.exe:
-    altrimenti a ogni avvio compare anche una finestra nera di console che
-    resta li' finche' il programma e' aperto, e che qualcuno prima o poi
-    chiude credendo di chiudere una cosa inutile."""
-    if sys.platform != "win32":
-        print("  (il collegamento si crea solo su Windows)")
-        return
-    import subprocess
-    lnk = os.path.join(radice, f"{NOME}.lnk")
-    icona = os.path.join(radice, "app", "logo", "timbra.ico")
-    comandi = (
-        "$ws = New-Object -ComObject WScript.Shell; "
-        f"$l = $ws.CreateShortcut('{lnk}'); "
-        f"$l.TargetPath = '{os.path.join(radice, 'python', 'pythonw.exe')}'; "
-        "$l.Arguments = 'gestione.py'; "
-        f"$l.WorkingDirectory = '{os.path.join(radice, 'app')}'; "
-        f"$l.IconLocation = '{icona}'; "
-        "$l.Description = 'TIMBRA - presenze'; "
-        "$l.Save()")
-    esito = subprocess.run(["powershell", "-NoProfile", "-Command", comandi],
-                           capture_output=True, text=True)
-    if esito.returncode or not os.path.exists(lnk):
-        print("  ATTENZIONE: collegamento non creato:",
-              (esito.stderr or "").strip()[:200])
-        print("  resta comunque TIMBRA.bat, che funziona uguale.")
-    else:
-        print(f"  collegamento: {os.path.basename(lnk)}")
 
 
 def etichetta_corrente() -> str:
@@ -216,7 +202,6 @@ def main() -> int:
     os.makedirs(os.path.join(radice, "dati"), exist_ok=True)
 
     scrivi_avvio(radice)
-    crea_collegamento(radice)
     peso = sum(os.path.getsize(os.path.join(r, f))
                for r, _, fs in os.walk(radice) for f in fs)
     print(f"pronto: {radice}  ({peso / 1_000_000:.0f} MB)")
