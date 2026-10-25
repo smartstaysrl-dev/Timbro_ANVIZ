@@ -233,9 +233,15 @@ def punzoni(db, dal: dt.date, al: dt.date) -> list[Punzone]:
             "WHERE tipo = 'aggiunta' AND quando_locale >= ? AND quando_locale < ?",
             (inizio, fine)):
         locale = _quando(quando)
+        istante = _istante(locale)
+        if locale.tzinfo is not None:
+            # Nell'ora che si ripete a ottobre c'e' scritto anche il fuso,
+            # per dire quale delle due: vale quello.
+            istante = locale.astimezone(dt.timezone.utc)
+            locale = locale.replace(tzinfo=None)
         # L'identificativo porta dentro il numero della rettifica: e' quello
         # che permette di toglierla, se e' stata inserita per sbaglio.
-        fuori.append(Punzone(codice, locale, _istante(locale), None,
+        fuori.append(Punzone(codice, locale, istante, None,
                              "inserita a mano", "rettifica",
                              f"rettifica:{rid}", verso=verso))
 

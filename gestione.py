@@ -298,6 +298,8 @@ def deriva_orologio(db, giorni: int = GIORNI_DERIVA) -> tuple[float, float, int]
     for (q1, s1, r1), (q2, s2, _) in zip(righe, righe[1:]):
         if r1:                      # in mezzo c'e' stato un riallineamento
             continue
+        if abs(s2 - s1) > 600:      # un salto, non una deriva: il cambio d'ora
+            continue
         secondi = (dt.datetime.fromisoformat(q2)
                    - dt.datetime.fromisoformat(q1)).total_seconds()
         if secondi < 120:           # intervalli troppo corti: solo rumore
@@ -322,6 +324,98 @@ def pota_registro(db, giorni: int = GIORNI_REGISTRO) -> int:
     cur = db.execute("DELETE FROM importazioni WHERE quando < ?", (limite,))
     db.commit()
     return cur.rowcount
+
+
+# Il terminale non conosce l'ora legale: nelle due notti del cambio resta
+# avanti (ottobre) o indietro (marzo) di un'ora finche' TIMBRA non lo
+# riallinea, al primo scarico che riesce. Le timbrature fatte nel frattempo
+# portano l'ora sbagliata. Si riconoscono dallo scarto misurato in quello
+# stesso scarico (il riallineamento avviene prima di leggerle), e si
+# correggono come farebbe l'operatore: quella del terminale annullata, che
+# resta in archivio, e una nuova con l'ora giusta e il motivo.
+MOTIVO_CAMBIO_ORA = ("Cambio d'ora: il terminale non era ancora riallineato "
+                     "(corretta da TIMBRA)")
+GIORNI_CAMBIO_ORA = 30
+
+
+def _cambi_ora(anno: int):
+    """Per ogni cambio d'ora dell'anno: (ora del terminale da cui sbaglia,
+    fuso in cui e' rimasto, fuso giusto). A marzo resta in CET e alle 03:00
+    vere segna le 02:00; a ottobre resta in CEST e alle 02:00 vere (la
+    seconda volta) segna le 03:00."""
+    cet, cest = (dt.timezone(dt.timedelta(hours=h)) for h in (1, 2))
+    return [
+        (dt.datetime.combine(anviz._ultima_domenica(anno, 3), dt.time(2)),
+         cet, cest),
+        (dt.datetime.combine(anviz._ultima_domenica(anno, 10), dt.time(3)),
+         cest, cet),
+    ]
+
+
+def correggi_cambio_ora(db, regole, autore: str = "TIMBRA",
+                        adesso: dt.datetime | None = None) -> int:
+    """Corregge le timbrature prese col terminale fermo all'ora di prima.
+
+    Si tocca solo cio' che e' dimostrato: una timbratura dopo il cambio,
+    scaricata in uno scarico che ha misurato il terminale sfasato di un'ora
+    giusta, nella direzione del cambio. Quelle gia' annullate (anche a mano)
+    non si toccano: rifarlo due volte, o sopra una correzione dell'operatore,
+    sarebbe peggio che non farlo. Ritorna quante ne ha corrette.
+    """
+    presenze.prepara(db)
+    adesso = adesso or dt.datetime.now()
+    annullati = {r[0] for r in db.execute(
+        "SELECT evento_annullato FROM rettifiche WHERE tipo = 'annullamento'")}
+    da_fare = []
+    for anno in {adesso.year, adesso.year - 1}:
+        for inizio, vecchio, nuovo in _cambi_ora(anno):
+            fine = inizio + dt.timedelta(days=GIORNI_CAMBIO_ORA)
+            if not inizio <= adesso < fine + dt.timedelta(days=1):
+                continue
+            sposta = (nuovo.utcoffset(None) - vecchio.utcoffset(None))
+            scarichi = list(db.execute(
+                "SELECT quando, scarto_s FROM importazioni WHERE esito = 'ok' "
+                "AND quando >= ? AND quando < ? ORDER BY quando",
+                (inizio.isoformat(timespec="seconds"),
+                 fine.isoformat(timespec="seconds"))))
+            for eid, codice, quando, preso in db.execute(
+                    "SELECT source_event_id, employee_code, occurred_at_local, "
+                    "imported_at FROM raw_events WHERE occurred_at_local >= ? "
+                    "AND occurred_at_local < ?",
+                    (inizio.isoformat(sep=" "), fine.isoformat(sep=" "))):
+                if eid in annullati:
+                    continue
+                # Lo scarico che l'ha portata e' il primo registrato dopo:
+                # la riga del registro si scrive appena salvate le timbrature.
+                scarto = next((s for q, s in scarichi if q >= preso[:19]), None)
+                if scarto is None or abs(scarto + sposta.total_seconds()) > 300:
+                    continue
+                segnata = dt.datetime.fromisoformat(quando)
+                istante = segnata.replace(tzinfo=vecchio)
+                giusta = segnata + sposta
+                # Nell'ora che a ottobre si ripete, l'ora sola non basta a
+                # dire quale delle due: si scrive anche il fuso.
+                if presenze._istante(giusta) != istante:
+                    giusta = giusta.replace(tzinfo=nuovo)
+                da_fare.append((eid, codice, segnata, giusta))
+    if not da_fare:
+        return 0
+
+    # Il verso si prende da come la timbratura e' gia' letta adesso: spostate
+    # tutte di un'ora, l'ordine non cambia, e l'entrata resta un'entrata.
+    versi = {}
+    giorni = [s.date() for _, _, s, _ in da_fare]
+    for g in presenze.giornate(db, regole, min(giorni) - dt.timedelta(days=1),
+                               max(giorni)):
+        for t in g.turni:
+            for p, v in ((t.entrata, "entrata"), (t.uscita, "uscita")):
+                if p is not None and p.evento_id:
+                    versi[p.evento_id] = v
+    for eid, codice, _, giusta in da_fare:
+        presenze.annulla_timbratura(db, codice, eid, MOTIVO_CAMBIO_ORA, autore)
+        presenze.aggiungi_timbratura(db, codice, giusta, versi.get(eid),
+                                     MOTIVO_CAMBIO_ORA, autore)
+    return len(da_fare)
 
 
 def _quando_o_niente(testo):
@@ -398,8 +492,22 @@ class Servizio(threading.Thread):
             return
         try:
             self._scarica()
+            self._cambio_ora()
         finally:
             self.in_corso.release()
+
+    def _cambio_ora(self):
+        """Dopo ogni giro, anche fallito: le timbrature da correggere possono
+        essere arrivate in uno scarico di ieri, e il terminale oggi spento."""
+        db = None
+        try:
+            db = apri_archivio(self.cfg["archivio"])
+            correggi_cambio_ora(db, presenze.Regole.carica(FILE_REGOLE))
+        except Exception:                                        # noqa: BLE001
+            pass            # mai fermare la raccolta per questo
+        finally:
+            if db is not None:
+                db.close()
         # Fuori dal blocco dello scarico apposta: il report mensile non ha
         # bisogno del terminale, legge dall'archivio. Se stesse dentro, un cavo
         # staccato smetterebbe di far arrivare le mail senza che nessuno colleghi

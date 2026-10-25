@@ -599,6 +599,78 @@ def _():
     db2.close()
 
 
+@prova("cambio d'ora col terminale non riallineato: TIMBRA corregge da sola")
+def _():
+    import gestione
+    db = gestione.apri_archivio(":memory:")
+
+    def timbra(codice, segnata, scaricata):
+        eid = punzona(db, codice, segnata)
+        db.execute("UPDATE raw_events SET imported_at = ? WHERE "
+                   "source_event_id = ?", (scaricata, eid))
+        return eid
+
+    def scarico(quando, scarto):
+        db.execute("INSERT INTO importazioni (quando, esito, scarto_s, "
+                   "riallineato) VALUES (?, 'ok', ?, 0)", (quando, scarto))
+
+    # Notte del 25 ottobre 2026, programma spento. Il terminale resta in
+    # ora legale: dopo le 02:00 vere (la seconda volta) segna un'ora in piu'.
+    timbra(1, "2026-10-24 20:00:00", "2026-10-24T20:05:00+02:00")
+    scarico("2026-10-24T20:05:01", 0.0)
+    timbra(1, "2026-10-25 05:00:00", "2026-10-25T10:05:00+01:00")   # 04:00
+    timbra(2, "2026-10-25 03:30:00", "2026-10-25T10:05:00+01:00")   # 02:30
+    timbra(2, "2026-10-25 05:30:00", "2026-10-25T10:05:00+01:00")   # 04:30
+    scarico("2026-10-25T10:05:01", 3600.0)          # misura e riallinea
+    # Dopo il riallineamento l'ora e' giusta: questa non si tocca.
+    timbra(3, "2026-10-25 11:00:00", "2026-10-25T11:05:00+01:00")
+    timbra(3, "2026-10-25 15:00:00", "2026-10-25T15:05:00+01:00")
+    scarico("2026-10-25T15:05:01", 0.0)
+    db.commit()
+
+    regole = presenze.Regole()
+    adesso = dt.datetime(2026, 10, 25, 16, 0)
+    def ore(codice):
+        return sum(g.minuti_lavorati for g in presenze.giornate(
+            db, regole, dt.date(2026, 10, 24), dt.date(2026, 10, 25))
+            if g.employee_code == codice)
+
+    assert ore(1) == 600, f"prima: {ore(1)} (il terminale conta 10 ore)"
+    assert gestione.correggi_cambio_ora(db, regole, adesso=adesso) == 3
+    # 20:00 ora legale -> 04:00 ora solare: 9 ore vere, una piu' del muro.
+    assert ore(1) == 540, f"Mario: {ore(1)} invece di 540"
+    # Entrata alle 02:30 della seconda volta, uscita alle 04:30: 2 ore. Col
+    # terminale avanti l'uscita (05:30) cadeva perfino nel giorno dopo.
+    assert ore(2) == 120, f"Luca: {ore(2)} invece di 120"
+    assert db.execute("SELECT COUNT(*) FROM rettifiche WHERE quando_locale "
+                      "= '2026-10-25 02:30:00+01:00'").fetchone()[0] == 1
+    assert ore(3) == 240, f"dopo il riallineamento: {ore(3)} invece di 240"
+    motivi = {r[0] for r in db.execute("SELECT motivo FROM rettifiche")}
+    assert motivi == {gestione.MOTIVO_CAMBIO_ORA}, motivi
+    # Rifarla non cambia nulla: ogni giro di scarico la richiama.
+    assert gestione.correggi_cambio_ora(db, regole, adesso=adesso) == 0
+    assert ore(1) == 540 and ore(2) == 120
+    # Fuori dalla finestra del cambio d'ora non guarda nemmeno.
+    assert gestione.correggi_cambio_ora(
+        db, regole, adesso=dt.datetime(2026, 9, 1)) == 0
+    db.close()
+
+
+@prova("cambio d'ora: la deriva non scambia il salto di un'ora per deriva")
+def _():
+    import gestione
+    db = gestione.apri_archivio(":memory:")
+    ieri = (dt.date.today() - dt.timedelta(days=1)).isoformat()
+    for n, s in enumerate([0.0, -1.0, -2.0, 3597.0, 3596.0, 3595.0]):
+        db.execute("INSERT INTO importazioni (quando, esito, scarto_s, "
+                   "riallineato) VALUES (?, 'ok', ?, 0)",
+                   (f"{ieri} {8+n:02d}:00:00", s))
+    db.commit()
+    al_giorno, _, campioni = gestione.deriva_orologio(db)
+    assert campioni == 4 and abs(al_giorno + 24) < 0.5, (al_giorno, campioni)
+    db.close()
+
+
 # --------------------------------------------------------------------------
 falliti = [(n, e) for n, e in esiti if e]
 for nome, errore in esiti:
