@@ -203,6 +203,16 @@ def carica_config() -> dict:
         if not isinstance(letto, dict):
             raise ValueError("il file non contiene una configurazione")
         cfg.update(letto)
+        # Una volta sola: al cambio d'ora di ottobre 2026 il riallineamento
+        # era spento dal cliente, e il terminale e' rimasto un'ora avanti.
+        # Spento non serve a nessuno; chi lo vuole spento lo rispegne.
+        if not cfg.get("orologio_riacceso"):
+            cfg["allinea_orologio"] = True
+            cfg["orologio_riacceso"] = True
+            try:
+                salva_config(cfg)
+            except OSError:
+                pass
         return cfg
     except (OSError, ValueError) as e:
         # Ripartire zitti dai valori di fabbrica vorrebbe dire: PIN di nuovo
