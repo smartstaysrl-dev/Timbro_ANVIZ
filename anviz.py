@@ -102,6 +102,8 @@ CMD_GET_CONFIG2 = 0x32
 CMD_SET_CONFIG2 = 0x33
 CMD_GET_DATETIME = 0x38
 CMD_SET_DATETIME = 0x39
+CMD_GET_ORA_LEGALE = 0x1A
+CMD_SET_ORA_LEGALE = 0x1B
 CMD_GET_NETWORK = 0x3A
 CMD_SET_NETWORK = 0x3B
 CMD_GET_RECORD_INFO = 0x3C
@@ -468,6 +470,21 @@ class Terminale:
         q = quando or dt.datetime.now()
         self.comando(CMD_SET_DATETIME,
                      bytes([q.year - 2000, q.month, q.day, q.hour, q.minute, q.second]))
+
+    def spegni_ora_legale(self) -> bool:
+        """Spegne l'ora legale del terminale, se e' accesa. True se l'ha spenta.
+
+        L'ora la gestisce il computer, che la rimette a ogni scarico: due
+        padroni dell'orologio, con regole diverse, litigano. Il primo byte
+        dei parametri e' l'interruttore; gli altri (regola e date) si
+        lasciano come stanno.
+        """
+        d = bytearray(self.comando(CMD_GET_ORA_LEGALE))
+        if len(d) != 16 or d[0] == 0:
+            return False
+        d[0] = 0
+        self.comando(CMD_SET_ORA_LEGALE, bytes(d))
+        return True
 
     def conteggi(self) -> dict[str, int]:
         d = self.comando(CMD_GET_RECORD_INFO)

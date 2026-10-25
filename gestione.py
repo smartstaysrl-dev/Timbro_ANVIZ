@@ -655,6 +655,16 @@ class Servizio(threading.Thread):
                         and abs(scarto) >= self.cfg["tolleranza_orologio_s"]):
                     t.imposta_orologio()
                     riallineato = True
+                    # Rimessa l'ora, la si rilegge. Se e' ancora sfasata
+                    # di un'ora la sposta il terminale stesso, con un'ora
+                    # legale sua e una regola sbagliata: la si spegne, e
+                    # l'ora la tiene TIMBRA. Mai fermare lo scarico per questo.
+                    try:
+                        dopo = (t.orologio() - dt.datetime.now()).total_seconds()
+                        if abs(dopo) >= 1800 and t.spegni_ora_legale():
+                            t.imposta_orologio()
+                    except Exception:                            # noqa: BLE001
+                        pass
 
                 if self.seriale is None:
                     try:
@@ -677,9 +687,22 @@ class Servizio(threading.Thread):
                 if righe:
                     t.marca_nuove_scaricate(len(righe))
 
+                utenti = t.utenti()
+                # I nomi scritti direttamente sul terminale finiscono anche
+                # nell'archivio: Presenze, Oggi e il report del mese leggono
+                # i nomi da li', e senza questo mostravano "Utente 1". Un nome
+                # gia' dato da TIMBRA non si tocca: puo' essere piu' lungo
+                # dei dieci caratteri che il terminale tiene.
+                db.executemany(
+                    "INSERT OR IGNORE INTO dipendenti (employee_code, nome, "
+                    "badge, attivo, aggiornato) VALUES (?,?,?,1,?)",
+                    [(u.user_id, u.nome, u.badge,
+                      dt.datetime.now().isoformat(timespec="seconds"))
+                     for u in utenti if u.nome])
+                db.commit()
                 stato = {
                     "conteggi": t.conteggi(),
-                    "utenti": t.utenti(),
+                    "utenti": utenti,
                     "orologio": t.orologio(),
                     "stati_ta": t.stati_ta(),
                 }
