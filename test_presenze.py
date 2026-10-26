@@ -656,6 +656,48 @@ def _():
     db.close()
 
 
+@prova("cambio d'ora di marzo: terminale indietro, TIMBRA corregge da sola")
+def _():
+    import gestione
+    db = gestione.apri_archivio(":memory:")
+
+    def timbra(codice, segnata, scaricata):
+        eid = punzona(db, codice, segnata)
+        db.execute("UPDATE raw_events SET imported_at = ? WHERE "
+                   "source_event_id = ?", (scaricata, eid))
+
+    def scarico(quando, scarto):
+        db.execute("INSERT INTO importazioni (quando, esito, scarto_s, "
+                   "riallineato) VALUES (?, 'ok', ?, 1)", (quando, scarto))
+
+    # 28 marzo 2027, programma spento la notte. Il terminale resta in ora
+    # solare: alle 03:00 vere segna le 02:00, un'ora indietro.
+    timbra(1, "2027-03-27 22:00:00", "2027-03-27T22:05:00+01:00")
+    scarico("2027-03-27T22:05:01", 0.0)
+    timbra(1, "2027-03-28 03:00:00", "2027-03-28T10:05:00+02:00")   # 04:00
+    # Prima del cambio il terminale era giusto: l'01:30 non si tocca.
+    timbra(2, "2027-03-28 01:30:00", "2027-03-28T10:05:00+02:00")
+    timbra(2, "2027-03-28 03:30:00", "2027-03-28T10:05:00+02:00")   # 04:30
+    scarico("2027-03-28T10:05:01", -3600.0)
+    db.commit()
+
+    regole = presenze.Regole()
+    def ore(codice):
+        return sum(g.minuti_lavorati for g in presenze.giornate(
+            db, regole, dt.date(2027, 3, 27), dt.date(2027, 3, 28))
+            if g.employee_code == codice)
+
+    assert ore(1) == 240, f"prima: {ore(1)} (il terminale conta 4 ore)"
+    assert gestione.correggi_cambio_ora(
+        db, regole, adesso=dt.datetime(2027, 3, 28, 11, 0)) == 2
+    # 22:00 ora solare -> 04:00 ora legale: 5 ore vere, una meno del muro.
+    assert ore(1) == 300, f"turno di notte: {ore(1)} invece di 300"
+    assert ore(2) == 120, f"01:30 -> 04:30: {ore(2)} invece di 120"
+    assert gestione.correggi_cambio_ora(
+        db, regole, adesso=dt.datetime(2027, 3, 28, 11, 0)) == 0
+    db.close()
+
+
 @prova("cambio d'ora: la deriva non scambia il salto di un'ora per deriva")
 def _():
     import gestione
