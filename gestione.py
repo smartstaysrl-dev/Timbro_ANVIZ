@@ -175,6 +175,15 @@ def data_lunga(d: dt.date) -> str:
     return f"{GIORNI[d.weekday()]} {d.day} {MESI[d.month]} {d.year}"
 
 
+def data_ora(testo: str) -> str:
+    """Un istante dell'archivio (2026-11-01 11:03:..) come lo si legge qui:
+    01/11/2026 11:03. Se non e' leggibile lo si mostra com'e'."""
+    try:
+        return f"{dt.datetime.fromisoformat(testo):%d/%m/%Y %H:%M}"
+    except (TypeError, ValueError):
+        return str(testo)[:16]
+
+
 # Se la configurazione risulta illeggibile, il file rotto viene messo da parte
 # con questo nome invece di essere sovrascritto dai valori di fabbrica.
 FILE_CONFIG_ROTTA = FILE_CONFIG + ".rotta"
@@ -2774,7 +2783,7 @@ class SchermataTimbrature(Schermata):
             riga = tk.Frame(self.lista.interno, bg=CARD)
             riga.pack(fill="x", pady=2, padx=8, ipady=10)
             pezzi = [
-                tk.Label(riga, text=quando[:16], bg=CARD, fg=colore,
+                tk.Label(riga, text=data_ora(quando), bg=CARD, fg=colore,
                          font=F_MONO + (("overstrike",) if annullata else ()),
                          width=17, anchor="w"),
                 tk.Label(riga, text=self.nomi.get(codice, f"Utente {codice}")
@@ -3036,6 +3045,15 @@ class SchermataImpostazioni(Schermata):
                      font=F_PICCOLO, anchor="w", wraplength=880,
                      justify="left").pack(fill="x", padx=20, pady=(0, 4))
 
+    @staticmethod
+    def _mese(etichetta: str) -> str:
+        """"2026-08" -> "agosto 2026"."""
+        try:
+            anno, mese = (int(x) for x in etichetta.split("-")[:2])
+            return f"{MESI[mese]} {anno}"
+        except (AttributeError, ValueError, IndexError):
+            return etichetta
+
     def entra(self):
         self.lista.svuota()
         cfg, r = self.app.cfg, self.app.regole
@@ -3190,7 +3208,7 @@ class SchermataImpostazioni(Schermata):
             giorni = (dt.date.today() - data).days
             quando = ("oggi" if giorni == 0 else "ieri" if giorni == 1
                       else f"{giorni} giorni fa")
-            self._voce("Ultima copia", f"{data} ({quando}), {byte / 1024:.0f} KB")
+            self._voce("Ultima copia", f"{data:%d/%m/%Y} ({quando}), {byte / 1024:.0f} KB")
             self._voce("Copie conservate", f"{len(elenco)} in {copie.cartella_copie(cfg['archivio'])}")
         tk.Label(self.lista.interno, bg=BG, fg=TESTO_TENUE, font=F_PICCOLO,
                  anchor="w", wraplength=880, justify="left",
@@ -3236,7 +3254,8 @@ class SchermataImpostazioni(Schermata):
                    "Se il mese e' piu' corto — il 31 a febbraio — arriva "
                    "l'ultimo giorno che c'e'.")
         self._voce("Ora", imp["ora"], self._cambia_ora_report)
-        self._voce("Ultimo mese spedito", imp["ultimo_inviato"] or "nessuno")
+        self._voce("Ultimo mese spedito",
+                   self._mese(imp["ultimo_inviato"]) or "nessuno")
         self._voce("Avvisa se il terminale tace",
                    "no" if not imp["allarme_giorni"]
                    else f"dopo {imp['allarme_giorni']} giorni",
@@ -4238,7 +4257,7 @@ class App(tk.Tk):
             self.dati_terminale["conteggi"] = dati.get("conteggi")
             if dati.get("orologio"):
                 self.dati_terminale["orologio"] = \
-                    dati["orologio"].strftime("%Y-%m-%d %H:%M:%S")
+                    dati["orologio"].strftime("%d/%m/%Y %H:%M:%S")
             self.spia.config(fg=VERDE)
             self.stato.config(
                 text=f"Collegato · ultimo scarico alle "

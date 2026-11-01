@@ -564,7 +564,7 @@ def testo_csv(elenco: list[Giornata], nomi: dict[int, str]) -> str:
             orari += [ora(t.entrata), ora(t.uscita)]
         orari += [""] * (2 * coppie - len(orari))
         w.writerow([
-            g.data.isoformat(), g.employee_code,
+            f"{g.data:%d/%m/%Y}", g.employee_code,
             nomi.get(g.employee_code, f"Utente {g.employee_code}"),
             *orari,
             len([t for t in g.turni if t.completo]),
