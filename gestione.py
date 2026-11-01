@@ -2770,7 +2770,7 @@ class SchermataTimbrature(Schermata):
                      fg=TESTO_TENUE, font=F_GRANDE).pack(pady=50)
             return
 
-        stati = self.app.stati_ta or {}
+        stati = self.app.stati_ta or {0: "IN", 1: "OUT"}
         for voce in righe:
             origine, evento, codice, quando, metodo, stato, verso, \
                 annullata, motivo = voce
@@ -3113,7 +3113,7 @@ class SchermataImpostazioni(Schermata):
             self._voce("Formato dell'ora",
                        "12 ore (AM/PM)" if conf["ore_12"] else "24 ore",
                        self._cambia_formato)
-            stati = self.app.stati_ta or {}
+            stati = self.app.stati_ta or {0: "IN", 1: "OUT"}
             self._voce("Stato predefinito",
                        stati.get(conf["stato_predefinito"],
                                  f"numero {conf['stato_predefinito']}"),
