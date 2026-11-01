@@ -2735,6 +2735,32 @@ class SchermataTimbrature(Schermata):
         Bottone(piede, "Successive  ▶", self._successiva,
                 larghezza=220).pack(side="right")
 
+    def _versi(self, db, righe) -> dict[str, str]:
+        """ENTRATA / USCITA / doppione per le timbrature della pagina."""
+        giorni = []
+        for riga in righe:
+            try:
+                giorni.append(dt.datetime.fromisoformat(riga[3]).date())
+            except (TypeError, ValueError):
+                pass
+        if not giorni:
+            return {}
+        versi = {}
+        try:
+            for g in presenze.giornate(db, self.app.regole,
+                                       min(giorni) - dt.timedelta(days=1),
+                                       max(giorni)):
+                for t in g.turni:
+                    for p in (t.entrata, t.uscita):
+                        if p is not None and p.evento_id and p.verso:
+                            versi[p.evento_id] = p.verso.upper()
+                for p in g.scartati:
+                    if p.evento_id and (p.scartato or "").startswith("doppione"):
+                        versi[p.evento_id] = "doppione"
+        except Exception:                                        # noqa: BLE001
+            pass          # meglio una colonna vuota che la schermata rotta
+        return versi
+
     def _precedente(self):
         if self.pagina > 0:
             self.pagina -= 1
@@ -2754,6 +2780,7 @@ class SchermataTimbrature(Schermata):
             righe = list(db.execute(
                 f"{self.ELENCO} ORDER BY 4 DESC LIMIT ? OFFSET ?",
                 (self.PER_PAGINA, self.pagina * self.PER_PAGINA)))
+            versi = self._versi(db, righe)
         finally:
             db.close()
 
@@ -2770,16 +2797,19 @@ class SchermataTimbrature(Schermata):
                      fg=TESTO_TENUE, font=F_GRANDE).pack(pady=50)
             return
 
-        stati = self.app.stati_ta or {0: "IN", 1: "OUT"}
         for voce in righe:
             origine, evento, codice, quando, metodo, stato, verso, \
                 annullata, motivo = voce
+            # Entrata o uscita come le conta TIMBRA, non il tasto del
+            # terminale: quello resta dove l'ha lasciato l'ultimo, e
+            # "stato 1" su tutte le righe non diceva niente a nessuno.
+            accanto = versi.get(evento) or (verso or "—").upper()
             if annullata:
                 colore, accanto = TESTO_TENUE, "annullata"
             elif origine == "mano":
-                colore, accanto = BLU, (verso or "?").upper()
+                colore = BLU
             else:
-                colore, accanto = TESTO, stati.get(stato, f"stato {stato}")
+                colore = TESTO
             riga = tk.Frame(self.lista.interno, bg=CARD)
             riga.pack(fill="x", pady=2, padx=8, ipady=10)
             pezzi = [
