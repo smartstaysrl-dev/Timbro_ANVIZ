@@ -143,7 +143,7 @@ CONFIG_PREDEFINITA = {
     "terminale_porta": 5010,
     "minuti_fra_scarichi": 5,
     "allinea_orologio": True,
-    "tolleranza_orologio_s": 30,
+    "tolleranza_orologio_s": 5,
     "archivio": os.path.join(CARTELLA_DATI, "timbrature.db"),
     "operatore": "segreteria",
     # Il seriale letto dal terminale, tenuto anche qui: e' il codice con cui
@@ -177,11 +177,11 @@ def data_lunga(d: dt.date) -> str:
 
 def data_ora(testo: str) -> str:
     """Un istante dell'archivio (2026-11-01 11:03:..) come lo si legge qui:
-    01/11/2026 11:03. Se non e' leggibile lo si mostra com'e'."""
+    01/11/2026 11:03:27. Se non e' leggibile lo si mostra com'e'."""
     try:
-        return f"{dt.datetime.fromisoformat(testo):%d/%m/%Y %H:%M}"
+        return f"{dt.datetime.fromisoformat(testo):%d/%m/%Y %H:%M:%S}"
     except (TypeError, ValueError):
-        return str(testo)[:16]
+        return str(testo)[:19]
 
 
 # Se la configurazione risulta illeggibile, il file rotto viene messo da parte
@@ -215,9 +215,18 @@ def carica_config() -> dict:
         # Una volta sola: al cambio d'ora di ottobre 2026 il riallineamento
         # era spento dal cliente, e il terminale e' rimasto un'ora avanti.
         # Spento non serve a nessuno; chi lo vuole spento lo rispegne.
+        cambiata = False
         if not cfg.get("orologio_riacceso"):
             cfg["allinea_orologio"] = True
             cfg["orologio_riacceso"] = True
+            cambiata = True
+        # Una volta sola: dal novembre 2026 le ore si contano al secondo, e un
+        # orologio lasciato sbagliare fino a mezzo minuto non e' piu' "giusto".
+        if not cfg.get("orologio_al_secondo"):
+            cfg["tolleranza_orologio_s"] = 5
+            cfg["orologio_al_secondo"] = True
+            cambiata = True
+        if cambiata:
             try:
                 salva_config(cfg)
             except OSError:
@@ -1529,8 +1538,9 @@ class DettaglioGiornata(Dialogo):
         tk.Label(riepilogo, text=giornata.ore, bg=CARD, fg=VERDE,
                  font=F_ENORME).pack()
         dettaglio = f"{len([t for t in giornata.turni if t.completo])} turni"
-        if giornata.minuti_straordinario:
-            dettaglio += f" · {giornata.minuti_straordinario} min di straordinario"
+        if giornata.secondi_straordinario:
+            dettaglio += (f" · {presenze.durata(giornata.secondi_straordinario)}"
+                          f" di straordinario")
         dettaglio += f" · verso dedotto per {getattr(giornata, 'criterio', '?')}"
         tk.Label(riepilogo, text=dettaglio, bg=CARD, fg=TESTO_TENUE,
                  font=F_PICCOLO).pack()
@@ -1555,8 +1565,8 @@ class DettaglioGiornata(Dialogo):
             riga.pack(fill="x", pady=3, ipady=12)
             colore = (TESTO_TENUE if p.scartato
                       else VERDE if p.verso == "entrata" else GIALLO)
-            tk.Label(riga, text=f"{p.quando:%H:%M}", bg=CARD, fg=colore,
-                     font=("Consolas", 18), width=7).pack(side="left", padx=(14, 6))
+            tk.Label(riga, text=f"{p.quando:%H:%M:%S}", bg=CARD, fg=colore,
+                     font=("Consolas", 18), width=9).pack(side="left", padx=(14, 6))
             testi = tk.Frame(riga, bg=CARD)
             testi.pack(side="left", fill="x", expand=True)
             etichetta = (p.scartato or (p.verso or "?").upper())
@@ -1620,7 +1630,7 @@ class DettaglioGiornata(Dialogo):
             return
         if not Conferma.chiedi(
                 self, "Togliere questa aggiunta?",
-                f"La timbratura delle {punzone.quando:%H:%M} era stata "
+                f"La timbratura delle {punzone.quando:%H:%M:%S} era stata "
                 f"inserita a mano. Toglierla la fa sparire del tutto: non e' "
                 f"un dato del terminale, e' una correzione.", pericoloso=True):
             return
@@ -1645,7 +1655,7 @@ class DettaglioGiornata(Dialogo):
             return
         if not Conferma.chiedi(
                 self, "Annullare questa timbratura?",
-                f"La timbratura delle {punzone.quando:%H:%M} non verra' piu' "
+                f"La timbratura delle {punzone.quando:%H:%M:%S} non verra' piu' "
                 f"contata.\n\nResta comunque in archivio: si annulla il "
                 f"conteggio, non il dato."):
             return
@@ -1739,9 +1749,9 @@ class SchermataOggi(Schermata):
                      anchor="w").pack(fill="x")
             pezzi = []
             if g.prima_entrata:
-                pezzi.append(f"dalle {g.prima_entrata:%H:%M}")
+                pezzi.append(f"dalle {g.prima_entrata:%H:%M:%S}")
             if g.ultima_uscita and not aperto:
-                pezzi.append(f"alle {g.ultima_uscita:%H:%M}")
+                pezzi.append(f"alle {g.ultima_uscita:%H:%M:%S}")
             if g.anomalie:
                 pezzi.append(f"{len(g.anomalie)} da verificare")
             tk.Label(testi, text=" · ".join(pezzi) or "—", bg=CARD,
@@ -1754,14 +1764,10 @@ class SchermataOggi(Schermata):
                      fg=VERDE if aperto else TESTO_TENUE, font=F_PICCOLO).pack()
             self.lista.segui_trascinamento(riquadro)
 
-        totale = sum(g.minuti_lavorati for g in elenco)
+        totale = sum(g.secondi_lavorati for g in elenco)
         self.sottotitolo.config(
             text=f"{data_lunga(oggi)} · {dentro} al lavoro su {len(elenco)} · "
-                 f"{totale // 60}h{totale % 60:02d} complessive")
-
-
-def ore_e_minuti(minuti: int) -> str:
-    return f"{minuti // 60}:{minuti % 60:02d}"
+                 f"{presenze.durata(totale)} complessive")
 
 
 def _sfuma(da: str, a: str, quanto: float) -> str:
@@ -1790,7 +1796,7 @@ class GraficoPresenze(tk.Canvas):
     """
 
     NOMI = 130           # colonna dei nomi, a sinistra
-    TOTALI = 84          # colonna delle ore totali, a destra
+    TOTALI = 110         # colonna delle ore totali, a destra
     RIGHELLO = 26        # spazio in alto per le ore o le date
     PIEDE = 12
     ALTEZZE = {"giorno": 56, "settimana": 78, "mese": 48}
@@ -1857,7 +1863,7 @@ class GraficoPresenze(tk.Canvas):
                 "codice": codice,
                 "nome": nomi.get(codice, f"Utente {codice}"),
                 "giornate": giornate,
-                "minuti": sum(x.minuti_lavorati for x in giornate),
+                "secondi": sum(x.secondi_lavorati for x in giornate),
                 "anomalie": sum(len(x.anomalie) for x in giornate),
             })
         fuori.sort(key=lambda p: p["nome"].lower())
@@ -1990,7 +1996,7 @@ class GraficoPresenze(tk.Canvas):
                     self.create_text(xa + (-11 if a_destra else 11),
                                      centro + 21,
                                      anchor="e" if a_destra else "w",
-                                     text=f"{inizio:%H:%M} · {manca}",
+                                     text=f"{inizio:%H:%M:%S} · {manca}",
                                      fill=ROSSO, font=F_PICCOLO)
                     continue
                 in_corso = genere == self.IN_CORSO
@@ -2001,26 +2007,23 @@ class GraficoPresenze(tk.Canvas):
                 # Il turno ancora aperto si misura sull'orologio a muro: e' un
                 # conteggio provvisorio che serve a occhio, il motore delle
                 # presenze non conta i turni non chiusi.
-                minuti = t.minuti
+                # "dura", non "secondi": quel nome e' gia' l'ampiezza della
+                # finestra oraria su cui ics() misura le barre.
+                dura = t.secondi
                 if in_corso:
-                    # Al minuto, come il motore: "dalle 19:29" alle 20:00
-                    # fa 31 minuti anche se l'entrata era alle 19:29:50.
-                    minuti = max(0, int(
-                        (adesso.replace(second=0, microsecond=0)
-                         - inizio.replace(second=0, microsecond=0))
-                        .total_seconds() // 60))
-                    provvisori += minuti
-                if xb - xa >= 44:
+                    dura = max(0, int((adesso - inizio).total_seconds()))
+                    provvisori += dura
+                if xb - xa >= 60:
                     self.create_text((xa + xb) / 2, centro,
-                                     text=ore_e_minuti(minuti), fill=BG,
+                                     text=presenze.durata(dura), fill=BG,
                                      font=F_PICCOLO)
-                if xb - xa >= 78:
+                if xb - xa >= 120:
                     self.create_text(xa + 5, centro + 21, anchor="w",
-                                     text=f"{inizio:%H:%M}", fill=TESTO_TENUE,
+                                     text=f"{inizio:%H:%M:%S}", fill=TESTO_TENUE,
                                      font=F_PICCOLO)
                     self.create_text(xb - 5, centro + 21, anchor="e",
                                      text=("in corso" if in_corso
-                                           else f"{fine:%H:%M}"),
+                                           else f"{fine:%H:%M:%S}"),
                                      fill=GIALLO if in_corso else TESTO_TENUE,
                                      font=F_PICCOLO)
             # Il totale e' quello del motore delle presenze, che i turni
@@ -2028,11 +2031,11 @@ class GraficoPresenze(tk.Canvas):
             # ore in corso si dicono a parte: cosi' un totale a zero accanto a
             # una barra lunga smette di sembrare un errore.
             self.create_text(larghezza - 10, centro - (7 if provvisori else 0),
-                             anchor="e", text=ore_e_minuti(p["minuti"]),
+                             anchor="e", text=presenze.durata(p["secondi"]),
                              fill=TESTO, font=F_GRANDE)
             if provvisori:
                 self.create_text(larghezza - 10, centro + 13, anchor="e",
-                                 text=f"+{ore_e_minuti(provvisori)}",
+                                 text=f"+{presenze.durata(provvisori)}",
                                  fill=GIALLO, font=F_PICCOLO)
 
     # --- settimana e mese: una colonna per giorno ------------------------
@@ -2042,7 +2045,7 @@ class GraficoPresenze(tk.Canvas):
         if not giorni or x1 - x0 < 140:
             return
         passo = (x1 - x0) / len(giorni)
-        massimo = max((g.minuti_lavorati for p in persone
+        massimo = max((g.secondi_lavorati for p in persone
                        for g in p["giornate"]), default=0) or 1
         self._giorni, self._x0, self._passo = giorni, x0, passo
 
@@ -2068,34 +2071,34 @@ class GraficoPresenze(tk.Canvas):
             for i, giorno in enumerate(giorni):
                 x = x0 + passo * i
                 g = per_data.get(giorno)
-                if g is None or not g.minuti_lavorati:
+                if g is None or not g.secondi_lavorati:
                     # Il giorno senza ore resta visibile come tacca: un buco
                     # vuoto si confonde con "non c'era ancora il dipendente".
                     self.create_rectangle(x + 2, base - 3, x + passo - 2, base,
                                           fill=CARD, outline="")
                     continue
-                quota = g.minuti_lavorati / massimo
+                quota = g.secondi_lavorati / massimo
                 alto = max(5, spazio * quota)
                 self.create_rectangle(
                     x + 2, base - alto, x + passo - 2, base, outline="",
                     fill=GIALLO if g.anomalie
                     else _sfuma(CARD_CHIARA, VERDE, 0.3 + 0.7 * quota))
-                if passo >= 36:
+                if passo >= 52:
                     dentro = alto >= 18
                     self.create_text(
                         x + passo / 2, base - alto + (10 if dentro else -8),
-                        text=ore_e_minuti(g.minuti_lavorati), font=F_PICCOLO,
-                        fill=BG if dentro else TESTO)
-                if modo == "settimana" and passo >= 62:
-                    entrata = (f"{g.prima_entrata:%H:%M}"
+                        text=presenze.durata(g.secondi_lavorati),
+                        font=F_PICCOLO, fill=BG if dentro else TESTO)
+                if modo == "settimana" and passo >= 120:
+                    entrata = (f"{g.prima_entrata:%H:%M:%S}"
                                if g.prima_entrata else "—")
-                    uscita = (f"{g.ultima_uscita:%H:%M}"
+                    uscita = (f"{g.ultima_uscita:%H:%M:%S}"
                               if g.ultima_uscita else "…")
                     self.create_text(x + passo / 2, base + 13,
                                      text=f"{entrata}→{uscita}",
                                      fill=TESTO_TENUE, font=F_PICCOLO)
             self.create_text(larghezza - 10, cima + 18, anchor="e",
-                             text=ore_e_minuti(p["minuti"]), fill=TESTO,
+                             text=presenze.durata(p["secondi"]), fill=TESTO,
                              font=F_GRANDE)
 
     # --- tocco su una colonna --------------------------------------------
@@ -2257,12 +2260,12 @@ class SchermataPresenze(Schermata):
         else:
             self._schede_periodo(elenco, nomi)
 
-        totale = sum(g.minuti_lavorati for g in elenco)
+        totale = sum(g.secondi_lavorati for g in elenco)
         quante = len({g.employee_code for g in elenco})
         piede = tk.Frame(self.lista.interno, bg=BG)
         piede.pack(fill="x", pady=(14, 4), padx=8)
         tk.Label(piede,
-                 text=f"Totale: {totale // 60}h{totale % 60:02d} su "
+                 text=f"Totale: {presenze.durata(totale)} su "
                       f"{quante} persone",
                  bg=BG, fg=TESTO_TENUE, font=F_NORMALE).pack(anchor="e")
 
@@ -2280,8 +2283,8 @@ class SchermataPresenze(Schermata):
             tk.Label(testi, text=nome, bg=CARD, fg=TESTO, font=F_GRANDE,
                      anchor="w").pack(fill="x")
             orari = " → ".join(filter(None, [
-                f"{g.prima_entrata:%H:%M}" if g.prima_entrata else None,
-                f"{g.ultima_uscita:%H:%M}" if g.ultima_uscita else None]))
+                f"{g.prima_entrata:%H:%M:%S}" if g.prima_entrata else None,
+                f"{g.ultima_uscita:%H:%M:%S}" if g.ultima_uscita else None]))
             righe = [orari or "—"]
             if g.anomalie:
                 righe.append(g.anomalie[0]
@@ -2303,8 +2306,8 @@ class SchermataPresenze(Schermata):
         quindici righe al giorno per quattordici dipendenti sarebbero
         quattrocento righe da scorrere per capire chi ha fatto piu' ore."""
         for p in GraficoPresenze._per_persona(elenco, nomi):
-            lavorati = sum(1 for g in p["giornate"] if g.minuti_lavorati)
-            straordinario = sum(g.minuti_straordinario for g in p["giornate"])
+            lavorati = sum(1 for g in p["giornate"] if g.secondi_lavorati)
+            straordinario = sum(g.secondi_straordinario for g in p["giornate"])
             riquadro = tk.Frame(self.lista.interno, bg=CARD)
             riquadro.pack(fill="x", pady=4, padx=8, ipady=12)
             tk.Frame(riquadro, bg=GIALLO if p["anomalie"] else VERDE,
@@ -2316,16 +2319,16 @@ class SchermataPresenze(Schermata):
             pezzi = ["1 giorno lavorato" if lavorati == 1
                      else f"{lavorati} giorni lavorati"]
             if lavorati:
-                pezzi.append(f"media {ore_e_minuti(p['minuti'] // lavorati)}"
+                pezzi.append(f"media {presenze.durata(p['secondi'] // lavorati)}"
                              f" al giorno")
             if straordinario:
-                pezzi.append(f"{ore_e_minuti(straordinario)} di straordinario")
+                pezzi.append(f"{presenze.durata(straordinario)} di straordinario")
             if p["anomalie"]:
                 pezzi.append(f"{p['anomalie']} da verificare")
             tk.Label(testi, text=" · ".join(pezzi), bg=CARD,
                      fg=GIALLO if p["anomalie"] else TESTO_TENUE,
                      font=F_PICCOLO, anchor="w").pack(fill="x")
-            tk.Label(riquadro, text=ore_e_minuti(p["minuti"]), bg=CARD,
+            tk.Label(riquadro, text=presenze.durata(p["secondi"]), bg=CARD,
                      fg=TESTO, font=F_GRANDE).pack(side="right", padx=(0, 20))
             self.lista.segui_trascinamento(testi)
 
@@ -2820,7 +2823,7 @@ class SchermataTimbrature(Schermata):
             pezzi = [
                 tk.Label(riga, text=data_ora(quando), bg=CARD, fg=colore,
                          font=F_MONO + (("overstrike",) if annullata else ()),
-                         width=17, anchor="w"),
+                         width=20, anchor="w"),
                 tk.Label(riga, text=self.nomi.get(codice, f"Utente {codice}")
                          + (f"   ·   {motivo}" if motivo else ""), bg=CARD,
                          fg=colore, font=F_NORMALE, anchor="w"),
@@ -2850,7 +2853,7 @@ class SchermataTimbrature(Schermata):
         origine, ev, codice, quando, _metodo, _stato, verso, annullata, _ = voce
         quando = dt.datetime.fromisoformat(quando)
         chi = self.nomi.get(codice, f"Utente {codice}")
-        titolo = f"{chi}, {quando:%d/%m %H:%M}"
+        titolo = f"{chi}, {quando:%d/%m %H:%M:%S}"
         if origine == "mano":
             scelta = Scelta.chiedi(self, titolo, [
                 ("Cambia l'ora", "ora"), ("Togli questa timbratura", "togli")],

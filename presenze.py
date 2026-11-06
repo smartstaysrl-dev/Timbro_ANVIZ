@@ -181,23 +181,27 @@ class Punzone:
     scartato: str | None = None # motivo dello scarto (doppione, annullato)
 
 
-# Dal 1 novembre 2026 le durate si contano al minuto, come si leggono: 19:29
-# -> 00:16 fa 4:47. Prima si sottraevano anche i secondi e si buttava il resto
-# turno per turno: 19:29:50 -> 00:16:10 faceva 4:46, a chi guardava le due ore
-# mancava un minuto, e in un mese se ne perdevano una ventina, sempre a
-# sfavore di chi lavora. I mesi prima restano come sono stati visti e spediti.
-AL_MINUTO_DAL = dt.date(2026, 11, 1)
+# Dal 1 novembre 2026 le durate si contano al secondo, dall'entrata all'uscita
+# come le ha segnate il terminale, e i totali non tagliano niente: non si
+# regala nulla ne' a chi lavora ne' a chi paga. Prima si contavano i minuti
+# interi turno per turno e il resto si buttava: 19:29:50 -> 00:16:10 faceva
+# 4:46, e nel mese i secondi persi erano sempre a sfavore di chi lavora.
+# I giorni prima restano come sono stati visti e spediti.
+AL_SECONDO_DAL = dt.date(2026, 11, 1)
 
 
-def _minuti_fra(da: Punzone, a: Punzone) -> int:
-    """Minuti fra due punzoni, sugli istanti: vale anche la notte del cambio d'ora."""
-    inizio, fine = da.istante, a.istante
-    if da.quando.date() >= AL_MINUTO_DAL:
-        # Il fuso si sposta di ore intere: tagliare i secondi all'istante UTC
-        # e' tagliarli all'ora che si legge.
-        inizio = inizio.replace(second=0, microsecond=0)
-        fine = fine.replace(second=0, microsecond=0)
-    return max(0, int((fine - inizio).total_seconds() // 60))
+def _secondi_fra(da: Punzone, a: Punzone) -> int:
+    """Secondi fra due punzoni, sugli istanti: vale anche la notte del cambio d'ora."""
+    secondi = max(0, int((a.istante - da.istante).total_seconds()))
+    if da.quando.date() < AL_SECONDO_DAL:
+        secondi -= secondi % 60         # il conto di prima: minuti interi
+    return secondi
+
+
+def durata(secondi: int) -> str:
+    """4:46:20 — ore, minuti e secondi, anche oltre le ventiquattro ore."""
+    ore, resto = divmod(int(secondi), 3600)
+    return f"{ore}:{resto // 60:02d}:{resto % 60:02d}"
 
 
 def _quando(testo: str) -> dt.datetime:
@@ -277,7 +281,7 @@ class Turno:
     uscita: Punzone | None
 
     @property
-    def minuti(self) -> int:
+    def secondi(self) -> int:
         """Durata vera del turno.
 
         Si sottraggono gli ISTANTI, non le ore locali: nella notte in cui
@@ -286,7 +290,7 @@ class Turno:
         """
         if not self.entrata or not self.uscita:
             return 0
-        return _minuti_fra(self.entrata, self.uscita)
+        return _secondi_fra(self.entrata, self.uscita)
 
     @property
     def completo(self) -> bool:
@@ -300,12 +304,12 @@ class Giornata:
     turni: list[Turno] = field(default_factory=list)
     scartati: list[Punzone] = field(default_factory=list)
     anomalie: list[str] = field(default_factory=list)
-    minuti_lavorati: int = 0
-    minuti_straordinario: int = 0
+    secondi_lavorati: int = 0
+    secondi_straordinario: int = 0
 
     @property
     def ore(self) -> str:
-        return f"{self.minuti_lavorati // 60}:{self.minuti_lavorati % 60:02d}"
+        return durata(self.secondi_lavorati)
 
     @property
     def prima_entrata(self) -> dt.datetime | None:
@@ -467,30 +471,30 @@ def _accoppia(lista: list[Punzone], regole: Regole) -> tuple[list[Turno], list[s
         if p.verso == "entrata":
             if aperto is not None:
                 turni.append(Turno(aperto, None))
-                anomalie.append(f"manca l'uscita delle {aperto.quando:%H:%M}")
+                anomalie.append(f"manca l'uscita delle {aperto.quando:%H:%M:%S}")
             aperto = p
         else:
             if aperto is None:
                 turni.append(Turno(None, p))
-                anomalie.append(f"manca l'entrata prima delle {p.quando:%H:%M}")
+                anomalie.append(f"manca l'entrata prima delle {p.quando:%H:%M:%S}")
             else:
                 turno = Turno(aperto, p)
-                if turno.minuti > regole.ore_massime_turno * 60:
+                if turno.secondi > regole.ore_massime_turno * 3600:
                     anomalie.append(
-                        f"turno di {turno.minuti // 60}h dalle "
-                        f"{aperto.quando:%H:%M}: uscita dimenticata?")
+                        f"turno di {turno.secondi // 3600}h dalle "
+                        f"{aperto.quando:%H:%M:%S}: uscita dimenticata?")
                 turni.append(turno)
                 aperto = None
     if aperto is not None:
         turni.append(Turno(aperto, None))
-        anomalie.append(f"manca l'uscita delle {aperto.quando:%H:%M}")
+        anomalie.append(f"manca l'uscita delle {aperto.quando:%H:%M:%S}")
     return turni, anomalie
 
 
 def _applica_regole(g: Giornata, regole: Regole) -> None:
     completi = [t for t in g.turni if t.completo]
-    minuti = sum(t.minuti for t in completi)
-    if regole.pausa_automatica_minuti and minuti > regole.pausa_oltre_ore * 60:
+    secondi = sum(t.secondi for t in completi)
+    if regole.pausa_automatica_minuti and secondi > regole.pausa_oltre_ore * 3600:
         # Chi la pausa l'ha timbrata l'ha gia' pagata: quel tempo e' fuori dal
         # conteggio perche' sta fra due turni. Togliere di nuovo l'intera pausa
         # la scalerebbe due volte, e chi timbra diligentemente si ritroverebbe
@@ -504,18 +508,22 @@ def _applica_regole(g: Giornata, regole: Regole) -> None:
         for prima, dopo in zip(g.turni, g.turni[1:]):
             if not (prima.completo and dopo.completo):
                 continue
-            gia_prese += _minuti_fra(prima.uscita, dopo.entrata)
-        minuti = max(0, minuti - max(0, regole.pausa_automatica_minuti - gia_prese))
-    passo = regole.arrotondamento_minuti
-    if passo > 1 and minuti % passo:
-        if regole.arrotondamento_verso == "su":
-            minuti = ((minuti // passo) + 1) * passo
-        elif regole.arrotondamento_verso == "giu":
-            minuti = (minuti // passo) * passo
-        else:
-            minuti = int(round(minuti / passo) * passo)
-    g.minuti_lavorati = minuti
-    g.minuti_straordinario = max(0, minuti - regole.minuti_ordinari)
+            gia_prese += _secondi_fra(prima.uscita, dopo.entrata)
+        secondi = max(0, secondi - max(
+            0, regole.pausa_automatica_minuti * 60 - gia_prese))
+    # L'arrotondamento resta quello scelto in Impostazioni (di serie spento):
+    # e' una decisione scritta, non un taglio nascosto.
+    if regole.arrotondamento_minuti > 1:
+        passo = regole.arrotondamento_minuti * 60
+        if secondi % passo:
+            if regole.arrotondamento_verso == "su":
+                secondi = ((secondi // passo) + 1) * passo
+            elif regole.arrotondamento_verso == "giu":
+                secondi = (secondi // passo) * passo
+            else:
+                secondi = int(round(secondi / passo) * passo)
+    g.secondi_lavorati = secondi
+    g.secondi_straordinario = max(0, secondi - regole.minuti_ordinari * 60)
 
 
 def giornate(db, regole: Regole, dal: dt.date, al: dt.date) -> list[Giornata]:
@@ -543,7 +551,7 @@ def giornate(db, regole: Regole, dal: dt.date, al: dt.date) -> list[Giornata]:
             g.turni, g.anomalie = _accoppia(del_giorno, regole)
             g.scartati = [p for p in del_giorno if p.scartato]
             for p in g.scartati:
-                g.anomalie.append(f"{p.quando:%H:%M} {p.scartato}")
+                g.anomalie.append(f"{p.quando:%H:%M:%S} {p.scartato}")
             _applica_regole(g, regole)
             g.criterio = criterio
             fuori.append(g)
@@ -570,10 +578,10 @@ def testo_csv(elenco: list[Giornata], nomi: dict[int, str]) -> str:
     for n in range(1, coppie + 1):
         colonne += [f"entrata_{n}", f"uscita_{n}"]
     w.writerow(["data", "codice", "dipendente", *colonne,
-                "turni", "ore", "minuti", "straordinario_min", "anomalie"])
+                "turni", "ore", "secondi", "straordinario", "anomalie"])
 
     def ora(p):
-        return f"{p.quando:%H:%M}" if p else ""
+        return f"{p.quando:%H:%M:%S}" if p else ""
 
     for g in elenco:
         orari = []
@@ -585,21 +593,21 @@ def testo_csv(elenco: list[Giornata], nomi: dict[int, str]) -> str:
             nomi.get(g.employee_code, f"Utente {g.employee_code}"),
             *orari,
             len([t for t in g.turni if t.completo]),
-            g.ore, g.minuti_lavorati, g.minuti_straordinario,
+            g.ore, g.secondi_lavorati, durata(g.secondi_straordinario),
             " | ".join(g.anomalie),
         ])
 
     # Il monte ore: una riga per persona e una per tutto il periodo, nelle
     # stesse colonne delle giornate, cosi' chi fa le paghe non deve sommare
-    # a mano (ne' sapere che "8:30" vuol dire otto ore e mezza, non 8,30).
+    # a mano (ne' sapere che "8:30:00" vuol dire otto ore e mezza, non 8,30).
     def totale(nome, giornate, codice=""):
-        minuti = sum(g.minuti_lavorati for g in giornate)
+        secondi = sum(g.secondi_lavorati for g in giornate)
         w.writerow([
             nome, codice, "", *([""] * 2 * coppie),
             sum(len([t for t in g.turni if t.completo]) for g in giornate),
-            f"{minuti // 60}:{minuti % 60:02d}", minuti,
-            sum(g.minuti_straordinario for g in giornate),
-            f"{len({g.data for g in giornate if g.minuti_lavorati})} "
+            durata(secondi), secondi,
+            durata(sum(g.secondi_straordinario for g in giornate)),
+            f"{len({g.data for g in giornate if g.secondi_lavorati})} "
             f"giorni lavorati",
         ])
 
@@ -636,8 +644,9 @@ def esporta_csv(percorso: str, elenco: list[Giornata],
 # solo un aggiornatore che lo conosce gia', e le copie installate con la lista
 # vecchia ripartirebbero senza.
 #
-# Orari e ore sono NUMERI (frazioni di giorno con formato hh:mm e [h]:mm), non
-# testo: cosi' in Excel si sommano, si filtrano e il totale si ricontrolla.
+# Orari e ore sono NUMERI (frazioni di giorno con formato hh:mm:ss e
+# [h]:mm:ss), non testo: cosi' in Excel si sommano, si filtrano e il totale si
+# ricontrolla, al secondo.
 
 _GIORNI_BREVI = ["Lu", "Ma", "Me", "Gi", "Ve", "Sa", "Do"]
 
@@ -647,8 +656,8 @@ _S_VUOTO, _S_TESTO, _S_GRASSETTO, _S_ORA, _S_DURATA, _S_DURATA_G, \
 
 _STILI = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<numFmts count="2"><numFmt numFmtId="164" formatCode="hh:mm"/>
-<numFmt numFmtId="165" formatCode="[h]:mm"/></numFmts>
+<numFmts count="2"><numFmt numFmtId="164" formatCode="hh:mm:ss"/>
+<numFmt numFmtId="165" formatCode="[h]:mm:ss"/></numFmts>
 <fonts count="3"><font><sz val="11"/><name val="Calibri"/></font>
 <font><b/><sz val="11"/><name val="Calibri"/></font>
 <font><b/><sz val="16"/><name val="Calibri"/></font></fonts>
@@ -732,11 +741,13 @@ def _nome_foglio(nome: str, usati: set) -> str:
 
 
 def _frazione(quando: dt.datetime | None):
-    return (quando.hour * 60 + quando.minute) / 1440 if quando else None
+    if not quando:
+        return None
+    return (quando.hour * 3600 + quando.minute * 60 + quando.second) / 86400
 
 
-def _durata(minuti: int):
-    return minuti / 1440
+def _durata(secondi: int):
+    return secondi / 86400
 
 
 def esporta_xlsx(percorso: str, elenco: list[Giornata], nomi: dict[int, str],
@@ -768,19 +779,19 @@ def esporta_xlsx(percorso: str, elenco: list[Giornata], nomi: dict[int, str],
     tot_lav = tot_str = 0
     for codice in ordine:
         gg = persone[codice]
-        lav = sum(g.minuti_lavorati for g in gg)
-        stra = sum(g.minuti_straordinario for g in gg)
+        lav = sum(g.secondi_lavorati for g in gg)
+        stra = sum(g.secondi_straordinario for g in gg)
         tot_lav, tot_str = tot_lav + lav, tot_str + stra
         righe.append([(nomi.get(codice, f"Utente {codice}"), _S_TESTO),
                       (codice, _S_TESTO),
-                      (len({g.data for g in gg if g.minuti_lavorati}), _S_TESTO),
+                      (len({g.data for g in gg if g.secondi_lavorati}), _S_TESTO),
                       (_durata(lav), _S_DURATA), (_durata(lav - stra), _S_DURATA),
                       (_durata(stra), _S_DURATA)])
     righe.append([("TOTALE PERIODO", _S_GRASSETTO), None, None,
                   (_durata(tot_lav), _S_DURATA_G),
                   (_durata(tot_lav - tot_str), _S_DURATA_G),
                   (_durata(tot_str), _S_DURATA_G)])
-    fogli.append(("Riepilogo", _foglio_xml(righe, [30, 9, 15, 14, 12, 14])))
+    fogli.append(("Riepilogo", _foglio_xml(righe, [30, 9, 15, 14, 14, 14])))
 
     # Un foglio per dipendente
     for codice in ordine:
@@ -810,15 +821,15 @@ def esporta_xlsx(percorso: str, elenco: list[Giornata], nomi: dict[int, str],
             orari += [None] * (2 * coppie - len(orari))
             riga += [(_frazione(q), _S_ORA) if q else ("", _S_ORA)
                      for q in orari]
-            if g and g.minuti_lavorati:
+            if g and g.secondi_lavorati:
                 lavorati += 1
-                lav_tot += g.minuti_lavorati
-                stra_tot += g.minuti_straordinario
-                riga += [(_durata(g.minuti_lavorati), _S_DURATA),
-                         (_durata(g.minuti_lavorati - g.minuti_straordinario),
+                lav_tot += g.secondi_lavorati
+                stra_tot += g.secondi_straordinario
+                riga += [(_durata(g.secondi_lavorati), _S_DURATA),
+                         (_durata(g.secondi_lavorati - g.secondi_straordinario),
                           _S_DURATA),
-                         (_durata(g.minuti_straordinario), _S_DURATA)
-                         if g.minuti_straordinario else ("", _S_DURATA)]
+                         (_durata(g.secondi_straordinario), _S_DURATA)
+                         if g.secondi_straordinario else ("", _S_DURATA)]
             else:
                 riga += [("", _S_DURATA)] * 3
             riga.append((" | ".join(g.anomalie) if g else "", _S_TESTO))
@@ -829,7 +840,7 @@ def esporta_xlsx(percorso: str, elenco: list[Giornata], nomi: dict[int, str],
                         (_durata(lav_tot - stra_tot), _S_DURATA_G),
                         (_durata(stra_tot), _S_DURATA_G), ("", _S_GRASSETTO)])
         fogli.append((_nome_foglio(nome, usati), _foglio_xml(
-            righe, [16] + [8] * (2 * coppie) + [8, 8, 8, 40])))
+            righe, [16] + [9] * (2 * coppie) + [10, 10, 10, 40])))
 
     tipo = "application/vnd.openxmlformats-officedocument.spreadsheetml"
     with zipfile.ZipFile(percorso, "w", zipfile.ZIP_DEFLATED) as z:

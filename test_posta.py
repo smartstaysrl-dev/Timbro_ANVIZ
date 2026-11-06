@@ -57,7 +57,7 @@ def giornata(codice, data, ore, anomalie=()):
     u = e + dt.timedelta(hours=ore)
     t = presenze.Turno(entrata=punzone(e), uscita=punzone(u))
     g = presenze.Giornata(employee_code=codice, data=data, turni=[t])
-    g.minuti_lavorati = t.minuti
+    g.secondi_lavorati = t.secondi
     g.anomalie = list(anomalie)
     return g
 
@@ -188,7 +188,7 @@ def _():
     dal, al = posta.estremi(2026, 8)
     html = posta.corpo_html(elenco, nomi, "agosto 2026", dal, al)
     testo = posta.testo_semplice(elenco, nomi, "agosto 2026")
-    for atteso in ("Marta Villa", "Ivan Popescu", "14:00", "agosto 2026"):
+    for atteso in ("Marta Villa", "Ivan Popescu", "14:00:00", "agosto 2026"):
         assert atteso in html, f"manca dall'HTML: {atteso}"
         assert atteso in testo, f"manca dal testo: {atteso}"
     assert "da verificare" in html and "da verificare" in testo

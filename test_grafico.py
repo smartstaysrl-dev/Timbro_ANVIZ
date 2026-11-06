@@ -47,7 +47,7 @@ def giornata(data: dt.date, coppie) -> presenze.Giornata:
                             uscita=punzone(u) if u else None)
              for e, u in coppie]
     g = presenze.Giornata(employee_code=1, data=data, turni=turni)
-    g.minuti_lavorati = sum(t.minuti for t in turni)
+    g.secondi_lavorati = sum(t.secondi for t in turni)
     return g
 
 
@@ -148,7 +148,7 @@ def _():
     # cambiasse, il grafico direbbe una cosa e l'esportazione un'altra.
     e = dt.datetime.combine(OGGI, dt.time(9, 0))
     g = giornata(OGGI, [(e, None)])
-    assert g.turni[0].minuti == 0, "il motore ha iniziato a contare i turni aperti"
+    assert g.turni[0].secondi == 0, "il motore ha iniziato a contare i turni aperti"
 
 
 @prova("raggruppamento per persona: somme, anomalie e ordine alfabetico")
@@ -170,7 +170,7 @@ def _():
     assert [p["nome"] for p in persone] == ["Anna Greco", "Zoe Vitali"], \
         "le persone non sono in ordine alfabetico"
     anna = persone[0]
-    assert anna["minuti"] == 600, anna["minuti"]
+    assert anna["secondi"] == 600 * 60, anna["secondi"]
     assert anna["anomalie"] == 1, anna["anomalie"]
     assert [g.data for g in anna["giornate"]] == [IERI, OGGI], \
         "le giornate della persona non sono in ordine di data"
@@ -194,12 +194,40 @@ def _():
         int(colore[1:], 16)
 
 
-@prova("ore e minuti: formato costante anche oltre le ventiquattro")
+@prova("giornata disegnata: ogni barra sta sotto i suoi orari")
 def _():
-    assert gestione.ore_e_minuti(0) == "0:00"
-    assert gestione.ore_e_minuti(59) == "0:59"
-    assert gestione.ore_e_minuti(480) == "8:00"
-    assert gestione.ore_e_minuti(12345) == "205:45"
+    # Novembre 2026: la durata del turno chiamata come l'ampiezza della
+    # finestra oraria spostava tutte le barre dopo la prima sul bordo destro.
+    try:
+        radice = gestione.tk.Tk()
+    except gestione.tk.TclError:
+        return                          # niente schermo: non si puo' disegnare
+    try:
+        radice.withdraw()
+        tela = G(radice)
+        g = giornata(IERI, [
+            (dt.datetime.combine(IERI, dt.time(11, 0)),
+             dt.datetime.combine(IERI, dt.time(15, 0))),
+            (dt.datetime.combine(IERI, dt.time(18, 0)),
+             dt.datetime.combine(IERI, dt.time(23, 0)))])
+        tela._giornata(G._per_persona([g], {1: "Anna"}), 1000, 56)
+        x0, x1 = G.NOMI, 1000 - G.TOTALI
+        barre = sorted(tela.coords(i)[0] for i in tela.find_all()
+                       if tela.type(i) == "rectangle"
+                       and tela.itemcget(i, "fill") == gestione.VERDE)
+        # Righello dalle 11 alle 23: dodici ore.
+        attese = [x0, x0 + (x1 - x0) * 7 / 12]
+        assert len(barre) == 2, barre
+        for vera, attesa in zip(barre, attese):
+            assert abs(vera - attesa) < 2, (barre, attese)
+    finally:
+        radice.destroy()
+
+
+@prova("le ore della mail sono scritte come quelle del programma")
+def _():
+    for secondi in (0, 59, 8 * 3600, 205 * 3600 + 45 * 60 + 7):
+        assert gestione.posta._ore(secondi) == presenze.durata(secondi), secondi
 
 
 falliti = [(n, e) for n, e in esiti if e]

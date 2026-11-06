@@ -676,9 +676,9 @@ Tirarla fino a stasera racconterebbe una giornata di sedici ore mai lavorata —
 è il primo difetto che il grafico ha avuto, ed è in prova (`test_grafico.py`).
 
 **Il totale a destra è quello del motore delle presenze, che i turni aperti non
-li conta.** Chi è dentro adesso vedrebbe quindi `0:00` accanto a una barra
+li conta.** Chi è dentro adesso vedrebbe quindi `0:00:00` accanto a una barra
 lunga cinque ore: per non farlo sembrare un errore, le ore in corso si scrivono
-sotto in giallo come `+5:00`. Due numeri diversi perché misurano due cose
+sotto in giallo come `+5:00:00`. Due numeri diversi perché misurano due cose
 diverse, non perché uno sbagli.
 
 **La finestra oraria è adattiva.** Un ristorante lavora dalle 11 a mezzanotte:
@@ -819,6 +819,16 @@ in un `finally` e ogni messaggio si lavora per conto suo.
 (`gestione.py`). Il gestore d'errore di `_scarica` scriveva sul database; se
 quella scrittura falliva, l'eccezione usciva da `run()` e il thread moriva. Da
 quel momento la raccolta automatica non sarebbe più ripartita, in silenzio.
+
+**6. Ogni turno perdeva i suoi secondi, sempre dalla stessa parte**
+(`presenze.py`, novembre 2026). La durata si calcolava al secondo e poi si
+buttava il resto turno per turno: 19:29:50 → 00:16:10 faceva 4:46, mentre lo
+schermo mostrava 19:29 → 00:16. Dal 1 novembre 2026 (`AL_SECONDO_DAL`) si conta
+al secondo fino al totale del mese, e orari e durate si mostrano coi secondi
+ovunque (schermo, CSV, Excel, mail), così ogni numero torna con gli altri. I
+giorni prima restano a minuti interi, come sono stati visti e spediti. Con il
+conto al secondo anche l'orologio del terminale si riallinea oltre i 5 secondi
+di scarto, non più 30.
 
 Il filo comune dei primi tre: **confondere "coerente con quello che vedo" con
 "verificato"**. Due dati che tornano non provano un'ipotesi se tornerebbero

@@ -72,8 +72,8 @@ def _():
     g = sola(presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
-    assert g.minuti_lavorati == 480, g.minuti_lavorati
-    assert g.ore == "8:00", g.ore
+    assert g.secondi_lavorati == (480) * 60, g.secondi_lavorati
+    assert g.ore == "8:00:00", g.ore
     assert not g.anomalie, g.anomalie
 
 
@@ -86,7 +86,7 @@ def _():
                                dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
     assert len(g.turni) == 2, len(g.turni)
-    assert g.minuti_lavorati == 210 + 270, g.minuti_lavorati
+    assert g.secondi_lavorati == (210 + 270) * 60, g.secondi_lavorati
     assert not g.anomalie, g.anomalie
 
 
@@ -101,9 +101,9 @@ def _():
     punzona(db, 1, "2026-09-02 05:15:00")
     elenco = presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 9, 1), dt.date(2026, 9, 2))
-    assert len(elenco) == 1, [(g.data, g.minuti_lavorati) for g in elenco]
+    assert len(elenco) == 1, [(g.data, g.secondi_lavorati) for g in elenco]
     g = sola(elenco, "2026-09-01")
-    assert g.minuti_lavorati == 555, g.minuti_lavorati
+    assert g.secondi_lavorati == (555) * 60, g.secondi_lavorati
     assert not g.anomalie, g.anomalie
 
 
@@ -120,9 +120,9 @@ def _():
                                dt.date(2026, 9, 1), dt.date(2026, 9, 2))
     ieri = sola(elenco, "2026-09-01")
     oggi = sola(elenco, "2026-09-02")
-    assert ieri.minuti_lavorati == 0 and ieri.anomalie, (ieri.minuti_lavorati,
+    assert ieri.secondi_lavorati == 0 and ieri.anomalie, (ieri.secondi_lavorati,
                                                          ieri.anomalie)
-    assert oggi.minuti_lavorati == 480, oggi.minuti_lavorati
+    assert oggi.secondi_lavorati == (480) * 60, oggi.secondi_lavorati
 
 
 @prova("la coda di notte si puo' spegnere, e allora si torna al taglio secco")
@@ -132,7 +132,7 @@ def _():
     punzona(db, 1, "2026-09-02 05:15:00")
     elenco = presenze.giornate(db, presenze.Regole(minuti_coda_notte=0),
                                dt.date(2026, 9, 1), dt.date(2026, 9, 2))
-    assert len(elenco) == 2, [(g.data, g.minuti_lavorati) for g in elenco]
+    assert len(elenco) == 2, [(g.data, g.secondi_lavorati) for g in elenco]
 
 
 @prova("pausa d'ufficio: un turno monco in mezzo non vale come pausa presa")
@@ -146,9 +146,9 @@ def _():
     regole = presenze.Regole(pausa_automatica_minuti=30, pausa_oltre_ore=6.0)
     g = sola(presenze.giornate(db, regole, dt.date(2026, 9, 1),
                                dt.date(2026, 9, 1)), "2026-09-01")
-    grezzi = sum(t.minuti for t in g.turni)
+    grezzi = sum(t.secondi for t in g.turni)
     # Pausa vera timbrata: cinque minuti. Se ne devono togliere altri 25.
-    assert g.minuti_lavorati == grezzi - 25, (g.minuti_lavorati, grezzi)
+    assert g.secondi_lavorati == grezzi - 25 * 60, (g.secondi_lavorati, grezzi)
 
 
 @prova("turno notturno: uscita dopo mezzanotte resta sul giorno prima")
@@ -159,7 +159,7 @@ def _():
     elenco = presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 9, 1), dt.date(2026, 9, 2))
     g = sola(elenco, "2026-09-01")
-    assert g.minuti_lavorati == 225, g.minuti_lavorati
+    assert g.secondi_lavorati == (225) * 60, g.secondi_lavorati
     assert not g.anomalie, g.anomalie
     # Il 2 settembre non deve esistere: quelle ore sono gia' contate il giorno 1.
     assert not [x for x in elenco if x.data == dt.date(2026, 9, 2)], \
@@ -175,7 +175,7 @@ def _():
     g = sola(presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
-    assert g.minuti_lavorati == 480, g.minuti_lavorati
+    assert g.secondi_lavorati == (480) * 60, g.secondi_lavorati
     assert len(g.scartati) == 1, g.scartati
     assert any("doppione" in a for a in g.anomalie), g.anomalie
 
@@ -201,7 +201,7 @@ def _():
     g = sola([x for x in presenze.giornate(db, presenze.Regole(),
                                            dt.date(2026, 9, 1), dt.date(2026, 9, 1))
               if x.employee_code == 1], "2026-09-01")
-    assert g.minuti_lavorati == 20 * 60, g.minuti_lavorati
+    assert g.secondi_lavorati == (20 * 60) * 60, g.secondi_lavorati
     assert any("dimenticata" in a for a in g.anomalie), g.anomalie
 
 
@@ -217,7 +217,7 @@ def _():
                                dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
     assert g.criterio == "stati del terminale", g.criterio
-    assert g.minuti_lavorati == 240, g.minuti_lavorati   # 14:00 -> 18:00
+    assert g.secondi_lavorati == (240) * 60, g.secondi_lavorati   # 14:00 -> 18:00
     assert any("manca l'uscita delle 09:00" in a for a in g.anomalie), g.anomalie
 
 
@@ -230,7 +230,7 @@ def _():
                                dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
     assert g.criterio == "alternanza", g.criterio
-    assert g.minuti_lavorati == 480, g.minuti_lavorati
+    assert g.secondi_lavorati == (480) * 60, g.secondi_lavorati
 
 
 @prova("stato del terminale rimasto su OUT: gli stati non si prendono alla lettera")
@@ -249,7 +249,7 @@ def _():
              "2026-09-02")
     assert g.criterio.startswith("alternanza"), g.criterio
     assert "incoerenti" in g.criterio, g.criterio
-    assert g.minuti_lavorati == 42 + 147, g.minuti_lavorati
+    assert g.secondi_lavorati == (42 + 147) * 60, g.secondi_lavorati
     assert not g.anomalie, g.anomalie
 
 
@@ -273,7 +273,7 @@ def _():
              "2026-09-02")
     assert g.criterio.startswith("alternanza"), g.criterio
     assert len(g.turni) == 4 and all(t.completo for t in g.turni), g.turni
-    assert g.minuti_lavorati == 1 + 4 + 14 + 74, g.minuti_lavorati
+    assert g.secondi_lavorati == (1 + 4 + 14 + 74) * 60, g.secondi_lavorati
     assert not any("manca" in a for a in g.anomalie), g.anomalie
     assert any("doppione" in a for a in g.anomalie), g.anomalie
 
@@ -289,7 +289,7 @@ def _():
                                dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
     assert g.criterio == "stati del terminale", g.criterio
-    assert g.minuti_lavorati == 480, g.minuti_lavorati
+    assert g.secondi_lavorati == (480) * 60, g.secondi_lavorati
     assert not g.anomalie, g.anomalie
 
 
@@ -319,7 +319,7 @@ def _():
     g = sola(presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
-    assert g.minuti_lavorati == 480, g.minuti_lavorati
+    assert g.secondi_lavorati == (480) * 60, g.secondi_lavorati
     assert not [a for a in g.anomalie if "manca" in a], g.anomalie
     grezzi = db.execute("SELECT COUNT(*) FROM raw_events").fetchone()[0]
     assert grezzi == 1, "il grezzo e' stato alterato: non deve succedere mai"
@@ -336,7 +336,7 @@ def _():
     g = sola(presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
-    assert g.minuti_lavorati == 480, g.minuti_lavorati
+    assert g.secondi_lavorati == (480) * 60, g.secondi_lavorati
     assert db.execute("SELECT COUNT(*) FROM raw_events").fetchone()[0] == 3
 
 
@@ -350,7 +350,7 @@ def _():
         r = presenze.Regole(arrotondamento_minuti=15, arrotondamento_verso=verso)
         g = sola(presenze.giornate(db, r, dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
                  "2026-09-01")
-        assert g.minuti_lavorati == minuti, f"{verso}: {g.minuti_lavorati}"
+        assert g.secondi_lavorati == (minuti) * 60, f"{verso}: {g.secondi_lavorati}"
 
     # 8h08 = 488: "vicino" deve salire, mentre "giu" resta sotto.
     db2 = archivio()
@@ -359,7 +359,7 @@ def _():
     r = presenze.Regole(arrotondamento_minuti=15, arrotondamento_verso="vicino")
     g = sola(presenze.giornate(db2, r, dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
-    assert g.minuti_lavorati == 495, g.minuti_lavorati
+    assert g.secondi_lavorati == (495) * 60, g.secondi_lavorati
 
 
 @prova("pausa automatica oltre le 6 ore")
@@ -370,7 +370,7 @@ def _():
     r = presenze.Regole(pausa_automatica_minuti=30, pausa_oltre_ore=6)
     g = sola(presenze.giornate(db, r, dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
-    assert g.minuti_lavorati == 450, g.minuti_lavorati
+    assert g.secondi_lavorati == (450) * 60, g.secondi_lavorati
 
 
 @prova("straordinario oltre le 8 ore")
@@ -381,8 +381,8 @@ def _():
     g = sola(presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
              "2026-09-01")
-    assert g.minuti_lavorati == 630, g.minuti_lavorati
-    assert g.minuti_straordinario == 150, g.minuti_straordinario
+    assert g.secondi_lavorati == (630) * 60, g.secondi_lavorati
+    assert g.secondi_straordinario == 150 * 60, g.secondi_straordinario
 
 
 @prova("export CSV")
@@ -395,7 +395,7 @@ def _():
     percorso = pathlib.Path(tempfile.mkdtemp()) / "prova.csv"
     n = presenze.esporta_csv(str(percorso), elenco, {1: "Mario Rossi"})
     testo = percorso.read_text(encoding="utf-8-sig")
-    assert n == 1 and "Mario Rossi" in testo and "8:00" in testo, testo
+    assert n == 1 and "Mario Rossi" in testo and "8:00:00" in testo, testo
 
 
 @prova("un annullamento si puo' togliere: la timbratura torna a contare")
@@ -409,12 +409,12 @@ def _():
     presenze.annulla_timbratura(db, 1, evento, "prova", "io")
     g = sola(presenze.giornate(db, presenze.Regole(), giorno, giorno),
              "2026-09-03")
-    assert g.minuti_lavorati == 0, g.minuti_lavorati
+    assert g.secondi_lavorati == (0) * 60, g.secondi_lavorati
     assert presenze.togli_annullamento(db, evento)
     assert not presenze.togli_annullamento(db, evento), "gia' tolto"
     g = sola(presenze.giornate(db, presenze.Regole(), giorno, giorno),
              "2026-09-03")
-    assert g.minuti_lavorati == 480, g.minuti_lavorati
+    assert g.secondi_lavorati == (480) * 60, g.secondi_lavorati
 
 
 @prova("export CSV: pranzo e cena, tutte e quattro le timbrature")
@@ -430,9 +430,9 @@ def _():
     assert intestazione[3:9] == ["entrata_1", "uscita_1", "entrata_2",
                                  "uscita_2", "entrata_3", "uscita_3"],         intestazione
     mario = next(r.split(";") for r in righe if "Mario Rossi" in r)
-    assert mario[3:7] == ["11:00", "15:00", "18:30", "23:30"], mario
+    assert mario[3:7] == ["11:00:00", "15:00:00", "18:30:00", "23:30:00"], mario
     altro = next(r.split(";") for r in righe[1:] if "Mario" not in r)
-    assert altro[3:9] == ["10:00", "", "", "", "", ""], altro
+    assert altro[3:9] == ["10:00:00", "", "", "", "", ""], altro
     assert len(altro) == len(intestazione)
 
 
@@ -480,12 +480,12 @@ def _():
     righe = [r.split(";") for r in presenze.testo_csv(
         elenco, {1: "Mario Rossi", 2: "Anna Bianchi"}).splitlines()]
     colonne = righe[0]
-    ore, minuti = colonne.index("ore"), colonne.index("minuti")
+    ore, secondi = colonne.index("ore"), colonne.index("secondi")
     totali = {r[0]: r for r in righe if r and r[0].startswith("TOTALE")}
-    assert totali["TOTALE Mario Rossi"][ore] == "17:00", totali
-    assert totali["TOTALE Anna Bianchi"][ore] == "5:00"
-    assert totali["TOTALE PERIODO"][ore] == "22:00"
-    assert totali["TOTALE PERIODO"][minuti] == "1320"
+    assert totali["TOTALE Mario Rossi"][ore] == "17:00:00", totali
+    assert totali["TOTALE Anna Bianchi"][ore] == "5:00:00"
+    assert totali["TOTALE PERIODO"][ore] == "22:00:00"
+    assert totali["TOTALE PERIODO"][secondi] == str(22 * 3600)
     assert "2 giorni lavorati" in totali["TOTALE Mario Rossi"][-1]
     assert all(len(r) == len(colonne) for r in totali.values())
 
@@ -500,7 +500,7 @@ def _():
     g = sola(presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 10, 24), dt.date(2026, 10, 25)),
              "2026-10-24")
-    assert g.minuti_lavorati == 420, f"{g.minuti_lavorati} invece di 420 (7 ore)"
+    assert g.secondi_lavorati == (420) * 60, f"{g.secondi_lavorati} invece di 420 (7 ore)"
 
 
 @prova("ora legale, notte in cui si perde un'ora: il turno dura 5 ore")
@@ -512,22 +512,23 @@ def _():
     g = sola(presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 3, 28), dt.date(2026, 3, 29)),
              "2026-03-28")
-    assert g.minuti_lavorati == 300, f"{g.minuti_lavorati} invece di 300 (5 ore)"
+    assert g.secondi_lavorati == (300) * 60, f"{g.secondi_lavorati} invece di 300 (5 ore)"
 
 
-@prova("dal 1 novembre 2026 si conta al minuto, come si legge")
+@prova("dal 1 novembre 2026 si conta al secondo, senza regalare nulla")
 def _():
-    # Caso vero di Dario: 19:29 -> 00:16 sullo schermo, 4:46 sulla barra.
-    # I secondi c'erano (19:29:50 -> 00:16:10) e si mangiavano il minuto.
+    # Caso vero di Dario: 19:29:50 -> 00:16:10. Col conto vecchio 4:46, a
+    # minuti interi 4:47: il vero e' 4:46:20, ne' uno ne' l'altro.
     db = archivio()
     punzona(db, 1, "2026-11-02 19:29:50")
     punzona(db, 1, "2026-11-03 00:16:10")
     g = sola(presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 11, 2), dt.date(2026, 11, 2)),
              "2026-11-02")
-    assert g.minuti_lavorati == 4 * 60 + 47, g.minuti_lavorati
-    # Il secondo verso: l'entrata a fine minuto, l'uscita a inizio minuto non
-    # regalano nulla, l'entrata a inizio minuto e l'uscita a fine non tolgono.
+    assert g.secondi_lavorati == 4 * 3600 + 46 * 60 + 20, g.secondi_lavorati
+    assert g.ore == "4:46:20", g.ore
+    # Pranzo e cena: i secondi dei due turni si sommano, non si tagliano.
+    # 09:00:05-12:59:55 = 3:59:50, 13:30:59-17:00:01 = 3:29:02.
     db = archivio()
     punzona(db, 2, "2026-11-04 09:00:05")
     punzona(db, 2, "2026-11-04 12:59:55")
@@ -536,9 +537,27 @@ def _():
     r = presenze.Regole(pausa_automatica_minuti=30, pausa_oltre_ore=6)
     g = sola(presenze.giornate(db, r, dt.date(2026, 11, 4), dt.date(2026, 11, 4)),
              "2026-11-04")
-    # 9:00-12:59 = 239, 13:30-17:00 = 210; pausa timbrata 12:59-13:30 = 31,
-    # gia' sopra i 30 minuti d'ufficio: non si scala niente.
-    assert g.minuti_lavorati == 239 + 210, g.minuti_lavorati
+    # Pausa timbrata 12:59:55-13:30:59 = 31:04, gia' sopra la mezz'ora
+    # d'ufficio: non si scala niente.
+    assert g.ore == "7:28:52", g.ore
+    # Pausa timbrata di 29:30: della mezz'ora d'ufficio mancano 30 secondi,
+    # e si tolgono quelli, non un minuto intero.
+    db = archivio()
+    punzona(db, 3, "2026-11-04 09:00:00")
+    punzona(db, 3, "2026-11-04 13:00:00")
+    punzona(db, 3, "2026-11-04 13:29:30")
+    punzona(db, 3, "2026-11-04 17:00:00")
+    g = sola(presenze.giornate(db, r, dt.date(2026, 11, 4), dt.date(2026, 11, 4)),
+             "2026-11-04")
+    assert g.ore == "7:30:00", g.ore    # 4:00:00 + 3:30:30 - 0:00:30
+    # Lo straordinario e' quello che supera le 8 ore, al secondo.
+    db = archivio()
+    punzona(db, 4, "2026-11-05 09:00:00")
+    punzona(db, 4, "2026-11-05 17:00:45")
+    g = sola(presenze.giornate(db, presenze.Regole(),
+                               dt.date(2026, 11, 5), dt.date(2026, 11, 5)),
+             "2026-11-05")
+    assert g.secondi_straordinario == 45, g.secondi_straordinario
 
 
 @prova("prima del 1 novembre 2026 il conto resta quello gia' visto")
@@ -549,7 +568,15 @@ def _():
     g = sola(presenze.giornate(db, presenze.Regole(),
                                dt.date(2026, 10, 26), dt.date(2026, 10, 26)),
              "2026-10-26")
-    assert g.minuti_lavorati == 4 * 60 + 46, g.minuti_lavorati
+    assert g.ore == "4:46:00", g.ore
+
+
+@prova("durata: ore, minuti e secondi, anche oltre le ventiquattro")
+def _():
+    assert presenze.durata(0) == "0:00:00"
+    assert presenze.durata(59) == "0:00:59"
+    assert presenze.durata(8 * 3600) == "8:00:00"
+    assert presenze.durata(205 * 3600 + 45 * 60 + 7) == "205:45:07"
 
 
 @prova("pausa d'ufficio: non si scala a chi l'ha gia' timbrata")
@@ -562,8 +589,8 @@ def _():
         punzona(a, 1, f"2026-09-01 {o}:00")
     ga = sola(presenze.giornate(a, r, dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
               "2026-09-01")
-    assert ga.minuti_lavorati == 480, \
-        f"a chi timbra la pausa: {ga.minuti_lavorati} invece di 480"
+    assert ga.secondi_lavorati == (480) * 60, \
+        f"a chi timbra la pausa: {ga.secondi_lavorati} invece di 480"
 
     # B non la timbra: 9 ore filate, la mezz'ora va tolta d'ufficio.
     b = archivio()
@@ -571,8 +598,8 @@ def _():
     punzona(b, 2, "2026-09-01 18:00:00")
     gb = sola(presenze.giornate(b, r, dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
               "2026-09-01")
-    assert gb.minuti_lavorati == 510, \
-        f"a chi non la timbra: {gb.minuti_lavorati} invece di 510"
+    assert gb.secondi_lavorati == (510) * 60, \
+        f"a chi non la timbra: {gb.secondi_lavorati} invece di 510"
 
     # C ne timbra solo dieci minuti: se ne tolgono i venti mancanti.
     c = archivio()
@@ -582,8 +609,8 @@ def _():
     punzona(c, 3, "2026-09-01 18:10:00")
     gc = sola(presenze.giornate(c, r, dt.date(2026, 9, 1), dt.date(2026, 9, 1)),
               "2026-09-01")
-    assert gc.minuti_lavorati == 520, \
-        f"a chi ne timbra dieci: {gc.minuti_lavorati} invece di 520"
+    assert gc.secondi_lavorati == (520) * 60, \
+        f"a chi ne timbra dieci: {gc.secondi_lavorati} invece di 520"
 
 
 @prova("deriva dell'orologio: stimata solo sugli intervalli liberi")
@@ -668,7 +695,7 @@ def _():
     regole = presenze.Regole()
     adesso = dt.datetime(2026, 10, 25, 16, 0)
     def ore(codice):
-        return sum(g.minuti_lavorati for g in presenze.giornate(
+        return sum(g.secondi_lavorati // 60 for g in presenze.giornate(
             db, regole, dt.date(2026, 10, 24), dt.date(2026, 10, 25))
             if g.employee_code == codice)
 
@@ -720,7 +747,7 @@ def _():
 
     regole = presenze.Regole()
     def ore(codice):
-        return sum(g.minuti_lavorati for g in presenze.giornate(
+        return sum(g.secondi_lavorati // 60 for g in presenze.giornate(
             db, regole, dt.date(2027, 3, 27), dt.date(2027, 3, 28))
             if g.employee_code == codice)
 

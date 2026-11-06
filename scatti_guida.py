@@ -86,11 +86,15 @@ def archivio_finto(percorso: str, giorni: int = 75, seme: int = 7) -> int:
             spezzato = i % 3 != 0
             fasce = ([(11, 20, 15, 0), (18, 30, 23, 40)] if spezzato
                      else [(18, 20, 23, 50)])
+            # Coi secondi, come le timbrature vere: le figure devono mostrare
+            # se 19:29:50 e 4:46:20 ci stanno.
             for oe, me, ou, mu in fasce:
                 entrata = dt.datetime.combine(giorno, dt.time(oe, me)) \
-                    + dt.timedelta(minutes=caso.randint(-12, 14))
+                    + dt.timedelta(minutes=caso.randint(-12, 14),
+                                   seconds=caso.randint(0, 59))
                 uscita = dt.datetime.combine(giorno, dt.time(ou, mu)) \
-                    + dt.timedelta(minutes=caso.randint(-10, 35))
+                    + dt.timedelta(minutes=caso.randint(-10, 35),
+                                   seconds=caso.randint(0, 59))
                 if giorno == oggi and entrata > dt.datetime.now():
                     continue
                 scrivi(i, entrata)

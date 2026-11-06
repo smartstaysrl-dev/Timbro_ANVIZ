@@ -291,9 +291,11 @@ CAPITOLI = [
  "«Su» favorisce il dipendente, «giù» il datore di lavoro, «vicino» "
  "arrotonda al più vicino. Non è un dettaglio tecnico: è una decisione, e "
  "conviene che sia scritta anche altrove, non solo qui dentro.",
- "Prima di qualunque arrotondamento ogni turno si conta al minuto, come si "
- "legge sullo schermo: dalle 19:29 alle 00:16 fa 4:47, i secondi non "
- "contano. Vale dal 1 novembre 2026; i mesi prima restano come erano.",
+ "Prima di qualunque arrotondamento ogni turno si conta al secondo, "
+ "dall'entrata all'uscita come le ha segnate il terminale: dalle 19:29:50 "
+ "alle 00:16:10 fa 4:46:20, e nei totali non si taglia niente, ne' a favore "
+ "del dipendente ne' del datore di lavoro. Vale dal 1 novembre 2026; i giorni "
+ "prima restano come erano, a minuti interi.",
 
  "# Pausa tolta d'ufficio",
  "Toglie un tot di minuti a chi supera un certo numero di ore. Se la persona "

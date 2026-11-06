@@ -213,8 +213,10 @@ def tocca_inviare(imp: dict, adesso: dt.datetime):
 
 
 # --- Il contenuto -------------------------------------------------------------
-def _ore(minuti: int) -> str:
-    return f"{minuti // 60}:{minuti % 60:02d}"
+def _ore(secondi: int) -> str:
+    """Come presenze.durata: ore, minuti e secondi, senza tagliare niente."""
+    ore, resto = divmod(int(secondi), 3600)
+    return f"{ore}:{resto // 60:02d}:{resto % 60:02d}"
 
 
 def _per_persona(elenco, nomi) -> list:
@@ -228,9 +230,9 @@ def _per_persona(elenco, nomi) -> list:
             "nome": nomi.get(codice, f"Utente {codice}"),
             "giornate": giornate,
             "per_data": {x.data: x for x in giornate},
-            "minuti": sum(x.minuti_lavorati for x in giornate),
-            "straordinario": sum(x.minuti_straordinario for x in giornate),
-            "lavorati": sum(1 for x in giornate if x.minuti_lavorati),
+            "secondi": sum(x.secondi_lavorati for x in giornate),
+            "straordinario": sum(x.secondi_straordinario for x in giornate),
+            "lavorati": sum(1 for x in giornate if x.secondi_lavorati),
             "anomalie": sum(len(x.anomalie) for x in giornate),
         })
     fuori.sort(key=lambda p: p["nome"].lower())
@@ -246,14 +248,14 @@ def testo_semplice(elenco, nomi, titolo: str) -> str:
         return "\n".join(righe)
     larghezza = max(len(p["nome"]) for p in persone)
     for p in persone:
-        pezzi = [f"{p['nome']:<{larghezza}}  {_ore(p['minuti']):>8}",
+        pezzi = [f"{p['nome']:<{larghezza}}  {_ore(p['secondi']):>9}",
                  f"{p['lavorati']} giorni"]
         if p["straordinario"]:
             pezzi.append(f"{_ore(p['straordinario'])} straordinario")
         if p["anomalie"]:
             pezzi.append(f"{p['anomalie']} da verificare")
         righe.append("  ·  ".join(pezzi))
-    totale = sum(p["minuti"] for p in persone)
+    totale = sum(p["secondi"] for p in persone)
     anomalie = sum(p["anomalie"] for p in persone)
     righe += ["", f"Totale: {_ore(totale)} su {len(persone)} persone."]
     if anomalie:
@@ -275,14 +277,14 @@ _VERDE_TENUE = "#cbe6d3"
 _AMBRA = "#c98a1b"
 
 
-def _colonna_giorno(giorno: dt.date, minuti: int, anomala: bool,
+def _colonna_giorno(giorno: dt.date, secondi: int, anomala: bool,
                     massimo: int, alto: int, largo: int) -> str:
     """Una colonna del grafico: tabella annidata, l'unica cosa che tutti i
     client di posta disegnano davvero allo stesso modo."""
-    quota = (minuti / massimo) if massimo else 0
-    pieno = max(3, round(alto * quota)) if minuti else 2
+    quota = (secondi / massimo) if massimo else 0
+    pieno = max(3, round(alto * quota)) if secondi else 2
     vuoto = max(0, alto - pieno)
-    colore = (_AMBRA if anomala else _VERDE if minuti else "#dcdee3")
+    colore = (_AMBRA if anomala else _VERDE if secondi else "#dcdee3")
     festivo = giorno.weekday() >= 5
     return (
         f'<td valign="bottom" style="padding:0 1px;'
@@ -297,7 +299,7 @@ def _colonna_giorno(giorno: dt.date, minuti: int, anomala: bool,
 
 def _grafico(persone, dal: dt.date, al: dt.date) -> str:
     giorni = [dal + dt.timedelta(days=i) for i in range((al - dal).days + 1)]
-    massimo = max((g.minuti_lavorati for p in persone
+    massimo = max((g.secondi_lavorati for p in persone
                    for g in p["giornate"]), default=0)
     largo, alto = 14, 46
     pezzi = ['<table cellpadding="0" cellspacing="0" border="0" '
@@ -316,12 +318,12 @@ def _grafico(persone, dal: dt.date, al: dt.date) -> str:
         for g in giorni:
             giornata = p["per_data"].get(g)
             pezzi.append(_colonna_giorno(
-                g, giornata.minuti_lavorati if giornata else 0,
+                g, giornata.secondi_lavorati if giornata else 0,
                 bool(giornata and giornata.anomalie), massimo, alto, largo))
         pezzi.append(
             f'<td style="font:bold 13px Arial,sans-serif;'
             f'color:{_INCHIOSTRO};padding-left:10px;white-space:nowrap">'
-            f'{_ore(p["minuti"])}</td></tr>')
+            f'{_ore(p["secondi"])}</td></tr>')
     pezzi.append('</table>')
     return "".join(pezzi)
 
@@ -346,12 +348,12 @@ def corpo_html(elenco, nomi, titolo: str, dal: dt.date, al: dt.date) -> str:
         righe.append(
             f'<tr><td {stile_cella}>{_esc(p["nome"])}</td>'
             f'<td {stile_cella} align="right">{p["lavorati"]}</td>'
-            f'<td {stile_cella} align="right"><b>{_ore(p["minuti"])}</b></td>'
+            f'<td {stile_cella} align="right"><b>{_ore(p["secondi"])}</b></td>'
             f'<td {stile_cella} style="font:12px Arial,sans-serif;'
             f'color:{_TENUE};padding:8px 12px;'
             f'border-bottom:1px solid #e6e8ec">{" · ".join(note)}</td></tr>')
 
-    totale = sum(p["minuti"] for p in persone)
+    totale = sum(p["secondi"] for p in persone)
     anomalie = sum(p["anomalie"] for p in persone)
     avviso = ""
     if anomalie:
