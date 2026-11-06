@@ -181,6 +181,25 @@ class Punzone:
     scartato: str | None = None # motivo dello scarto (doppione, annullato)
 
 
+# Dal 1 novembre 2026 le durate si contano al minuto, come si leggono: 19:29
+# -> 00:16 fa 4:47. Prima si sottraevano anche i secondi e si buttava il resto
+# turno per turno: 19:29:50 -> 00:16:10 faceva 4:46, a chi guardava le due ore
+# mancava un minuto, e in un mese se ne perdevano una ventina, sempre a
+# sfavore di chi lavora. I mesi prima restano come sono stati visti e spediti.
+AL_MINUTO_DAL = dt.date(2026, 11, 1)
+
+
+def _minuti_fra(da: Punzone, a: Punzone) -> int:
+    """Minuti fra due punzoni, sugli istanti: vale anche la notte del cambio d'ora."""
+    inizio, fine = da.istante, a.istante
+    if da.quando.date() >= AL_MINUTO_DAL:
+        # Il fuso si sposta di ore intere: tagliare i secondi all'istante UTC
+        # e' tagliarli all'ora che si legge.
+        inizio = inizio.replace(second=0, microsecond=0)
+        fine = fine.replace(second=0, microsecond=0)
+    return max(0, int((fine - inizio).total_seconds() // 60))
+
+
 def _quando(testo: str) -> dt.datetime:
     return dt.datetime.fromisoformat(testo)
 
@@ -267,8 +286,7 @@ class Turno:
         """
         if not self.entrata or not self.uscita:
             return 0
-        return max(0, int((self.uscita.istante - self.entrata.istante)
-                          .total_seconds() // 60))
+        return _minuti_fra(self.entrata, self.uscita)
 
     @property
     def completo(self) -> bool:
@@ -486,8 +504,7 @@ def _applica_regole(g: Giornata, regole: Regole) -> None:
         for prima, dopo in zip(g.turni, g.turni[1:]):
             if not (prima.completo and dopo.completo):
                 continue
-            gia_prese += max(0, int(
-                (dopo.entrata.istante - prima.uscita.istante).total_seconds() // 60))
+            gia_prese += _minuti_fra(prima.uscita, dopo.entrata)
         minuti = max(0, minuti - max(0, regole.pausa_automatica_minuti - gia_prese))
     passo = regole.arrotondamento_minuti
     if passo > 1 and minuti % passo:

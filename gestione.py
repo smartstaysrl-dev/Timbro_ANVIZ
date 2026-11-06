@@ -2003,7 +2003,12 @@ class GraficoPresenze(tk.Canvas):
                 # presenze non conta i turni non chiusi.
                 minuti = t.minuti
                 if in_corso:
-                    minuti = max(0, int((adesso - inizio).total_seconds() // 60))
+                    # Al minuto, come il motore: "dalle 19:29" alle 20:00
+                    # fa 31 minuti anche se l'entrata era alle 19:29:50.
+                    minuti = max(0, int(
+                        (adesso.replace(second=0, microsecond=0)
+                         - inizio.replace(second=0, microsecond=0))
+                        .total_seconds() // 60))
                     provvisori += minuti
                 if xb - xa >= 44:
                     self.create_text((xa + xb) / 2, centro,

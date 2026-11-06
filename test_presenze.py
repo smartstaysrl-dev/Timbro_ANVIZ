@@ -515,6 +515,43 @@ def _():
     assert g.minuti_lavorati == 300, f"{g.minuti_lavorati} invece di 300 (5 ore)"
 
 
+@prova("dal 1 novembre 2026 si conta al minuto, come si legge")
+def _():
+    # Caso vero di Dario: 19:29 -> 00:16 sullo schermo, 4:46 sulla barra.
+    # I secondi c'erano (19:29:50 -> 00:16:10) e si mangiavano il minuto.
+    db = archivio()
+    punzona(db, 1, "2026-11-02 19:29:50")
+    punzona(db, 1, "2026-11-03 00:16:10")
+    g = sola(presenze.giornate(db, presenze.Regole(),
+                               dt.date(2026, 11, 2), dt.date(2026, 11, 2)),
+             "2026-11-02")
+    assert g.minuti_lavorati == 4 * 60 + 47, g.minuti_lavorati
+    # Il secondo verso: l'entrata a fine minuto, l'uscita a inizio minuto non
+    # regalano nulla, l'entrata a inizio minuto e l'uscita a fine non tolgono.
+    db = archivio()
+    punzona(db, 2, "2026-11-04 09:00:05")
+    punzona(db, 2, "2026-11-04 12:59:55")
+    punzona(db, 2, "2026-11-04 13:30:59")
+    punzona(db, 2, "2026-11-04 17:00:01")
+    r = presenze.Regole(pausa_automatica_minuti=30, pausa_oltre_ore=6)
+    g = sola(presenze.giornate(db, r, dt.date(2026, 11, 4), dt.date(2026, 11, 4)),
+             "2026-11-04")
+    # 9:00-12:59 = 239, 13:30-17:00 = 210; pausa timbrata 12:59-13:30 = 31,
+    # gia' sopra i 30 minuti d'ufficio: non si scala niente.
+    assert g.minuti_lavorati == 239 + 210, g.minuti_lavorati
+
+
+@prova("prima del 1 novembre 2026 il conto resta quello gia' visto")
+def _():
+    db = archivio()
+    punzona(db, 1, "2026-10-26 19:29:50")
+    punzona(db, 1, "2026-10-27 00:16:10")
+    g = sola(presenze.giornate(db, presenze.Regole(),
+                               dt.date(2026, 10, 26), dt.date(2026, 10, 26)),
+             "2026-10-26")
+    assert g.minuti_lavorati == 4 * 60 + 46, g.minuti_lavorati
+
+
 @prova("pausa d'ufficio: non si scala a chi l'ha gia' timbrata")
 def _():
     r = presenze.Regole(pausa_automatica_minuti=30, pausa_oltre_ore=6)
