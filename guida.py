@@ -84,10 +84,11 @@ CAPITOLI = [
  "uscita alle tre o alle cinque. Fatto lo stesso giorno, ci si ricorda.",
 ]),
 
-("Presenze: giorno, settimana, mese", [
- "In alto ci sono tre bottoni: Giorno, Settimana, Mese. Cambiano cosa "
- "guardi; le frecce ai lati si spostano di un giorno, di una settimana o di "
- "un mese, e il bottone «oggi» riporta a adesso.",
+("Presenze: giorno, settimana, mese, per dipendente", [
+ "In alto ci sono i bottoni Giorno, Settimana, Mese, Dal… al… e Per "
+ "dipendente. Cambiano cosa guardi; le frecce ai lati si spostano di un "
+ "giorno, di una settimana o di un mese, e il bottone «oggi» riporta a "
+ "adesso.",
 
  "Anche il bottone per esportare segue quello che stai guardando: se sei sul "
  "mese scrive «Esporta il mese».",
@@ -103,6 +104,25 @@ CAPITOLI = [
  "# A settimana e a mese",
  "La riga diventa il riassunto della persona: ore totali, giorni lavorati, "
  "media al giorno, straordinario, e quante cose ci sono da verificare.",
+
+ "# Per dipendente",
+ "Il cartellino del mese, una persona alla volta. A sinistra l'elenco dei "
+ "dipendenti con le ore del mese: la striscia gialla accanto al nome vuol "
+ "dire che c'è qualcosa da verificare. Tocca un nome e a destra compare il "
+ "suo mese, un giorno per riga: entrate e uscite, ore lavorate, ordinarie, "
+ "straordinario e le note.",
+ "- un trattino giallo è un'entrata o un'uscita che manca: va sistemata; "
+ "se la giornata è stata confermata il trattino resta, ma grigio",
+ "- «in corso» è chi è al lavoro adesso: l'uscita arriverà",
+ "- le righe più scure sono i giorni senza timbrature",
+ "Su uno schermo stretto a sinistra restano solo i nomi, senza le ore, e "
+ "le note vanno su una riga sotto il giorno: così non si taglia niente.",
+ "Toccando un giorno timbrato si apre il suo dettaglio, ed è da lì che si "
+ "corregge; in un giorno vuoto la timbratura dimenticata si aggiunge da "
+ "Timbrature. Le frecce cambiano mese restando sulla stessa persona, e "
+ "«Esporta il cartellino» parte con lei sola già spuntata.",
+ "! presenze-dipendente.png | Il mese di una persona: un giorno per riga, "
+ "le note in giallo dove c'è da verificare.",
 
  "# Il grafico in fondo",
  "A giorno la barra va dall'entrata all'uscita, con le ore scritte sopra. "
@@ -139,6 +159,28 @@ CAPITOLI = [
 
  "Il motivo è obbligatorio. Senza, fra sei mesi nessuno sa più perché quel "
  "giorno è cambiato, e davanti a una contestazione è l'unica cosa che conta.",
+
+ "# L'uscita dopo mezzanotte",
+ "Quando si sceglie l'ora, in cima c'è il giorno a cui va la timbratura. Sotto "
+ "c'è la casella «Dopo la mezzanotte»: un'uscita dimenticata alle 00:35 "
+ "dalla cena del 20 va registrata la mattina del 21, ma conta sulla "
+ "giornata del 20. La casella si spunta da sola quando l'ora è prima delle "
+ "05:00, e si può cambiare a mano. Sotto c'è scritta la data che verrà "
+ "registrata davvero.",
+
+ "# Conferma ore",
+ "Ci sono giornate che restano gialle anche se vanno bene così: un doppione, "
+ "un'uscita che non si può più ricostruire. Nel dettaglio il bottone verde "
+ "«Conferma ore», in alto a destra, dice «le ho guardate, si pagano così»: "
+ "gli avvisi di quel giorno non si contano più. Le ore non cambiano: "
+ "confermare non ne aggiunge e non ne toglie.",
+ "- nel dettaglio resta scritto chi ha confermato e quando, e gli avvisi "
+ "restano leggibili, in grigio",
+ "- se poi la giornata cambia (una timbratura arrivata in ritardo, una "
+ "correzione), la conferma non vale più e il giorno torna da verificare",
+ "- «togli conferma» la toglie",
+ "Una timbratura annullata a mano non è un avviso: chi l'ha annullata ha già "
+ "deciso, col codice e il motivo. Resta nel dettaglio, in grigio.",
 
  "# La timbratura originale non si cancella mai",
  "Annullare vuol dire «non contarla più». Il dato di partenza resta in "
@@ -351,7 +393,10 @@ CAPITOLI = [
  "# Una persona non compare nelle presenze",
  "Controlla in Dipendenti che sia iscritta e che abbia una tessera o un "
  "codice. Poi guarda in Timbrature se le sue passate arrivano: se ci sono "
- "lì ma non nelle presenze, è una questione di regole, non di collegamento.",
+ "lì ma non nelle presenze, è una questione di regole, non di collegamento. "
+ "In cima ci sono due filtri: il dipendente e il giorno. Il giorno è quello "
+ "di lavoro, lo stesso delle Presenze: il 20 comprende anche l'uscita dopo "
+ "mezzanotte che chiude la cena del 20. «Tutte» li toglie.",
  "! timbrature.png | L'elenco grezzo: così come arriva dal terminale, senza "
  "interpretazioni.",
 

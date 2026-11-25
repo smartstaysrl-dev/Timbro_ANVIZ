@@ -777,6 +777,167 @@ def _():
     db.close()
 
 
+@prova("annullata a mano: resta nel dettaglio ma non e' un avviso")
+def _():
+    # Caso vero di Dario, 20/11: badge passato due volte in due secondi,
+    # il secondo annullato a mano. Il giorno restava giallo per sempre.
+    db = archivio()
+    punzona(db, 1, "2026-11-20 12:19:34")
+    punzona(db, 1, "2026-11-20 15:57:34")
+    punzona(db, 1, "2026-11-20 19:22:16")
+    doppio = punzona(db, 1, "2026-11-20 19:22:18")
+    punzona(db, 1, "2026-11-21 00:35:00")
+    presenze.annulla_timbratura(db, 1, doppio, "doppio badge", "segreteria")
+    g = sola(presenze.giornate(db, presenze.Regole(), dt.date(2026, 11, 20),
+                               dt.date(2026, 11, 20)), "2026-11-20")
+    assert [p.scartato for p in g.scartati] == [presenze.ANNULLATA], g.scartati
+    assert not g.anomalie, g.anomalie
+    assert g.ore == "8:50:44", g.ore
+
+
+def _giorno(db, data="2026-11-20"):
+    d = dt.date.fromisoformat(data)
+    return sola(presenze.giornate(db, presenze.Regole(), d, d), data)
+
+
+@prova("conferma ore: gli avvisi si spengono, le ore restano quelle")
+def _():
+    db = archivio()
+    punzona(db, 1, "2026-11-20 11:00:00")
+    punzona(db, 1, "2026-11-20 15:00:00")
+    punzona(db, 1, "2026-11-20 19:00:00")       # uscita mai timbrata
+    g = _giorno(db)
+    avvisi, ore = list(g.anomalie), g.ore
+    assert avvisi and g.confermata_da is None, g.anomalie
+    presenze.conferma_giornata(db, 1, g.data, g.impronta, "segreteria")
+    g = _giorno(db)
+    assert g.anomalie == [] and g.anomalie_confermate == avvisi, g
+    assert g.confermata_da == "segreteria" and g.confermata_il, g
+    assert g.ore == ore and g.conferma_decaduta is None
+    # Gli altri giorni e le altre persone non si toccano.
+    punzona(db, 2, "2026-11-20 19:00:00")
+    altro = [x for x in presenze.giornate(
+        db, presenze.Regole(), g.data, g.data) if x.employee_code == 2][0]
+    assert altro.anomalie and altro.confermata_da is None, altro
+
+
+@prova("conferma ore: se il giorno cambia dopo, torna da verificare")
+def _():
+    db = archivio()
+    punzona(db, 1, "2026-11-20 11:00:00")
+    punzona(db, 1, "2026-11-20 15:00:00")
+    punzona(db, 1, "2026-11-20 19:00:00")
+    g = _giorno(db)
+    presenze.conferma_giornata(db, 1, g.data, g.impronta, "segreteria")
+    assert not _giorno(db).anomalie
+    # Arriva una timbratura in ritardo dal terminale (era spento): stesso
+    # giorno, avvisi diversi. La conferma era per la giornata di prima.
+    punzona(db, 1, "2026-11-20 19:00:40")
+    g = _giorno(db)
+    assert g.anomalie and g.confermata_da is None, g.anomalie
+    assert g.conferma_decaduta, g.conferma_decaduta
+    # Anche una correzione a mano conta come cambiamento.
+    presenze.conferma_giornata(db, 1, g.data, g.impronta, "segreteria")
+    assert not _giorno(db).anomalie
+    presenze.aggiungi_timbratura(db, 1, dt.datetime(2026, 11, 20, 23, 30),
+                                 "uscita", "dimenticata", "segreteria")
+    g = _giorno(db)
+    assert g.confermata_da is None and g.conferma_decaduta, g
+
+
+@prova("conferma ore: si puo' togliere, e gli avvisi tornano")
+def _():
+    db = archivio()
+    punzona(db, 1, "2026-11-20 11:00:00")
+    g = _giorno(db)
+    presenze.conferma_giornata(db, 1, g.data, g.impronta, "segreteria")
+    assert not _giorno(db).anomalie
+    assert presenze.togli_conferma(db, 1, g.data)
+    g = _giorno(db)
+    assert g.anomalie and g.confermata_da is None and not g.conferma_decaduta
+    assert not presenze.togli_conferma(db, 1, g.data)
+
+
+@prova("vista Giorno e vista Mese raccontano lo stesso giorno allo stesso modo")
+def _():
+    # Caso del revisore: un turno aperto che si chiude la mattina dopo entro
+    # la coda di notte, due sere di fila. Col margine di un giorno solo, il 10
+    # valeva 4:20 con un avviso a giorno e 4:00 senza avvisi a mese, e una
+    # conferma data da una vista risultava decaduta nell'altra.
+    db = archivio()
+    punzona(db, 1, "2026-11-08 18:00:00")
+    for ora in ("06:30", "11:00", "15:00", "18:00"):
+        punzona(db, 1, f"2026-11-09 {ora}:00")
+    for ora in ("06:40", "11:00", "15:00"):
+        punzona(db, 1, f"2026-11-10 {ora}:00")
+    r = presenze.Regole()
+    giorno = sola(presenze.giornate(db, r, dt.date(2026, 11, 10),
+                                    dt.date(2026, 11, 10)), "2026-11-10")
+    mese = sola(presenze.giornate(db, r, dt.date(2026, 11, 1),
+                                  dt.date(2026, 11, 30)), "2026-11-10")
+    assert (giorno.ore, giorno.anomalie, giorno.impronta) == \
+        (mese.ore, mese.anomalie, mese.impronta), (giorno.ore, mese.ore,
+                                                  giorno.anomalie, mese.anomalie)
+
+
+@prova("chi entra alle 06:30 e dimentica un'uscita non fa scivolare il mese")
+def _():
+    # Caso del revisore: 06:30, 11:00, 15:00, 18:00 ogni giorno, e il 2
+    # manca l'uscita delle 11:00. Prima ogni mattina diventava l'uscita della
+    # sera prima: a mese 16:30 al giorno dal 3 in poi, e nessun avviso.
+    db = archivio()
+    for giorno in range(1, 21):
+        for ora in ("06:30", "11:00", "15:00", "18:00"):
+            if giorno == 2 and ora == "11:00":
+                continue
+            punzona(db, 1, f"2026-11-{giorno:02d} {ora}:00")
+    r = presenze.Regole()
+    mese = {g.data.day: g for g in presenze.giornate(
+        db, r, dt.date(2026, 11, 1), dt.date(2026, 11, 30))}
+    for giorno in (3, 10, 15, 20):
+        assert mese[giorno].ore == "7:30:00" and not mese[giorno].anomalie, \
+            (giorno, mese[giorno].ore, mese[giorno].anomalie)
+    # Il giorno sbagliato e' il 2, ed e' lui a restare giallo.
+    assert mese[2].anomalie, mese[2].anomalie
+    quindici = sola(presenze.giornate(db, r, dt.date(2026, 11, 15),
+                                      dt.date(2026, 11, 15)), "2026-11-15")
+    assert quindici.impronta == mese[15].impronta
+
+
+@prova("due chiusure dopo le cinque di fila: ogni notte resta la sua")
+def _():
+    # Chi chiude alle 05:15 e rientra alle 20:00: il giorno dopo ha due
+    # timbrature (pari) ma letto da solo farebbe un turno di 14:45. Quella
+    # delle 05:15 e' l'uscita di ieri, e la ricucitura deve continuare.
+    db = archivio()
+    punzona(db, 1, "2026-11-10 20:00:00")
+    punzona(db, 1, "2026-11-11 05:15:00")
+    punzona(db, 1, "2026-11-11 20:00:00")
+    punzona(db, 1, "2026-11-12 05:20:00")
+    r = presenze.Regole()
+    elenco = presenze.giornate(db, r, dt.date(2026, 11, 10),
+                               dt.date(2026, 11, 12))
+    dieci, undici = sola(elenco, "2026-11-10"), sola(elenco, "2026-11-11")
+    assert (dieci.ore, dieci.anomalie) == ("9:15:00", []), (dieci.ore,
+                                                            dieci.anomalie)
+    assert (undici.ore, undici.anomalie) == ("9:20:00", []), (undici.ore,
+                                                              undici.anomalie)
+
+
+@prova("filtro Timbrature: il giorno di lavoro e' quello che contano le Presenze")
+def _():
+    db = archivio()
+    sera = punzona(db, 1, "2026-11-20 20:00:00")
+    sfora = punzona(db, 1, "2026-11-21 05:30:00")    # la serata sfora le 05
+    mattina = punzona(db, 2, "2026-11-21 06:30:00")  # altro, turno del 21
+    venti = presenze.eventi_del_giorno(db, presenze.Regole(),
+                                       dt.date(2026, 11, 20))
+    assert venti == {sera, sfora}, venti
+    ventuno = presenze.eventi_del_giorno(db, presenze.Regole(),
+                                         dt.date(2026, 11, 21))
+    assert ventuno == {mattina}, ventuno
+
+
 # --------------------------------------------------------------------------
 falliti = [(n, e) for n, e in esiti if e]
 for nome, errore in esiti:

@@ -86,6 +86,19 @@ l'esportazione segue quello che stai guardando. A settimana e a mese la scheda
 per giornata: quattordici dipendenti per trenta giorni farebbero quattrocento
 righe da scorrere per capire chi ha fatto più ore.
 
+**Per dipendente.** Il cartellino del mese a griglia, una persona alla volta,
+come sui programmi delle paghe (chiesto dal titolare il 25/11/2026): a sinistra
+i dipendenti col totale del mese, a destra un giorno per riga con entrate,
+uscite, lavorate, ordinarie, straordinario e note. Ci sono anche i giorni senza
+timbrature, perché un buco si vede solo se la riga c'è. L'uscita che manca
+all'ultimo turno di oggi è «in corso», non un trattino giallo: la decide lo
+stesso giudice del grafico (`_come_finisce`), così griglia e grafico non si
+contraddicono. Riposi, ferie e ore teoriche non ci sono: TIMBRA non sa chi
+deve lavorare quando. Se la griglia non ci sta (una cassa da 1024, tre turni in
+un giorno) si ridisegna stretta: a sinistra solo i nomi, le note su una riga
+sotto il giorno. La scelta si fa misurando la griglia disegnata, non con una
+soglia in pixel, perché i caratteri crescono con lo schermo.
+
 **Il grafico sotto l'elenco.** A giorno, una riga per persona e la barra che va
 dall'entrata all'uscita, con le ore scritte sopra: i turni spezzati diventano
 due barre con il buco della pausa in mezzo. A settimana e a mese, una colonna
@@ -95,6 +108,29 @@ Dettagli in *Il grafico non inventa ore*, più sotto.
 
 **Rettifiche tracciate.** Una timbratura dimenticata si aggiunge, una sbagliata
 si annulla — sempre con motivo e autore. Il dato grezzo non viene mai toccato.
+L'ora si sceglie col giorno di lavoro scritto in cima e la casella «dopo la
+mezzanotte» (spuntata da sola sotto l'inizio della giornata): prima, da
+Timbrature, l'uscita delle 00:35 della cena del 20 finiva il 20 alle 00:35,
+cioè la notte prima del turno.
+
+**Conferma ore** (25/11/2026). Nel dettaglio di una giornata il titolare
+conferma le ore: gli avvisi di quel giorno passano in `anomalie_confermate` e
+non si contano più (presenze, griglia, mail, Excel). La conferma (tabella
+`conferme`) vale per l'**impronta** della giornata — timbrature anche scartate,
+avvisi e ore: se poi cambia qualcosa, decade e il giorno torna da verificare.
+Le timbrature annullate a mano non sono più un avviso: sono già una decisione
+presa con codice e motivo.
+
+**Filtri delle Timbrature.** Per dipendente e per giorno. Il giorno di lavoro
+lo decide il motore (`presenze.eventi_del_giorno`), non un orario fisso: così
+l'uscita che chiude la sera dentro la coda di notte (fino alle 07:00 di serie)
+sta sotto il giorno giusto, esattamente come nelle Presenze.
+
+**Una settimana di margine** (`CONTESTO_GIORNI`). Come si legge un giorno
+dipende da quello prima (un turno aperto si chiude la mattina dopo, entro la
+coda di notte), e quello prima dal suo. Con un giorno solo di margine la vista
+Giorno e la vista Mese potevano dare allo stesso giorno ore e avvisi diversi —
+e una conferma data da una vista risultava decaduta nell'altra.
 
 **Il report mensile arriva per email**, con il riepilogo per persona nel testo,
 il mese giorno per giorno in figura e il foglio da aprire in Excel allegato.
@@ -829,6 +865,18 @@ ovunque (schermo, CSV, Excel, mail), così ogni numero torna con gli altri. I
 giorni prima restano a minuti interi, come sono stati visti e spediti. Con il
 conto al secondo anche l'orologio del terminale si riallinea oltre i 5 secondi
 di scarto, non più 30.
+
+**7. Un'uscita dimenticata faceva scivolare tutto il mese** (`presenze.py`,
+`_ricuci_notte`, 25/11/2026). La ricucitura della notte prende la prima
+timbratura del mattino come uscita della sera prima, se la sera è rimasta
+aperta. Chi entra alle 06:30 (dentro la coda di notte) e dimentica UN'uscita
+apriva una catena: ogni mattina diventava l'uscita della sera prima, 16:30 al
+giorno e nessun avviso, e la vista Giorno e la vista Mese davano ore diverse.
+Ora il mattino non si sposta se il giorno dopo sta in piedi da solo (timbrature
+pari, nessun turno oltre il massimo): resta aperta la sera, in giallo. Le due
+chiusure dopo le cinque di fila continuano a ricucirsi, perché lette da sole
+farebbero un turno di quindici ore. Trovato dal revisore avversario; sui dati
+veri di Dario (ottobre–11 novembre) non cambia nessuna ora.
 
 Il filo comune dei primi tre: **confondere "coerente con quello che vedo" con
 "verificato"**. Due dati che tornano non provano un'ipotesi se tornerebbero

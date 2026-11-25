@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import csv
 import datetime as dt
+import hashlib
 import io
 import json
 import os
@@ -114,7 +115,19 @@ CREATE TABLE IF NOT EXISTS rettifiche (
     autore         TEXT    NOT NULL,
     creata_il      TEXT    NOT NULL
 );
+CREATE TABLE IF NOT EXISTS conferme (
+    employee_code  INTEGER NOT NULL,
+    data           TEXT    NOT NULL,   -- il giorno operativo confermato
+    impronta       TEXT    NOT NULL,   -- com'era la giornata in quel momento
+    autore         TEXT    NOT NULL,
+    creata_il      TEXT    NOT NULL,
+    PRIMARY KEY (employee_code, data)
+);
 """
+
+# Il motivo con cui si scarta una timbratura annullata a mano. Non e' un
+# avviso: chi l'ha annullata ha gia' deciso, col codice e il motivo.
+ANNULLATA = "annullata a mano"
 
 
 def prepara(db) -> None:
@@ -143,6 +156,26 @@ def togli_aggiunta(db, rettifica_id: int) -> bool:
     """
     cur = db.execute("DELETE FROM rettifiche WHERE id = ? AND tipo = 'aggiunta'",
                      (rettifica_id,))
+    db.commit()
+    return cur.rowcount > 0
+
+
+def conferma_giornata(db, employee_code: int, data: dt.date, impronta: str,
+                      autore: str) -> None:
+    """Il titolare ha guardato la giornata e le ore vanno bene cosi': i suoi
+    avvisi non si contano piu'. Vale per la giornata COM'ERA (l'impronta): se
+    poi arriva una timbratura o si fa una correzione, torna da verificare."""
+    db.execute(
+        "INSERT OR REPLACE INTO conferme (employee_code, data, impronta, "
+        "autore, creata_il) VALUES (?,?,?,?,?)",
+        (employee_code, data.isoformat(), impronta, autore,
+         dt.datetime.now().isoformat(timespec="seconds")))
+    db.commit()
+
+
+def togli_conferma(db, employee_code: int, data: dt.date) -> bool:
+    cur = db.execute("DELETE FROM conferme WHERE employee_code = ? AND data = ?",
+                     (employee_code, data.isoformat()))
     db.commit()
     return cur.rowcount > 0
 
@@ -248,7 +281,7 @@ def punzoni(db, dal: dt.date, al: dt.date) -> list[Punzone]:
             assoluto = assoluto.replace(tzinfo=dt.timezone.utc)
         p = Punzone(codice, locale, assoluto, stato, metodo, "terminale", eid)
         if eid in annullati:
-            p.scartato = "annullata a mano"
+            p.scartato = ANNULLATA
         fuori.append(p)
 
     for rid, codice, quando, verso in db.execute(
@@ -306,6 +339,14 @@ class Giornata:
     anomalie: list[str] = field(default_factory=list)
     secondi_lavorati: int = 0
     secondi_straordinario: int = 0
+    # La conferma del titolare: se c'e' ed e' ancora valida, gli avvisi
+    # passano da `anomalie` ad `anomalie_confermate` e la giornata non e'
+    # piu' da verificare.
+    impronta: str = ""
+    confermata_da: str | None = None
+    confermata_il: str | None = None
+    anomalie_confermate: list[str] = field(default_factory=list)
+    conferma_decaduta: str | None = None    # quando era stata data, se non vale piu'
 
     @property
     def ore(self) -> str:
@@ -375,11 +416,29 @@ def _ricuci_notte(per_giorno: dict, regole: Regole) -> None:
         if candidato.istante - prima[-1].istante > dt.timedelta(
                 hours=regole.ore_massime_turno):
             continue
+        if len(dopo) % 2 == 0 and not _turno_assurdo(dopo, regole):
+            # Il giorno dopo sta in piedi da solo: la sua prima timbratura e'
+            # l'entrata di chi comincia presto, non l'uscita di ieri sera.
+            # Senza questo, chi entra alle 06:30 e dimentica UN'uscita faceva
+            # scivolare tutti i giorni dopo: ogni mattina diventava l'uscita
+            # della sera prima, 16:30 di ore al giorno e nessun avviso. Cosi'
+            # invece resta aperto ieri, e ieri si vede in giallo.
+            continue
         per_giorno[dopo_data].remove(candidato)
         per_giorno[data].append(candidato)
         per_giorno[data].sort(key=lambda p: p.quando)
         if not per_giorno[dopo_data]:
             del per_giorno[dopo_data]
+
+
+def _turno_assurdo(vivi: list[Punzone], regole: Regole) -> bool:
+    """Letti a coppie (entrata, uscita), c'e' un turno piu' lungo del
+    massimo? E' il segno che la prima timbratura non e' di quel giorno: chi
+    chiude alle 05:15 e rientra alle 20:00 sembrerebbe aver fatto un turno
+    unico di quasi quindici ore."""
+    massimo = dt.timedelta(hours=regole.ore_massime_turno)
+    return any(b.istante - a.istante > massimo
+               for a, b in zip(vivi[0::2], vivi[1::2]))
 
 
 def _togli_doppioni(lista: list[Punzone], regole: Regole) -> None:
@@ -464,6 +523,13 @@ def _assegna_verso(lista: list[Punzone], regole: Regole) -> str:
     return "stati del terminale" if modo == "stati" else "alternanza"
 
 
+def manca_uscita(quando: dt.datetime) -> str:
+    """Il testo dell'uscita mancante. Pubblico perche' l'interfaccia deve
+    riconoscerlo: sull'ultimo turno di oggi non e' un errore, e' chi e' al
+    lavoro adesso."""
+    return f"manca l'uscita delle {quando:%H:%M:%S}"
+
+
 def _accoppia(lista: list[Punzone], regole: Regole) -> tuple[list[Turno], list[str]]:
     turni, anomalie = [], []
     aperto: Punzone | None = None
@@ -471,7 +537,7 @@ def _accoppia(lista: list[Punzone], regole: Regole) -> tuple[list[Turno], list[s
         if p.verso == "entrata":
             if aperto is not None:
                 turni.append(Turno(aperto, None))
-                anomalie.append(f"manca l'uscita delle {aperto.quando:%H:%M:%S}")
+                anomalie.append(manca_uscita(aperto.quando))
             aperto = p
         else:
             if aperto is None:
@@ -487,7 +553,7 @@ def _accoppia(lista: list[Punzone], regole: Regole) -> tuple[list[Turno], list[s
                 aperto = None
     if aperto is not None:
         turni.append(Turno(aperto, None))
-        anomalie.append(f"manca l'uscita delle {aperto.quando:%H:%M:%S}")
+        anomalie.append(manca_uscita(aperto.quando))
     return turni, anomalie
 
 
@@ -526,9 +592,33 @@ def _applica_regole(g: Giornata, regole: Regole) -> None:
     g.secondi_straordinario = max(0, secondi - regole.minuti_ordinari * 60)
 
 
+def impronta(g: Giornata) -> str:
+    """Com'e' fatta la giornata: timbrature (anche scartate e annullate),
+    avvisi e ore. Se cambia una qualunque di queste cose, la conferma data
+    prima non vale piu'."""
+    voci = sorted(
+        f"{p.evento_id}|{p.quando.isoformat()}|{p.verso}|{p.scartato or ''}"
+        for p in [x for t in g.turni for x in (t.entrata, t.uscita) if x]
+        + list(g.scartati))
+    voci += sorted(g.anomalie) + [str(g.secondi_lavorati)]
+    return hashlib.sha1("\n".join(voci).encode("utf-8")).hexdigest()[:16]
+
+
+# Quanti giorni prima del periodo si leggono comunque. Il modo in cui si
+# legge un giorno dipende da quello prima (un turno rimasto aperto si chiude
+# con la prima timbratura del mattino dopo, entro la coda di notte), e quello
+# prima dal suo: con un giorno solo di margine la vista Giorno e la vista
+# Mese potevano raccontare lo stesso 10 del mese in due modi diversi, con ore
+# e avvisi diversi. Una settimana di margine li fa coincidere.
+CONTESTO_GIORNI = 7
+
+
 def giornate(db, regole: Regole, dal: dt.date, al: dt.date) -> list[Giornata]:
     """Calcola le giornate del periodo, persona per persona."""
-    tutti = punzoni(db, dal, al)
+    tutti = punzoni(db, dal - dt.timedelta(days=CONTESTO_GIORNI), al)
+    conferme = {(c, d): (i, a, q) for c, d, i, a, q in db.execute(
+        "SELECT employee_code, data, impronta, autore, creata_il FROM conferme "
+        "WHERE data >= ? AND data <= ?", (dal.isoformat(), al.isoformat()))}
 
     per_persona: dict[int, list[Punzone]] = {}
     for p in tutti:
@@ -551,13 +641,37 @@ def giornate(db, regole: Regole, dal: dt.date, al: dt.date) -> list[Giornata]:
             g.turni, g.anomalie = _accoppia(del_giorno, regole)
             g.scartati = [p for p in del_giorno if p.scartato]
             for p in g.scartati:
-                g.anomalie.append(f"{p.quando:%H:%M:%S} {p.scartato}")
+                if p.scartato != ANNULLATA:
+                    g.anomalie.append(f"{p.quando:%H:%M:%S} {p.scartato}")
             _applica_regole(g, regole)
             g.criterio = criterio
+            g.impronta = impronta(g)
+            data_conferma = conferme.get((codice, data.isoformat()))
+            if data_conferma:
+                vale, autore, il = data_conferma
+                if vale == g.impronta:
+                    g.confermata_da, g.confermata_il = autore, il
+                    g.anomalie_confermate, g.anomalie = g.anomalie, []
+                else:
+                    g.conferma_decaduta = il
             fuori.append(g)
 
     fuori.sort(key=lambda g: (g.data, g.employee_code))
     return fuori
+
+
+def eventi_del_giorno(db, regole: Regole, giorno: dt.date) -> set[str]:
+    """Le timbrature che il motore mette nel giorno di lavoro `giorno`: anche
+    l'uscita dopo mezzanotte (o fino alla coda di notte) che chiude la sera,
+    anche scartate e annullate. Serve al filtro delle Timbrature, che cosi'
+    mostra esattamente quello che le Presenze contano su quel giorno."""
+    ids = set()
+    for g in giornate(db, regole, giorno, giorno):
+        for p in ([x for t in g.turni for x in (t.entrata, t.uscita) if x]
+                  + list(g.scartati)):
+            if p.evento_id:
+                ids.add(p.evento_id)
+    return ids
 
 
 # --- Esportazione ------------------------------------------------------------

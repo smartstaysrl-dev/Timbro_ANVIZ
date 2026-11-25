@@ -230,6 +230,181 @@ def _():
         assert gestione.posta._ore(secondi) == presenze.durata(secondi), secondi
 
 
+@prova("ora della timbratura: dopo la mezzanotte va sulla mattina dopo")
+def _():
+    import tkinter as tk
+    radice = tk.Tk()
+    radice.withdraw()
+    try:
+        venti = dt.date(2026, 11, 20)
+        cinque = dt.time(5, 0)
+        S = gestione.SceltaOraTimbratura
+        # Uscita dimenticata dalla cena del 20: 00:35 e' il 21, non il 20.
+        d = S(radice, "A che ora?", venti, cinque,
+              dt.datetime(2026, 11, 20, 23, 50))
+        assert not d.notte and d._quando() == dt.datetime(2026, 11, 20, 23, 50)
+        d._muovi(1, 0)                                  # 00:50
+        d._muovi(0, -15)                                # 00:35
+        assert d.notte and d.casella.valore, "la casella non si e' spuntata"
+        assert d._quando() == dt.datetime(2026, 11, 21, 0, 35), d._quando()
+        assert "sabato 21 novembre" in d.esito.cget("text"), d.esito.cget("text")
+        # Chi tocca la casella decide lui: muovere l'ora non la cambia piu'.
+        d._casella(False)
+        d._muovi(0, 5)
+        assert not d.notte and d._quando() == dt.datetime(2026, 11, 20, 0, 40)
+        d.destroy()
+        # Correggere una timbratura gia' dopo mezzanotte: la casella parte
+        # spuntata e la data resta quella vera.
+        d = S(radice, "Ora giusta", venti, cinque,
+              dt.datetime(2026, 11, 21, 0, 35))
+        assert d.notte and d._quando() == dt.datetime(2026, 11, 21, 0, 35)
+        # Su una cassa da 1024x600 il dialogo deve stare in 510 pixel (600
+        # meno la barra): prima Annulla e Conferma finivano tagliati.
+        d.compatta()
+        d.update_idletasks()
+        assert d.winfo_reqheight() <= 510, d.winfo_reqheight()
+        d.destroy()
+    finally:
+        radice.destroy()
+
+
+C = gestione.SchermataPresenze._righe_cartellino
+NOV = dt.date(2026, 11, 1), dt.date(2026, 11, 30)
+
+
+def persona(*giornate):
+    return G._per_persona(list(giornate), {1: "Mario Rossi"})[0]
+
+
+@prova("cartellino: una riga per ogni giorno del mese, anche senza timbrature")
+def _():
+    g = giornata(dt.date(2026, 11, 3),
+                 [(dt.datetime(2026, 11, 3, 11, 19, 16),
+                   dt.datetime(2026, 11, 3, 15, 5, 56))])
+    coppie, righe = C(persona(g), *NOV, ADESSO, OGGI)
+    assert len(righe) == 30, len(righe)
+    assert [r["data"].day for r in righe] == list(range(1, 31))
+    assert righe[0]["giorno"] == "Do 1", righe[0]["giorno"]
+    assert [righe[i]["giorno"] for i in (1, 3, 4)] == ["Lu 2", "Me 4", "Gi 5"]
+    vuota = righe[0]
+    assert vuota["giornata"] is None and vuota["lavorate"] == ""
+    assert vuota["orari"] == [("", "")] * 4, vuota["orari"]
+    piena = righe[2]
+    assert piena["giornata"] is g
+    assert piena["orari"][:2] == [("11:19:16", ""), ("15:05:56", "")]
+    assert piena["lavorate"] == "3:46:40", piena["lavorate"]
+
+
+@prova("cartellino: due coppie di colonne, tre se qualcuno fa tre turni")
+def _():
+    g = giornata(dt.date(2026, 11, 3),
+                 [(dt.datetime(2026, 11, 3, 8), dt.datetime(2026, 11, 3, 10)),
+                  (dt.datetime(2026, 11, 3, 12), dt.datetime(2026, 11, 3, 14)),
+                  (dt.datetime(2026, 11, 3, 19), dt.datetime(2026, 11, 3, 23))])
+    coppie, righe = C(persona(g), *NOV, ADESSO, OGGI)
+    assert coppie == 3, coppie
+    assert all(len(r["orari"]) == 6 for r in righe)
+    assert righe[2]["orari"][4:] == [("19:00:00", ""), ("23:00:00", "")]
+
+
+@prova("cartellino: il turno dopo mezzanotte resta sul giorno in cui e' iniziato")
+def _():
+    g = giornata(dt.date(2026, 11, 2),
+                 [(dt.datetime(2026, 11, 2, 19, 29, 50),
+                   dt.datetime(2026, 11, 3, 0, 16, 10))])
+    _, righe = C(persona(g), *NOV, ADESSO, OGGI)
+    assert righe[1]["orari"][:2] == [("19:29:50", ""), ("00:16:10", "")]
+    assert righe[2]["giornata"] is None
+
+
+@prova("cartellino: uscita mancante ieri da verificare, oggi 'in corso'")
+def _():
+    ieri = giornata(IERI, [(dt.datetime.combine(IERI, dt.time(19)), None)])
+    ieri.anomalie = ["manca l'uscita"]
+    oggi = giornata(OGGI, [(dt.datetime.combine(OGGI, dt.time(11)), None)])
+    p = persona(ieri, oggi)
+    _, righe = C(p, IERI, OGGI, ADESSO, OGGI)
+    assert righe[0]["orari"][1] == ("—", "manca"), righe[0]["orari"]
+    assert righe[0]["note"] == "manca l'uscita"
+    assert righe[1]["orari"][1] == ("in corso", "in_corso"), righe[1]["orari"]
+    # Il giorno dopo la stessa uscita mancante non e' piu' "in corso".
+    domani = OGGI + dt.timedelta(days=1)
+    _, righe = C(p, IERI, OGGI, ADESSO + dt.timedelta(days=1), domani)
+    assert righe[1]["orari"][1] == ("—", "manca"), righe[1]["orari"]
+
+
+@prova("cartellino: chi e' al lavoro adesso non e' 'da verificare'")
+def _():
+    # Il motore segna "manca l'uscita" anche sul turno aperto di oggi: nella
+    # griglia c'e' gia' "in corso", e la nota gialla accanto la smentirebbe.
+    entrata = dt.datetime.combine(OGGI, dt.time(11, 3, 40))
+    oggi = giornata(OGGI, [(entrata, None)])
+    oggi.anomalie = [presenze.manca_uscita(entrata)]
+    p = persona(oggi)
+    _, righe = C(p, OGGI, OGGI, ADESSO, OGGI)
+    assert righe[0]["orari"][1] == ("in corso", "in_corso"), righe[0]["orari"]
+    assert righe[0]["note"] == "" and righe[0]["da_verificare"] == 0, righe[0]
+    # Passata la giornata, la stessa uscita mancante torna da verificare.
+    domani = OGGI + dt.timedelta(days=1)
+    _, righe = C(p, OGGI, OGGI, ADESSO + dt.timedelta(days=1), domani)
+    assert righe[0]["note"] == presenze.manca_uscita(entrata), righe[0]
+    assert righe[0]["da_verificare"] == 1
+
+
+@prova("cartellino: cambiando mese resta aperta la persona scelta")
+def _():
+    scegli = gestione.SchermataPresenze._chi_mostrare
+    nomi = {1: "Mario Rossi", 2: "Anna Bianchi", 3: "Zeno Verdi"}
+    persone = G._per_persona(
+        [giornata(dt.date(2026, 10, 3), [(dt.datetime(2026, 10, 3, 9),
+                                          dt.datetime(2026, 10, 3, 17))])],
+        nomi)
+    # Zeno a ottobre non ha timbrato: resta lui, col mese vuoto, e compare
+    # nell'elenco al suo posto in ordine alfabetico.
+    elenco, aperta = scegli(persone, 3, nomi)
+    assert aperta["codice"] == 3 and aperta["giornate"] == [], aperta
+    assert [x["nome"] for x in elenco] == ["Mario Rossi", "Zeno Verdi"], elenco
+    elenco, aperta = scegli(persone, 1, nomi)
+    assert aperta is persone[0] and elenco == persone
+    elenco, aperta = scegli(persone, None, nomi)
+    assert aperta is persone[0]
+
+
+@prova("cartellino: senza entrata si vede il trattino, non un buco")
+def _():
+    g = giornata(dt.date(2026, 11, 3),
+                 [(dt.datetime(2026, 11, 3, 11), dt.datetime(2026, 11, 3, 15))])
+    g.turni.append(presenze.Turno(
+        entrata=None, uscita=punzone(dt.datetime(2026, 11, 3, 23, 40))))
+    _, righe = C(persona(g), *NOV, ADESSO, OGGI)
+    assert righe[2]["orari"] == [("11:00:00", ""), ("15:00:00", ""),
+                                 ("—", "manca"), ("23:40:00", "")], \
+        righe[2]["orari"]
+
+
+@prova("cartellino: ordinarie + straordinario = lavorate, al secondo")
+def _():
+    g = giornata(dt.date(2026, 11, 5),
+                 [(dt.datetime(2026, 11, 5, 9), dt.datetime(2026, 11, 5, 17, 0, 45))])
+    g.secondi_straordinario = 45
+    _, righe = C(persona(g), *NOV, ADESSO, OGGI)
+    r = righe[4]
+    assert (r["lavorate"], r["ordinarie"], r["straordinario"]) == \
+        ("8:00:45", "8:00:00", "0:00:45"), r
+    assert righe[5]["straordinario"] == ""
+
+
+@prova("cartellino: in una giornata confermata il trattino e' grigio")
+def _():
+    g = giornata(dt.date(2026, 11, 3),
+                 [(dt.datetime(2026, 11, 3, 19), None)])
+    _, righe = C(persona(g), *NOV, ADESSO, OGGI)
+    assert righe[2]["orari"][1] == ("—", "manca"), righe[2]["orari"]
+    g.confermata_da = "segreteria"
+    _, righe = C(persona(g), *NOV, ADESSO, OGGI)
+    assert righe[2]["orari"][1] == ("—", "confermata"), righe[2]["orari"]
+
+
 falliti = [(n, e) for n, e in esiti if e]
 for nome, errore in esiti:
     print(("  OK   " if not errore else "  FALLITO ") + nome

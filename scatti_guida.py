@@ -246,6 +246,12 @@ def main() -> int:
         schermata.lista.tela.yview_moveto(1.0)
         calma(4)
         scatta(app, nome.replace(".png", "-grafico.png"))
+    # Il cartellino di una persona sul mese appena chiuso: Marco Bianchi fa
+    # il turno spezzato, cosi' si vedono piene tutte e due le coppie.
+    schermata.dipendente = 1
+    schermata._periodo("dipendente")
+    calma()
+    scatta(app, "presenze-dipendente.png")
     schermata._periodo("giorno")
     calma()
 
@@ -253,7 +259,10 @@ def main() -> int:
     db = gestione.apri_archivio(finto)
     try:
         nomi = gestione.nomi_dipendenti(db)
-        elenco = presenze.giornate(db, app.regole, ieri, ieri)
+        # Due settimane, non solo ieri: serve una giornata con un avviso,
+        # se no il bottone "Conferma ore" in figura non c'e'.
+        elenco = presenze.giornate(db, app.regole,
+                                   ieri - dt.timedelta(days=14), ieri)
     finally:
         db.close()
     con_anomalia = next((g for g in elenco if g.anomalie), elenco[0])

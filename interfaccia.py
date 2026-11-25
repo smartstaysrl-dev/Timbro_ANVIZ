@@ -351,7 +351,9 @@ class SceltaOra(Dialogo):
         base = iniziale or dt.datetime.now().time()
         self.ora, self.minuto = base.hour, base.minute
         tk.Label(self, text=titolo, bg=BG, fg=TESTO, font=F_TITOLO).pack(pady=(18, 10))
-        quadro = tk.Frame(self, bg=BG)
+        # Tenuti da parte: chi allarga la finestra (il giorno in cima, la
+        # casella della notte) si infila prima di questi.
+        self.quadro = quadro = tk.Frame(self, bg=BG)
         quadro.pack(padx=30, pady=6)
         self.display = tk.Label(quadro, text="", bg=CARD, fg=TESTO,
                                 font=("Consolas", 44), width=7)
@@ -367,7 +369,7 @@ class SceltaOra(Dialogo):
         for testo, dm in (("−15", -15), ("−5", -5), ("+5", 5), ("+15", 15)):
             Bottone(riga2, testo, lambda b=dm: self._muovi(0, b),
                     font=F_NORMALE, altezza=56, larghezza=110).pack(side="left", padx=4)
-        azioni = tk.Frame(self, bg=BG)
+        self.azioni = azioni = tk.Frame(self, bg=BG)
         azioni.pack(fill="x", padx=30, pady=(16, 20))
         Bottone(azioni, "Annulla", self.destroy, altezza=64,
                 larghezza=200).pack(side="left")
