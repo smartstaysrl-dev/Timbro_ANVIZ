@@ -294,6 +294,11 @@ def apri_archivio(percorso: str) -> sqlite3.Connection:
     for nome, tipo in COLONNE_NUOVE.items():
         if nome not in esistenti:
             db.execute(f"ALTER TABLE importazioni ADD COLUMN {nome} {tipo}")
+    # Quando e' stato archiviato (NULL = no): chi non lavora piu' qui ma
+    # resta sul terminale, per esempio uno stagionale.
+    if "archiviato_il" not in {r[1] for r in db.execute(
+            "PRAGMA table_info(dipendenti)")}:
+        db.execute("ALTER TABLE dipendenti ADD COLUMN archiviato_il TEXT")
     db.commit()
     return db
 
@@ -459,6 +464,40 @@ def _quando_o_niente(testo):
 def nomi_dipendenti(db) -> dict[int, str]:
     return {r[0]: r[1] for r in db.execute(
         "SELECT employee_code, nome FROM dipendenti")}
+
+
+def archivia_dipendente(db, codice: int, nome: str = "",
+                        badge: int | None = None) -> None:
+    """Non lo si vede piu' fra i Dipendenti. Resta sul terminale con tessera e
+    impronte, e le sue ore restano dove sono. La riga si crea se manca: chi
+    sul terminale non ha nome non e' mai entrato nell'archivio."""
+    adesso = dt.datetime.now().isoformat(sep=" ", timespec="seconds")
+    db.execute("INSERT OR IGNORE INTO dipendenti (employee_code, nome, badge, "
+               "attivo, aggiornato) VALUES (?,?,?,1,?)",
+               (codice, nome or "", badge, adesso))
+    db.execute("UPDATE dipendenti SET archiviato_il = ? WHERE employee_code = ?",
+               (adesso, codice))
+    db.commit()
+
+
+def ripristina_dipendente(db, codice: int) -> None:
+    db.execute("UPDATE dipendenti SET archiviato_il = NULL "
+               "WHERE employee_code = ?", (codice,))
+    db.commit()
+
+
+def archiviati(db) -> dict[int, str]:
+    """Gli archiviati, con la data. Chi dopo l'archiviazione ha timbrato di
+    nuovo sul terminale torna visibile da solo: se lavora, deve vedersi."""
+    tornati = [r[0] for r in db.execute(
+        "SELECT d.employee_code FROM dipendenti d WHERE d.archiviato_il IS NOT "
+        "NULL AND EXISTS (SELECT 1 FROM raw_events e WHERE e.employee_code = "
+        "d.employee_code AND e.occurred_at_local > d.archiviato_il)")]
+    for codice in tornati:
+        ripristina_dipendente(db, codice)
+    return {r[0]: r[1] for r in db.execute(
+        "SELECT employee_code, archiviato_il FROM dipendenti "
+        "WHERE archiviato_il IS NOT NULL")}
 
 
 # --- Servizio di raccolta -----------------------------------------------------
@@ -1225,6 +1264,11 @@ class ModuloUtente(Dialogo):
         # salvare. Il resto scorre.
         azioni = tk.Frame(self, bg=BG)
         azioni.pack(side="bottom", fill="x", padx=30, pady=(12, 20))
+        if not nuovo:
+            # Sopra la riga dei bottoni, che di posto per un quarto non ne ha.
+            Bottone(self, "Archivia", self._archivia, font=F_NORMALE,
+                    altezza=52, larghezza=250).pack(side="bottom",
+                                                    pady=(12, 0))
         self.scorrevole = ListaScorrevole(self)
         self.scorrevole.pack(fill="both", expand=True)
         self.scorrevole.tela.configure(
@@ -1489,6 +1533,24 @@ class ModuloUtente(Dialogo):
         self.risultato = True
         self.destroy()
         self.app.scarica_adesso()
+
+    def _archivia(self):
+        chi = self.nome_locale or f"Utente {self.u.user_id}"
+        if not Conferma.chiedi(
+                self, "Archiviare il dipendente?",
+                f"«{chi}» non si vede piu' fra i Dipendenti.\n\n"
+                f"Resta sul terminale con tessera e impronte, e le sue ore "
+                f"restano. Se timbra di nuovo ricompare da solo; si rimette "
+                f"anche con «Mostra archiviati»."):
+            return
+        db = apri_archivio(self.app.cfg["archivio"])
+        try:
+            archivia_dipendente(db, self.u.user_id, self.nome_locale,
+                                self.u.badge)
+        finally:
+            db.close()
+        self.risultato = True
+        self.destroy()
 
     def _elimina(self):
         if not Conferma.chiedi(
@@ -3519,10 +3581,15 @@ class SchermataDipendenti(Schermata):
     titolo = "Dipendenti"
 
     def costruisci(self):
-        self.intestazione("Dipendenti", [
+        self.mostra_archiviati = False
+        barra = self.intestazione("Dipendenti", [
             ("Nuovo", self._nuovo, VERDE),
             ("Rileggi", self.app.scarica_adesso, BLU),
         ])
+        self.b_archiviati = Bottone(barra, "Mostra archiviati",
+                                    self._archiviati, font=F_NORMALE,
+                                    altezza=52, larghezza=230)
+        self.b_archiviati.pack(side="right", padx=(8, 0))
         tk.Label(self, bg=BG, fg=TESTO_TENUE, font=F_PICCOLO, anchor="w",
                  wraplength=900, justify="left",
                  text="Nome, tessera e PIN si scrivono da qui, direttamente "
@@ -3539,8 +3606,16 @@ class SchermataDipendenti(Schermata):
         try:
             salvati = {r[0]: {"nome": r[1], "attivo": r[3]} for r in db.execute(
                 "SELECT employee_code, nome, badge, attivo FROM dipendenti")}
+            archiviati_il = archiviati(db)
         finally:
             db.close()
+        if self.mostra_archiviati and not archiviati_il:
+            self.mostra_archiviati = False
+        self.b_archiviati.testo(
+            "Nascondi archiviati" if self.mostra_archiviati
+            else f"Mostra archiviati ({len(archiviati_il)})")
+        self.b_archiviati.tinta(BLU if self.mostra_archiviati else CARD,
+                                BG if self.mostra_archiviati else TESTO)
 
         sul_terminale = {u.user_id: u for u in (self.app.utenti or [])}
         if not sul_terminale and not salvati:
@@ -3561,11 +3636,14 @@ class SchermataDipendenti(Schermata):
             # piu' qui. Le sue timbrature restano in archivio, la sua riga no.
             if sparito and info and not info.get("attivo", 1):
                 continue
+            archiviato = archiviati_il.get(codice)
+            if archiviato and not self.mostra_archiviati:
+                continue
 
             riquadro = tk.Frame(self.lista.interno, bg=CARD)
             riquadro.pack(fill="x", pady=4, padx=8, ipady=12)
-            tk.Frame(riquadro, bg=TESTO_TENUE if sparito else VERDE,
-                     width=8).pack(side="left", fill="y")
+            tk.Frame(riquadro, bg=TESTO_TENUE if sparito or archiviato
+                     else VERDE, width=8).pack(side="left", fill="y")
             testi = tk.Frame(riquadro, bg=CARD)
             testi.pack(side="left", fill="both", expand=True, padx=16)
             tk.Label(testi, text=nome or "— senza nome —", bg=CARD,
@@ -3582,8 +3660,15 @@ class SchermataDipendenti(Schermata):
                     pezzi.append("amministratore")
             else:
                 pezzi.append("non piu' sul terminale")
+            if archiviato:
+                pezzi.append(f"archiviato il {data_ora(archiviato)[:10]}")
             tk.Label(testi, text=" · ".join(pezzi), bg=CARD, fg=TESTO_TENUE,
                      font=F_PICCOLO, anchor="w").pack(fill="x")
+            if archiviato:
+                Bottone(riquadro, "ripristina",
+                        lambda c=codice: self._ripristina(c),
+                        font=F_PICCOLO, altezza=48,
+                        larghezza=130).pack(side="right", padx=(0, 16))
             if u is not None:
                 Bottone(riquadro, "modifica",
                         lambda uu=u, nn=nome: self._modifica(uu, nn),
@@ -3594,6 +3679,18 @@ class SchermataDipendenti(Schermata):
     def _modifica(self, utente, nome):
         if ModuloUtente(self, self.app, utente, nome).concludi():
             self.entra()
+
+    def _archiviati(self):
+        self.mostra_archiviati = not self.mostra_archiviati
+        self.entra()
+
+    def _ripristina(self, codice):
+        db = apri_archivio(self.app.cfg["archivio"])
+        try:
+            ripristina_dipendente(db, codice)
+        finally:
+            db.close()
+        self.entra()
 
     def _nuovo(self):
         if not self.app.utenti and not self.app.collegato:

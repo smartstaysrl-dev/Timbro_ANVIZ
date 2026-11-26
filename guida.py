@@ -226,6 +226,14 @@ CAPITOLI = [
  "- Rendere qualcuno amministratore del terminale: il dispositivo rifiuta il "
  "comando da rete. Si fa dal menu del terminale.",
 
+ "# Archiviare un dipendente",
+ "Chi non lavora più qui ma potrebbe tornare (uno stagionale) si archivia: "
+ "nella sua scheda, «Archivia». Non si vede più fra i Dipendenti, ma resta "
+ "sul terminale con tessera e impronte, e le sue ore restano nelle Presenze "
+ "e negli Excel dei mesi in cui ha lavorato.",
+ "- se timbra di nuovo, ricompare da solo",
+ "- «Mostra archiviati», in alto, li fa vedere; «ripristina» lo rimette",
+
  "# Cancellare un dipendente",
  "Lo toglie dal terminale insieme a tessera e impronte. Le sue timbrature "
  "già registrate restano in archivio: la storia non si perde, e il mese si "

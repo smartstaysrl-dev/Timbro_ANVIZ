@@ -121,6 +121,13 @@ avvisi e ore: se poi cambia qualcosa, decade e il giorno torna da verificare.
 Le timbrature annullate a mano non sono più un avviso: sono già una decisione
 presa con codice e motivo.
 
+**Archivia** (26/11/2026). Nascosto dai Dipendenti ma lasciato sul terminale
+con tessera e impronte (colonna `dipendenti.archiviato_il`): la differenza con
+Elimina, che lo toglie dal terminale. Le ore restano ovunque. Se timbra di
+nuovo dopo l'archiviazione torna visibile da solo (`archiviati()`); una
+timbratura di prima, arrivata in ritardo, non lo riporta. «Mostra archiviati»
+li fa vedere con «ripristina».
+
 **Filtri delle Timbrature.** Per dipendente e per giorno. Il giorno di lavoro
 lo decide il motore (`presenze.eventi_del_giorno`), non un orario fisso: così
 l'uscita che chiude la sera dentro la coda di notte (fino alle 07:00 di serie)

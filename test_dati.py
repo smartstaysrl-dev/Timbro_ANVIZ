@@ -12,6 +12,7 @@ di indicare il vecchio posto — è il difetto trovato provandolo su
 un'installazione vera: i file erano di là, ma il programma continuava a
 cercarli di qua e si creava un archivio nuovo, vuoto.
 """
+import datetime as dt
 import os
 import pathlib
 import shutil
@@ -159,6 +160,69 @@ def _():
         assert not gestione.raddrizza_percorsi(cfg)
     assert cfg["archivio"] == os.path.join(codice, "timbrature.db")
     shutil.rmtree(radice, ignore_errors=True)
+
+
+def _archivio_con(*timbrature):
+    cartella = tempfile.mkdtemp()
+    db = gestione.apri_archivio(os.path.join(cartella, "t.db"))
+    for codice, quando in timbrature:
+        db.execute(
+            "INSERT INTO raw_events (source_event_id, device_serial, "
+            "employee_code, occurred_at_local, occurred_at_utc, device_seconds,"
+            " event_type_raw, event_type, metodo, work_code, raw_payload, "
+            "imported_at) VALUES (?,?,?,?,?,0,0,0,'badge',0,'00','x')",
+            (f"{codice}-{quando}", "SN", codice, quando, quando))
+    db.commit()
+    return db
+
+
+@prova("archivia: sparisce dai Dipendenti, il nome e le ore restano")
+def _():
+    db = _archivio_con((7, "2026-10-03 11:00:00"))
+    # Utente senza nome sul terminale: la riga non c'era, si crea.
+    gestione.archivia_dipendente(db, 7, "", 14448196)
+    archiviati = gestione.archiviati(db)
+    assert list(archiviati) == [7], archiviati
+    assert 7 in gestione.nomi_dipendenti(db)       # export e Presenze lo trovano
+    gestione.ripristina_dipendente(db, 7)
+    assert gestione.archiviati(db) == {}
+    db.close()
+
+
+@prova("archivia: se timbra di nuovo ricompare da solo, non per le vecchie")
+def _():
+    db = _archivio_con((7, "2026-10-03 11:00:00"))
+    gestione.archivia_dipendente(db, 7, "Marco")
+    quando = db.execute("SELECT archiviato_il FROM dipendenti "
+                        "WHERE employee_code = 7").fetchone()[0]
+    # Uno scarico in ritardo porta timbrature di PRIMA dell'archiviazione:
+    # non e' tornato a lavorare.
+    db.execute("INSERT INTO raw_events VALUES ('vecchia','SN',7,"
+               "'2026-10-04 09:00:00','x',0,0,0,'badge',0,'00','x')")
+    assert 7 in gestione.archiviati(db)
+    dopo = (dt.datetime.fromisoformat(quando) + dt.timedelta(minutes=1))
+    db.execute("INSERT INTO raw_events VALUES ('nuova','SN',7,?,'x',0,0,0,"
+               "'badge',0,'00','x')", (dopo.isoformat(sep=" "),))
+    assert gestione.archiviati(db) == {}, "e' tornato e resta nascosto"
+    db.close()
+
+
+@prova("archivia: un archivio di prima si aggiorna da solo")
+def _():
+    import sqlite3
+    cartella = tempfile.mkdtemp()
+    percorso = os.path.join(cartella, "vecchio.db")
+    vecchio = sqlite3.connect(percorso)
+    vecchio.execute("CREATE TABLE dipendenti (employee_code INTEGER PRIMARY "
+                    "KEY, nome TEXT NOT NULL, badge INTEGER, attivo INTEGER "
+                    "NOT NULL DEFAULT 1, aggiornato TEXT NOT NULL)")
+    vecchio.execute("INSERT INTO dipendenti VALUES (1,'Piero',5,1,'x')")
+    vecchio.commit()
+    vecchio.close()
+    db = gestione.apri_archivio(percorso)
+    assert gestione.archiviati(db) == {}
+    assert gestione.nomi_dipendenti(db) == {1: "Piero"}
+    db.close()
 
 
 falliti = [(n, e) for n, e in esiti if e]
